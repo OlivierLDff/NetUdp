@@ -54,16 +54,16 @@ private:
     quint8 _multicastTtl = 0;
 
     // ──────── STATUS CONTROL ────────
-public slots:
+public Q_SLOTS:
     void onRestart();
     void onStart();
     void onStop();
 
-signals:
+Q_SIGNALS:
     void isBoundedChanged(const bool isBounded);
     void socketError(int error, const QString description);
 
-public slots:
+public Q_SLOTS:
     void setWatchdogTimeout(const quint64 ms);
     void setAddress(const QString address);
     void setPort(const quint16 port);
@@ -80,18 +80,18 @@ private:
     void setMulticastTtl(const quint8 ttl);
 
     // ──────── TX ────────
-public slots:
+public Q_SLOTS:
     virtual void onSendDatagram(SharedDatagram datagram);
 
     // ──────── RX ────────
 protected:
     virtual bool isPacketValid(const uint8_t* buffer, const size_t length);
 
-private slots:
+private Q_SLOTS:
     void readPendingDatagrams();
 
     // ──────── STATUS ────────
-public slots:
+public Q_SLOTS:
     void onSocketError(QAbstractSocket::SocketError error);
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
     void onWatchdogTimeout();
@@ -109,9 +109,9 @@ private:
     void startBytesCounter();
     void stopBytesCounter();
 
-private slots:
+private Q_SLOTS:
     void updateDataCounter();
-signals:
+Q_SIGNALS:
     void rxBytesCounterChanged(const quint64 rx);
     void txBytesCounterChanged(const quint64 tx);
 

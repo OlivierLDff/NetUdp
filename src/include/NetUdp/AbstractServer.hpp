@@ -43,7 +43,7 @@ protected:
     QSM_READONLY_AUTO_PROPERTY(bool, isBounded, IsBounded);
     QSM_WRITABLE_AUTO_PROPERTY_WDEFAULT(quint64, watchdogPeriodMs, WatchdogPeriodMs, 5000);
 
-signals:
+Q_SIGNALS:
     void socketError(int error, const QString description);
 
     // ──────── ATTRIBUTE INPUT ────────
@@ -60,7 +60,7 @@ protected:
     const std::set<QString>& multicastGroupsSet() const;
 public:
     QList<QString> multicastGroups() const;
-signals:
+Q_SIGNALS:
     void multicastGroupsChanged();
 
 protected:
@@ -73,7 +73,7 @@ public:
     QString multicastInterfaceName() const;
 
     bool setMulticastInterfaceName(const QString& name);
-signals:
+Q_SIGNALS:
     void multicastInterfaceNameChanged(const QString name);
 
 protected:

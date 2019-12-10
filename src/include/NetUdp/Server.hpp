@@ -58,14 +58,14 @@ public:
     virtual bool sendDatagram(std::shared_ptr<Datagram> datagram);
 
     // ──────── WORKER COMMUNICATION ────────
-signals:
+Q_SIGNALS:
     void startWorker();
     void stopWorker();
     void joinMulticastGroupWorker(const QString address);
     void leaveMulticastGroupWorker(const QString address);
     void sendDatagramToWorker(SharedDatagram datagram);
 
-private slots:
+private Q_SLOTS:
     void onBoundedChanged(const bool isBounded);
     void onWorkerRxPerSecondsChanged(const quint64 rxBytes);
     void onWorkerTxPerSecondsChanged(const quint64 txBytes);
