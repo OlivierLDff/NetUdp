@@ -64,9 +64,7 @@ Q_SIGNALS:
     void multicastGroupsChanged();
 
 protected:
-    Q_PROPERTY(
-        QString multicastInterfaceName READ multicastInterfaceName WRITE setMulticastInterfaceName NOTIFY
-        multicastInterfaceNameChanged);
+    Q_PROPERTY(QString multicastInterfaceName READ multicastInterfaceName WRITE setMulticastInterfaceName NOTIFY multicastInterfaceNameChanged);
 private:
     QString _multicastInterfaceName;
 public:

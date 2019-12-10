@@ -37,6 +37,7 @@ public:
      * -
      */
     static void registerTypes(const char* uri = nullptr, const quint8 major = 1, const quint8 minor = 0);
+    static void loadResources();
 };
 
 NETUDP_NAMESPACE_END // __NETUDP_UTILS_HPP__

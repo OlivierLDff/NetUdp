@@ -49,6 +49,8 @@ set(NETUDP_FOLDER_PREFIX ${NETUDP_PROJECT} CACHE STRING "Prefix folder for all N
 set(NETUDP_USE_NAMESPACE ON CACHE BOOL "Should we use namespace")
 set(NETUDP_NAMESPACE ${NETUDP_PROJECT} CACHE STRING "Namespace for the library")
 
+set(NETUDP_ENABLE_QML ON CACHE BOOL "Embedded Debug Qml module for NetUdp class")
+
 # Install
 set(NETUDP_ENABLE_INSTALL OFF CACHE BOOL "Create or not a target for install")
 set(NETUDP_INSTALL_PREFIX ${NETUDP_PROJECT} CACHE STRING "Prefix for all NetUdp headers in the install folder")
@@ -70,6 +72,7 @@ message(STATUS "NETUDP_VERSION            : " ${NETUDP_VERSION})
 message(STATUS "NETUDP_VERSION_TAG        : " ${NETUDP_VERSION_TAG})
 message(STATUS "NETUDP_BUILD_SHARED       : " ${NETUDP_BUILD_SHARED})
 message(STATUS "NETUDP_FOLDER_PREFIX      : " ${NETUDP_FOLDER_PREFIX})
+message(STATUS "NETUDP_ENABLE_QML      : " ${NETUDP_ENABLE_QML})
 
 # Install
 message(STATUS "NETUDP_ENABLE_INSTALL     : " ${NETUDP_ENABLE_INSTALL})
@@ -86,6 +89,10 @@ message("                                                     ")
 
 find_package(Qt5Core CONFIG REQUIRED)
 find_package(Qt5Network CONFIG REQUIRED)
+
+if(NETUDP_ENABLE_QML)
+    find_package(Qt5QuickCompiler CONFIG REQUIRED)
+endif() # NETUDP_ENABLE_QML
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                       DEPENDENCIES                               │
@@ -109,8 +116,34 @@ set(FETCHCONTENT_QUIET ON)
 FetchContent_MakeAvailable(QSuperMacros)
 
 # ┌──────────────────────────────────────────────────────────────────┐
-# │                          NETUDP                              │
+# │                          NETUDP                                  │
 # └──────────────────────────────────────────────────────────────────┘
+
+if(NETUDP_ENABLE_QML)
+    file(GLOB_RECURSE NETUDP_QML_SRCS qml/*.qml)
+
+    foreach(SOURCE IN ITEMS ${NETUDP_QML_SRCS})
+        get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
+        file(RELATIVE_PATH SOURCE_PATH_REL ${CMAKE_CURRENT_SOURCE_DIR}/qml "${SOURCE_PATH}")
+        string(REPLACE "/" "\\" GROUP_PATH "${SOURCE_PATH_REL}")
+        source_group("Qml\\${GROUP_PATH}" FILES "${SOURCE}")
+    endforeach()
+
+    # Add qml to the qtquick compiler
+    qtquick_compiler_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
+
+    # Trick to rerun cmake each time NetUdp.qrc is updated
+    configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc
+      ${CMAKE_CURRENT_BINARY_DIR}/qml.junk
+    )
+
+    # Dont Run Moc on cpp file generated from qml
+    foreach(NETUDP_CURRENT_QML_FILE ${NETUDP_QML_RES})
+        set_property(SOURCE ${NETUDP_CURRENT_QML_FILE} PROPERTY SKIP_AUTOMOC ON)
+        source_group("Qml\\QtQuickCompiler Files" FILES ${NETUDP_CURRENT_QML_FILE})
+    endforeach()
+endif() # NETUDP_ENABLE_QML
 
 set(NETUDP_SRCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(NETUDP_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src/include)
@@ -131,6 +164,8 @@ set(NETUDP_API_SRCS
 
 set(NETUDP_SRCS ${NETUDP_UTILS_SRCS}
     ${NETUDP_API_SRCS}
+    ${NETUDP_QML_SRCS}
+    ${NETUDP_QML_RES}
 )
 
 set(NETUDP_UTILS_INCS
@@ -182,6 +217,9 @@ set_target_properties(${NETUDP_TARGET} PROPERTIES PREFIX "")
 target_link_libraries(${NETUDP_TARGET} ${QSUPERMACROS_TARGET})
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
+if(NETUDP_ENABLE_QML)
+    set_target_properties(${NETUDP_TARGET} PROPERTIES AUTORCC TRUE)
+endif() # NETUDP_ENABLE_QML
 qt5_use_modules(${NETUDP_TARGET} Core Network)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES FOLDER ${NETUDP_FOLDER_PREFIX})

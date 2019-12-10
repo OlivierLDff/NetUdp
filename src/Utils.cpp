@@ -63,3 +63,8 @@ void Utils::registerTypes(const char* uri, const quint8 major, const quint8 mino
 {
     ::registerTypes(uri, major, minor);
 }
+
+void Utils::loadResources()
+{
+    Q_INIT_RESOURCE(NetUdp);
+}

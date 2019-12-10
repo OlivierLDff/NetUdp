@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/NetUdp">
+
+    <!-- DEBUG -->
+    <file>Debug/qmldir</file>
+    <file>Debug/Server.qml</file>
+
+    </qresource>
+</RCC>
