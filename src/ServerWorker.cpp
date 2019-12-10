@@ -34,6 +34,10 @@ ServerWorker::ServerWorker(QObject* parent): QObject(parent)
 {
 }
 
+ServerWorker::~ServerWorker()
+{
+}
+
 void ServerWorker::onRestart()
 {
     onStop();

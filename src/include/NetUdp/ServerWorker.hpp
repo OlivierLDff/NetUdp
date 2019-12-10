@@ -38,6 +38,7 @@ class NETUDP_API_ ServerWorker: public QObject
     // ──────── CONSTRUCTOR ────────
 public:
     ServerWorker(QObject* parent = nullptr);
+    ~ServerWorker();
 
     // ──────── ATTRIBUTE ────────
 private:
