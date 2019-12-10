@@ -36,7 +36,7 @@ public:
      * Registered types are:
      * -
      */
-    static void registerTypes(const char* uri, const quint8 major, const quint8 minor);
+    static void registerTypes(const char* uri = nullptr, const quint8 major = 1, const quint8 minor = 0);
 };
 
 NETUDP_NAMESPACE_END // __NETUDP_UTILS_HPP__

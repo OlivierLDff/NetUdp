@@ -73,7 +73,10 @@ void ServerWorker::onStart()
 
     if (bindSuccess)
     {
-        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success bind to %s:%d", qPrintable(_address), _port);
+        if(_address.isEmpty())
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success bind to port %d", _port);
+        else
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success bind to %s: %d", qPrintable(_address), _port);
         setMulticastInterfaceNameToSocket();
         setMulticastLoopbackToSocket();
         for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
@@ -234,13 +237,25 @@ void ServerWorker::onSendDatagram(SharedDatagram datagram)
         return;
     }
 
-    quint64 bytesWritten = 0;
-
     if(datagram->destination.isNull())
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send datagram to null address");
         return;
     }
+
+    if (!datagram->buffer)
+    {
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send datagram with empty buffer");
+        return;
+    }
+
+    if (!datagram->length)
+    {
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send datagram with data length to 0");
+        return;
+    }
+
+    quint64 bytesWritten = 0;
 
     if (datagram->destination.isMulticast())
     {
@@ -264,13 +279,13 @@ void ServerWorker::onSendDatagram(SharedDatagram datagram)
 
     if (bytesWritten != datagram->length)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Fail to send datagram, %d/%d bytes written", bytesWritten, datagram->length);
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Fail to send datagram, %llu/%llu bytes written", bytesWritten, datagram->length);
     }
 
     _txBytesCounter += bytesWritten;
 }
 
-bool ServerWorker::isPacketValid(const uint8_t* buffer, const size_t length) const
+bool ServerWorker::isPacketValid(const uint8_t* buffer, const size_t length)
 {
     return true;
 }
@@ -285,7 +300,10 @@ void ServerWorker::readPendingDatagrams()
         QNetworkDatagram datagram = _socket->receiveDatagram();
 
         if (!isPacketValid(reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size()))
+        {
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Receive not valid datagram");
             return;
+        }
 
         //processTheDatagram(datagram);
         _rxBytesCounter += datagram.data().size();

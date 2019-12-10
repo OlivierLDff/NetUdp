@@ -50,9 +50,12 @@ protected:
 public:
     Q_INVOKABLE bool start() override;
     Q_INVOKABLE bool stop() override;
-    Q_INVOKABLE bool joinMulticastGroup(const QString& groupAddress) override;
-    Q_INVOKABLE bool leaveMulticastGroup(const QString& groupAddress) override;
+    Q_INVOKABLE bool joinMulticastGroup(const QString& groupAddress) override final;
+    Q_INVOKABLE bool leaveMulticastGroup(const QString& groupAddress) override final;
     virtual std::unique_ptr<ServerWorker> createWorker() const;
+
+    virtual bool sendDatagram(uint8_t* buffer, const size_t length, const QHostAddress& address, const uint16_t port, const uint8_t ttl = 0);
+    virtual bool sendDatagram(std::shared_ptr<Datagram> datagram);
 
     // ──────── WORKER COMMUNICATION ────────
 signals:

@@ -17,12 +17,13 @@
 #include <NetUdp/Datagram.hpp>
 #include <NetUdp/AbstractServer.hpp>
 #include <NetUdp/Server.hpp>
+#include <NetUdp/Version.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-Q_LOGGING_CATEGORY(NETUDP_UTILS_LOG_CAT, "net.iface.utils")
+Q_LOGGING_CATEGORY(NETUDP_UTILS_LOG_CAT, "net.udp.utils")
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
@@ -35,9 +36,13 @@ static quint8 _minor = 0;
 
 static void registerTypes()
 {
-    // Controller
-    //qCDebug(NETUDP_REGISTER_LOG_CAT, "Register %s.Controller %d.%d to QML", *_uri, _major, _minor);
-    //NETUDP_NAMESPACE::Controller::registerToQml(*_uri, _major, _minor);
+    qCDebug(NETUDP_UTILS_LOG_CAT, "Register Singleton %s.Version %d.%d to QML", *_uri, _major, _minor);
+    NETUDP_NAMESPACE::Version::registerSingleton(*_uri, _major, _minor);
+
+    qCDebug(NETUDP_UTILS_LOG_CAT, "Register %s.Server %d.%d to QML", *_uri, _major, _minor);
+    NETUDP_NAMESPACE::Server::registerToQml(*_uri, _major, _minor);
+
+    qCDebug(NETUDP_UTILS_LOG_CAT, "Register SharedDatagram to QML");
     NETUDP_NAMESPACE::Datagram::registerType();
 }
 

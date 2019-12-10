@@ -134,6 +134,27 @@ std::unique_ptr<ServerWorker> Server::createWorker() const
     return std::make_unique<ServerWorker>();
 }
 
+bool Server::sendDatagram(uint8_t* buffer, const size_t length, const QHostAddress& address, const uint16_t port,
+    const uint8_t ttl)
+{
+    auto datagram = std::make_shared<NetUdp::Datagram>();
+    const auto datagramLength = length;
+    datagram->buffer = std::make_unique<uint8_t[]>(datagramLength);
+    memcpy(datagram->buffer.get(), buffer, length);
+    datagram->length = datagramLength;
+    datagram->destination = address;
+    datagram->port = port;
+    datagram->ttl = ttl;
+
+    return sendDatagram(datagram);
+}
+
+bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
+{
+    Q_EMIT sendDatagramToWorker(std::move(datagram));
+    return true;
+}
+
 void Server::onBoundedChanged(const bool isBounded)
 {
     setIsBounded(isBounded);

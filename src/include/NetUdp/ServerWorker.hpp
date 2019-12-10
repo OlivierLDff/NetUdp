@@ -84,7 +84,7 @@ public slots:
 
     // ──────── RX ────────
 protected:
-    virtual bool isPacketValid(const uint8_t* buffer, const size_t length) const;
+    virtual bool isPacketValid(const uint8_t* buffer, const size_t length);
 
 private slots:
     void readPendingDatagrams();
