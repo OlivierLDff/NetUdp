@@ -81,6 +81,7 @@ bool Server::start()
     connect(this, &Server::watchdogPeriodMsChanged, _worker.get(), &ServerWorker::setWatchdogTimeout);
 
     connect(this, &Server::sendDatagramToWorker, _worker.get(), &ServerWorker::onSendDatagram);
+    connect(_worker.get(), &ServerWorker::receivedDatagram, this, &Server::onDatagramReceived);
 
     connect(_worker.get(), &ServerWorker::isBoundedChanged, this, &Server::onBoundedChanged);
     connect(_worker.get(), &ServerWorker::socketError, this, &Server::socketError);
@@ -142,8 +143,8 @@ bool Server::sendDatagram(uint8_t* buffer, const size_t length, const QHostAddre
     datagram->buffer = std::make_unique<uint8_t[]>(datagramLength);
     memcpy(datagram->buffer.get(), buffer, length);
     datagram->length = datagramLength;
-    datagram->destination = address;
-    datagram->port = port;
+    datagram->destinationAddress = address;
+    datagram->destinationPort = port;
     datagram->ttl = ttl;
 
     return sendDatagram(datagram);
@@ -153,6 +154,11 @@ bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
 {
     Q_EMIT sendDatagramToWorker(std::move(datagram));
     return true;
+}
+
+void Server::onDatagramReceived(const SharedDatagram datagram)
+{
+    Q_CHECK_PTR(datagram.get());
 }
 
 void Server::onBoundedChanged(const bool isBounded)

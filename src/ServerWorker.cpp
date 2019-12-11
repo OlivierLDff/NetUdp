@@ -241,7 +241,7 @@ void ServerWorker::onSendDatagram(SharedDatagram datagram)
         return;
     }
 
-    if(datagram->destination.isNull())
+    if(datagram->destinationAddress.isNull())
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send datagram to null address");
         return;
@@ -259,18 +259,18 @@ void ServerWorker::onSendDatagram(SharedDatagram datagram)
         return;
     }
 
-    quint64 bytesWritten = 0;
+    qint64 bytesWritten = 0;
 
-    if (datagram->destination.isMulticast())
+    if (datagram->destinationAddress.isMulticast())
     {
         setMulticastTtl(datagram->ttl);
         bytesWritten = _socket->writeDatagram(reinterpret_cast<const char*>(datagram->buffer.get()), datagram->length,
-                                              datagram->destination, datagram->port);
+                                              datagram->destinationAddress, datagram->destinationPort);
     }
     else
     {
         QNetworkDatagram d(QByteArray(reinterpret_cast<const char*>(datagram->buffer.get()), int(datagram->length)),
-                           datagram->destination, datagram->port);
+                           datagram->destinationAddress, datagram->destinationPort);
         if (datagram->ttl)
             d.setHopLimit(datagram->ttl);
         bytesWritten = _socket->writeDatagram(d);
@@ -279,11 +279,13 @@ void ServerWorker::onSendDatagram(SharedDatagram datagram)
     if (bytesWritten <= 0)
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error: Fail to send datagram, 0 bytes written");
+        return;
     }
 
     if (bytesWritten != datagram->length)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Fail to send datagram, %llu/%llu bytes written", bytesWritten, datagram->length);
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Fail to send datagram, %lld/%lld bytes written", bytesWritten, datagram->length);
+        return;
     }
 
     _txBytesCounter += bytesWritten;
@@ -309,8 +311,19 @@ void ServerWorker::readPendingDatagrams()
             return;
         }
 
-        //processTheDatagram(datagram);
+        SharedDatagram sharedDatagram = std::make_shared<Datagram>();
+        sharedDatagram->buffer = std::make_unique<uint8_t[]>(datagram.data().size());
+        memcpy(sharedDatagram->buffer.get(), reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size());
+        sharedDatagram->length = datagram.data().size();
+        sharedDatagram->destinationAddress = datagram.destinationAddress();
+        sharedDatagram->destinationPort = datagram.destinationPort();
+        sharedDatagram->senderAddress = datagram.senderAddress();
+        sharedDatagram->senderPort = datagram.senderPort();
+        sharedDatagram->ttl = datagram.hopLimit();
+
         _rxBytesCounter += datagram.data().size();
+
+        Q_EMIT receivedDatagram(sharedDatagram);
     }
 }
 

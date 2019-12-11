@@ -89,6 +89,8 @@ protected:
 
 private Q_SLOTS:
     void readPendingDatagrams();
+Q_SIGNALS:
+    void receivedDatagram(const SharedDatagram datagram);
 
     // ──────── STATUS ────────
 public Q_SLOTS:

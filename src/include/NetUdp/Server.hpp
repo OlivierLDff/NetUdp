@@ -57,6 +57,9 @@ public:
     virtual bool sendDatagram(uint8_t* buffer, const size_t length, const QHostAddress& address, const uint16_t port, const uint8_t ttl = 0);
     virtual bool sendDatagram(std::shared_ptr<Datagram> datagram);
 
+public Q_SLOTS:
+    virtual void onDatagramReceived(const SharedDatagram datagram);
+
     // ──────── WORKER COMMUNICATION ────────
 Q_SIGNALS:
     void startWorker();

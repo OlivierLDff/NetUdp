@@ -35,8 +35,12 @@ public:
     std::unique_ptr<uint8_t[]> buffer;
     size_t length = 0;
 
-    QHostAddress destination;
-    uint16_t port = 0;
+    QHostAddress destinationAddress;
+    uint16_t destinationPort = 0;
+
+    QHostAddress senderAddress;
+    uint16_t senderPort = 0;
+
     uint8_t ttl = 8;
 
     static void registerType();
