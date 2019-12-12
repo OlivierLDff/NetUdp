@@ -63,7 +63,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 # LOG OPTIONS
 
-message("---------------- NETUDP OPTIONS. ----------------")
+message(STATUS "---------------- NETUDP OPTIONS. ----------------")
 
 #General
 message(STATUS "NETUDP_PROJECT            : " ${NETUDP_PROJECT})
@@ -80,8 +80,8 @@ if(NETUDP_ENABLE_INSTALL)
 message(STATUS "NETUDP_INSTALL_PREFIX     : " ${NETUDP_INSTALL_PREFIX})
 endif(NETUDP_ENABLE_INSTALL)
 
-message("---------------- DONE WITH OPTIONS. -----------------")
-message("                                                     ")
+message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
+message(STATUS "                                                     ")
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                         QT5 CMAKE                                │
