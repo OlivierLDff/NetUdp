@@ -81,7 +81,6 @@ message(STATUS "NETUDP_INSTALL_PREFIX     : " ${NETUDP_INSTALL_PREFIX})
 endif(NETUDP_ENABLE_INSTALL)
 
 message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
-message(STATUS "                                                     ")
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                         QT5 CMAKE                                │
