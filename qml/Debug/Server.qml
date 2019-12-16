@@ -8,7 +8,7 @@ import QtQuick 2.12
 
 // Backend
 import Qaterial 1.0 as Qaterial
-import Stringify 1.0 as Stringify
+import Stringify.Validator 1.0 as StringifyValidator
 import NetUdp 1.0 as NetUdp
 
 Qaterial.DebugObject
@@ -94,7 +94,7 @@ Qaterial.DebugObject
                 title: qsTr("Enter Bind Ip Address"),
                 textTitle: qsTr("Ip"),
                 helperText: "Should be 0.0.0.0 for multicast input",
-                validator: Stringify.Ipv4RegexValidator,
+                validator: StringifyValidator.Ipv4,
                 inputMethodHints: Qt.ImhFormattedNumbersOnly,
                 selectAllText: true,
                 standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
@@ -119,6 +119,7 @@ Qaterial.DebugObject
                 textTitle: qsTr("Listening port"),
                 helperText: "Between 0 and 65535",
                 inputMethodHints: Qt.ImhFormattedNumbersOnly,
+                validator: StringifyValidator.SocketPort,
                 selectAllText: true,
                 standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
             })
@@ -155,7 +156,7 @@ Qaterial.DebugObject
                     },
                     title: qsTr("Enter New ip address to join"),
                     textTitle: qsTr("Ip"),
-                    validator: Stringify.Ipv4RegexValidator,
+                    validator: StringifyValidator.Ipv4,
                     inputMethodHints: Qt.ImhFormattedNumbersOnly,
                     selectAllText: true,
                     standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
@@ -183,7 +184,7 @@ Qaterial.DebugObject
                     },
                     title: qsTr("Enter ip address to leave"),
                     textTitle: qsTr("Ip"),
-                    validator: Stringify.Ipv4RegexValidator,
+                    validator: StringifyValidator.Ipv4,
                     inputMethodHints: Qt.ImhFormattedNumbersOnly,
                     selectAllText: true,
                     standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
