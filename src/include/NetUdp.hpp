@@ -13,6 +13,5 @@
 #include <NetUdp/AbstractServer.hpp>
 #include <NetUdp/Datagram.hpp>
 #include <NetUdp/Server.hpp>
-#include <NetUdp/ServerWorker.hpp>
 
 #endif // __NETUDP_HPP__
