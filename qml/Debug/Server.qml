@@ -25,7 +25,7 @@ Qaterial.DebugObject
             width: parent.width
             elide: Text.ElideRight
             textType: Qaterial.Style.TextType.Caption
-            color: root.object.isRunning ? Qaterial.Style.green : Qaterial.Style.red
+            color: root.object && root.object.isRunning ? Qaterial.Style.green : Qaterial.Style.red
         }
         Qaterial.Label
         {
@@ -33,7 +33,7 @@ Qaterial.DebugObject
             width: parent.width
             elide: Text.ElideRight
             textType: Qaterial.Style.TextType.Caption
-            color: root.object.isBounded ? Qaterial.Style.green : Qaterial.Style.red
+            color: root.object && root.object.isBounded ? Qaterial.Style.green : Qaterial.Style.red
         }
         Qaterial.Label
         {
