@@ -90,7 +90,8 @@ void ServerWorker::onStart()
     }
     else
     {
-        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error: Fail to bind to %s:%d", qPrintable(_address), _port);
+        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error: Fail to bind to %s : %d", qPrintable(_address.isEmpty() ? "Any": _address), _port);
+        _socket = nullptr;
         startWatchdog();
     }
 }
