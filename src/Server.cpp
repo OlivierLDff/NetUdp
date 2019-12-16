@@ -7,11 +7,13 @@
 // C++ Header
 
 // Qt Header
+#include <QThread>
 
 // Dependencies Header
 
 // Application Header
 #include <NetUdp/Server.hpp>
+#include <NetUdp/ServerWorker.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -34,6 +36,20 @@ Server::~Server()
     {
         _workerThread->exit();
         _workerThread->wait();
+    }
+}
+
+bool Server::inputEnabled() const
+{
+    return _inputEnabled;
+}
+
+void Server::setInputEnabled(const bool enabled)
+{
+    if (enabled != _inputEnabled)
+    {
+        _inputEnabled = enabled;
+        Q_EMIT inputEnabledChanged(enabled);
     }
 }
 
@@ -67,6 +83,7 @@ bool Server::start()
 
     _worker->_multicastInterfaceName = multicastInterfaceName();
     _worker->_multicastLoopback = multicastLoopback();
+    _worker->_inputEnabled = inputEnabled();
 
     connect(this, &Server::startWorker, _worker.get(), &ServerWorker::onStart);
     connect(this, &Server::stopWorker, _worker.get(), &ServerWorker::onStop);
@@ -78,6 +95,7 @@ bool Server::start()
     connect(this, &Server::portChanged, _worker.get(), &ServerWorker::setPort);
     connect(this, &Server::multicastLoopbackChanged, _worker.get(), &ServerWorker::setMulticastLoopback);
     connect(this, &Server::multicastInterfaceNameChanged, _worker.get(), &ServerWorker::setMulticastInterfaceName);
+    connect(this, &Server::inputEnabledChanged, _worker.get(), &ServerWorker::setInputEnabled);
     connect(this, &Server::watchdogPeriodMsChanged, _worker.get(), &ServerWorker::setWatchdogTimeout);
 
     connect(this, &Server::sendDatagramToWorker, _worker.get(), &ServerWorker::onSendDatagram);

@@ -225,6 +225,20 @@ Qaterial.DebugObject
             }
         }
 
+        Qaterial.SwitchButton
+        {
+            text: "inputEnabled"
+            checked: root.object && root.object.inputEnabled
+            width: parent.width
+            elide: Text.ElideRight
+            textType: Qaterial.Style.TextType.Caption
+            onCheckedChanged:
+            {
+                if(root.object && root.object.inputEnabled !== checked)
+                    root.object.inputEnabled = checked
+            }
+        }
+
         Qaterial.Label
         {
             text: "rxBytesPerSeconds : " + (root.object ? root.object.rxBytesPerSeconds : "")

@@ -52,6 +52,7 @@ private:
     QString _multicastInterfaceName;
     bool _multicastLoopback = false;
     quint8 _multicastTtl = 0;
+    bool _inputEnabled = 0;
 
     // ──────── STATUS CONTROL ────────
 public Q_SLOTS:
@@ -71,6 +72,7 @@ public Q_SLOTS:
     void leaveMulticastGroup(const QString address);
     void setMulticastInterfaceName(const QString name);
     void setMulticastLoopback(const bool loopback);
+    void setInputEnabled(const bool enabled);
 
 private:
     void setMulticastInterfaceNameToSocket() const;

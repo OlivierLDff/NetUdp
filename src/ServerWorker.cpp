@@ -73,7 +73,7 @@ void ServerWorker::onStart()
     connect(_watchdog.get(), &QTimer::timeout, this, &ServerWorker::onWatchdogTimeout);
 
     // ) Bind to socket
-    const bool bindSuccess = _socket->bind(QHostAddress(_address), _port, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+    const bool bindSuccess = _inputEnabled ? _socket->bind(QHostAddress(_address), _port, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint) : _socket->bind();
 
     if (bindSuccess)
     {
@@ -83,8 +83,11 @@ void ServerWorker::onStart()
             qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success bind to %s: %d", qPrintable(_address), _port);
         setMulticastInterfaceNameToSocket();
         setMulticastLoopbackToSocket();
-        for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
-            it.value() = _socket->joinMulticastGroup(QHostAddress(it.key()));
+        if(_inputEnabled)
+        {
+            for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
+                it.value() = _socket->joinMulticastGroup(QHostAddress(it.key()));            
+        }
 
         startBytesCounter();
     }
@@ -144,6 +147,9 @@ void ServerWorker::joinMulticastGroup(const QString address)
 {
     qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Join Multicast group %s", qPrintable(address));
 
+    if (!_inputEnabled)
+        return;
+
     const auto hostAddress = QHostAddress(address);
     if (!address.isEmpty() && hostAddress.isMulticast())
     {
@@ -189,6 +195,15 @@ void ServerWorker::setMulticastLoopback(const bool loopback)
     }
 }
 
+void ServerWorker::setInputEnabled(const bool enabled)
+{
+    if(enabled != _inputEnabled)
+    {
+        _inputEnabled = enabled;
+        onRestart();
+    }
+}
+
 void ServerWorker::setMulticastInterfaceNameToSocket() const
 {
     if (_socket)
@@ -197,7 +212,7 @@ void ServerWorker::setMulticastInterfaceNameToSocket() const
 
 void ServerWorker::setMulticastLoopbackToSocket() const
 {
-    if (_socket)
+    if (_socket && _inputEnabled)
         _socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback);
 }
 

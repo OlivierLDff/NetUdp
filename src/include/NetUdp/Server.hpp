@@ -11,7 +11,6 @@
 
 // Qt Header
 #include <QObject>
-#include <QThread>
 
 // Dependencies Header
 
@@ -19,13 +18,14 @@
 #include <NetUdp/Export.hpp>
 #include <NetUdp/Datagram.hpp>
 #include <NetUdp/AbstractServer.hpp>
-#include <NetUdp/ServerWorker.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
 NETUDP_NAMESPACE_START
+
+class ServerWorker;
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
@@ -45,6 +45,18 @@ public:
 protected:
     std::unique_ptr<ServerWorker> _worker;
     std::unique_ptr<QThread> _workerThread;
+
+    // ──────── INPUT / OUTPUT ────────
+protected:
+    Q_PROPERTY(bool inputEnabled READ inputEnabled WRITE setInputEnabled NOTIFY inputEnabledChanged);
+private:
+    bool _inputEnabled = true;
+public:
+    bool inputEnabled() const;
+    void setInputEnabled(const bool enabled);
+
+Q_SIGNALS:
+    void inputEnabledChanged(bool enabled);
 
     // ──────── C++ API ────────
 public:
