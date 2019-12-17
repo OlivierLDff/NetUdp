@@ -8,6 +8,7 @@
 
 // Qt Header
 #include <QThread>
+#include <QLoggingCategory>
 
 // Dependencies Header
 
@@ -18,6 +19,8 @@
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
+
+Q_LOGGING_CATEGORY(NETUDP_SERVER_LOGCAT, "net.udp.server")
 
 NETUDP_USING_NAMESPACE;
 
@@ -156,6 +159,27 @@ std::unique_ptr<ServerWorker> Server::createWorker() const
 bool Server::sendDatagram(uint8_t* buffer, const size_t length, const QHostAddress& address, const uint16_t port,
     const uint8_t ttl)
 {
+    if (!isRunning() && !isBounded())
+    {
+        if (!isRunning())
+            qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Udp Server isn't running");
+        else if (!isBounded())
+            qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Udp Server isn't bounded to any interfaces.");
+        return false;
+    }
+
+    if (length <= 0)
+    {
+        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the length is <= 0");
+        return false;
+    }
+
+    if (ttl == 0)
+    {
+        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Ttl is 0");
+        return false;
+    }
+
     auto datagram = std::make_shared<NetUdp::Datagram>();
     const auto datagramLength = length;
     datagram->buffer = std::make_unique<uint8_t[]>(datagramLength);
@@ -165,12 +189,36 @@ bool Server::sendDatagram(uint8_t* buffer, const size_t length, const QHostAddre
     datagram->destinationPort = port;
     datagram->ttl = ttl;
 
-    return sendDatagram(datagram);
+    Q_EMIT sendDatagramToWorker(std::move(datagram));
+
+    return true;
 }
 
 bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
 {
+    if (!isRunning() && !isBounded())
+    {
+        if (!isRunning())
+            qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Udp Server isn't running");
+        else if (!isBounded())
+            qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Udp Server isn't bounded to any interfaces.");
+        return false;
+    }
+
+    if (datagram->length <= 0)
+    {
+        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the length is <= 0");
+        return false;
+    }
+
+    if (datagram->ttl == 0)
+    {
+        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Ttl is 0");
+        return false;
+    }
+
     Q_EMIT sendDatagramToWorker(std::move(datagram));
+
     return true;
 }
 

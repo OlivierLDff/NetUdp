@@ -22,7 +22,7 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-Q_LOGGING_CATEGORY(NETUDP_SERVERWORKER_LOGCAT, "netudp.server.worker")
+Q_LOGGING_CATEGORY(NETUDP_SERVERWORKER_LOGCAT, "net.udp.server.worker")
 
 NETUDP_USING_NAMESPACE;
 
@@ -86,7 +86,7 @@ void ServerWorker::onStart()
         if(_inputEnabled)
         {
             for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
-                it.value() = _socket->joinMulticastGroup(QHostAddress(it.key()));            
+                it.value() = _socket->joinMulticastGroup(QHostAddress(it.key()));
         }
 
         startBytesCounter();
