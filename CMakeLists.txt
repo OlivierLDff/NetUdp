@@ -15,6 +15,9 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 set(QSUPERMACROS_REPOSITORY "https://github.com/OlivierLDff/QSuperMacros" CACHE STRING "Repository of QSuperMacros")
 set(QSUPERMACROS_TAG "master" CACHE STRING "Git tag/branch of QSuperMacros")
 
+set(STRINGIFY_REPOSITORY "https://github.com/OlivierLDff/Stringify" CACHE STRING "Repository of Stringify")
+set(STRINGIFY_TAG "master" CACHE STRING "Git tag/branch of Stringify")
+
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                       PROJECT SETTINGS                           │
 # └──────────────────────────────────────────────────────────────────┘
@@ -100,13 +103,20 @@ endif() # NETUDP_ENABLE_QML
 include(FetchContent)
 
 # QSuperMacros
+set(QSUPERMACROS_FOLDER_PREFIX "Dependencies/QSuperMacros" CACHE STRING "")
 FetchContent_Declare(
     QSuperMacros
     GIT_REPOSITORY ${QSUPERMACROS_REPOSITORY}
     GIT_TAG        ${QSUPERMACROS_TAG}
 )
 
-set(QSUPERMACROS_FOLDER_PREFIX "Dependencies/QSuperMacros" CACHE STRING "")
+# Stringify
+set(STRINGIFY_FOLDER_PREFIX "Dependencies/Stringify" CACHE STRING "")
+FetchContent_Declare(
+    Stringify
+    GIT_REPOSITORY ${STRINGIFY_REPOSITORY}
+    GIT_TAG        ${STRINGIFY_TAG}
+)
 
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 set(FETCHCONTENT_QUIET ON)
@@ -213,7 +223,7 @@ target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_IN
 set_target_properties(${NETUDP_TARGET} PROPERTIES PREFIX "")
 
 # Link libraries
-target_link_libraries(${NETUDP_TARGET} ${QSUPERMACROS_TARGET})
+target_link_libraries(${NETUDP_TARGET} QSuperMacros Stringify)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)
