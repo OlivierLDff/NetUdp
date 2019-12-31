@@ -44,6 +44,22 @@ public:
     uint8_t ttl = 8;
 
     static void registerType();
+
+    static std::shared_ptr<Datagram> makeDatagram() { return std::make_shared<Datagram>(); }
+
+    void setBufferSize(size_t length)
+    {
+        if(length <= 0)
+        {
+            this->length = 0;
+            buffer = nullptr;
+        }
+        else
+        {
+            this->length = length;
+            buffer = std::make_unique<uint8_t[]>(length);
+        }
+    }
 };
 
 typedef std::shared_ptr<Datagram> SharedDatagram;

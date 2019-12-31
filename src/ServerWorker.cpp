@@ -206,8 +206,12 @@ void ServerWorker::setInputEnabled(const bool enabled)
 
 void ServerWorker::setMulticastInterfaceNameToSocket() const
 {
-    if (_socket)
-        _socket->setMulticastInterface(QNetworkInterface::interfaceFromName(_multicastInterfaceName));
+    if (_socket && _multicastInterfaceName.isEmpty())
+    {
+        const auto iface = QNetworkInterface::interfaceFromName(_multicastInterfaceName);
+        if(iface.isValid())
+            _socket->setMulticastInterface(iface);
+    }
 }
 
 void ServerWorker::setMulticastLoopbackToSocket() const
@@ -238,7 +242,7 @@ void ServerWorker::setMulticastTtl(const quint8 ttl)
 
     if (ttl != _multicastTtl)
     {
-        _socket->setSocketOption(QAbstractSocket::MulticastTtlOption, ttl);
+        _socket->setSocketOption(QAbstractSocket::MulticastTtlOption, int(ttl));
         _multicastTtl = ttl;
     }
 }
