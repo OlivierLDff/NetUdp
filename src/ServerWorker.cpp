@@ -232,17 +232,10 @@ void ServerWorker::setMulticastInterfaceNameToSocket() const
     if (_socket && _multicastInterface.isValid())
     {
         qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Set outgoing interface %s for multicast packets", qPrintable(_multicastInterface.name()));
-        for(const auto& it : QNetworkInterface::allInterfaces())
-        {
-            if(it.name() == _multicastInterface.name())
-            {
-                _socket->setMulticastInterface(it);
-
-                const auto i = _socket->multicastInterface();
-                qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Current iface: %s for multicast packets", qPrintable(i.name()));
-
-            }
-        }
+        _socket->setMulticastInterface(_multicastInterface);
+        const auto i = _socket->multicastInterface();
+        if (!i.isValid())
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't use %s for output multicast packet", qPrintable(_multicastInterface.name()));            
     }
 }
 
