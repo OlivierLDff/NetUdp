@@ -122,24 +122,12 @@ void ServerWorker::onStop()
 
     stopBytesCounter();
 
-    for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
-    {
-        bool successLeave = false;
-        if (_multicastInterface.isValid())
-            successLeave = _socket->leaveMulticastGroup(QHostAddress(it.key()), _multicastInterface);
-        else
-            successLeave = _socket->leaveMulticastGroup(QHostAddress(it.key()));
-        if(successLeave)
-            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Leave multicast group %s", qPrintable(it.key()));
-        else
-            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to leave multicast group %s", qPrintable(it.key()));
-
-        it.value() = false;
-    }
-
     _watchdog = nullptr;
     _socket = nullptr;
     _multicastTtl = 0;
+
+    for(auto& it: _multicastGroups)
+        it = false;
 }
 
 void ServerWorker::setWatchdogTimeout(const quint64 ms)
