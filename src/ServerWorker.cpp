@@ -279,31 +279,31 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
 {
     if (!datagram)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send null datagram");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send null datagram");
         return;
     }
 
     if (!_socket)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send a datagram when the socket is null");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send a datagram when the socket is null");
         return;
     }
 
     if(datagram->destinationAddress.isNull())
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send datagram to null address");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send datagram to null address");
         return;
     }
 
     if (!datagram->buffer)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send datagram with empty buffer");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send datagram with empty buffer");
         return;
     }
 
     if (!datagram->length)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send datagram with data length to 0");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send datagram with data length to 0");
         return;
     }
 
@@ -332,7 +332,7 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
 
     if (bytesWritten != datagram->length)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Fail to send datagram, %lld/%lld bytes written", bytesWritten, int64_t(datagram->length));
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to send datagram, %lld/%lld bytes written", bytesWritten, int64_t(datagram->length));
         return;
     }
 
