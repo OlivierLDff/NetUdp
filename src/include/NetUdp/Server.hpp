@@ -62,6 +62,7 @@ Q_SIGNALS:
 public:
     Q_INVOKABLE bool start() override;
     Q_INVOKABLE bool stop() override;
+    Q_INVOKABLE bool restart() override;
     Q_INVOKABLE bool joinMulticastGroup(const QString& groupAddress) override final;
     Q_INVOKABLE bool leaveMulticastGroup(const QString& groupAddress) override final;
     virtual std::unique_ptr<ServerWorker> createWorker() const;
@@ -76,6 +77,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void startWorker();
     void stopWorker();
+    void restartWorker();
     void joinMulticastGroupWorker(const QString address);
     void leaveMulticastGroupWorker(const QString address);
     void sendDatagramToWorker(SharedDatagram datagram);

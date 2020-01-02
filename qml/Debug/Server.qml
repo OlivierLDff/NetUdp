@@ -211,31 +211,35 @@ Qaterial.DebugObject
                 standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
             })
         }
-        Qaterial.SwitchButton
+        Row
         {
-            text: "multicastLoopback"
-            checked: root.object && root.object.multicastLoopback
             width: parent.width
-            elide: Text.ElideRight
-            textType: Qaterial.Style.TextType.Caption
-            onCheckedChanged:
+            Qaterial.SwitchButton
             {
-                if(root.object && root.object.multicastLoopback !== checked)
-                    root.object.multicastLoopback = checked
+                text: "multicastLoopback"
+                implicitHeight: 32
+                checked: root.object && root.object.multicastLoopback
+                elide: Text.ElideRight
+                textType: Qaterial.Style.TextType.Caption
+                onCheckedChanged:
+                {
+                    if(root.object && root.object.multicastLoopback !== checked)
+                        root.object.multicastLoopback = checked
+                }
             }
-        }
 
-        Qaterial.SwitchButton
-        {
-            text: "inputEnabled"
-            checked: root.object && root.object.inputEnabled
-            width: parent.width
-            elide: Text.ElideRight
-            textType: Qaterial.Style.TextType.Caption
-            onCheckedChanged:
+            Qaterial.SwitchButton
             {
-                if(root.object && root.object.inputEnabled !== checked)
-                    root.object.inputEnabled = checked
+                text: "inputEnabled"
+                implicitHeight: 32
+                checked: root.object && root.object.inputEnabled
+                elide: Text.ElideRight
+                textType: Qaterial.Style.TextType.Caption
+                onCheckedChanged:
+                {
+                    if(root.object && root.object.inputEnabled !== checked)
+                        root.object.inputEnabled = checked
+                }
             }
         }
 
@@ -271,21 +275,40 @@ Qaterial.DebugObject
             textType: Qaterial.Style.TextType.Caption
         }
 
-        Qaterial.FlatButton
+        Row
         {
-            topInset: 0
-            bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
-            backgroundImplicitHeight: 20
-            text: root.object && root.object.isRunning ? "Stop" : "Start"
-            onClicked:
+            Qaterial.FlatButton
             {
-                if(root.object)
+                topInset: 0
+                bottomInset: 0
+                textType: Qaterial.Style.TextType.Caption
+                backgroundImplicitHeight: 20
+                text: root.object && root.object.isRunning ? "Stop" : "Start"
+                onClicked:
                 {
-                    if(root.object.isRunning)
-                        root.object.stop()
-                    else
-                        root.object.start()
+                    if(root.object)
+                    {
+                        if(root.object.isRunning)
+                            root.object.stop()
+                        else
+                            root.object.start()
+                    }
+                }
+            }
+            Qaterial.FlatButton
+            {
+                topInset: 0
+                bottomInset: 0
+                textType: Qaterial.Style.TextType.Caption
+                backgroundImplicitHeight: 20
+                text: root.object && "Restart"
+                enabled: root.object && root.object.isRunning
+                onClicked:
+                {
+                    if(root.object)
+                    {
+                        root.object.restart()
+                    }
                 }
             }
         }

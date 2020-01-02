@@ -81,6 +81,12 @@ bool AbstractServer::stop()
     return true;
 }
 
+bool AbstractServer::restart()
+{
+    stop();
+    return start();
+}
+
 bool AbstractServer::joinMulticastGroup(const QString& groupAddress)
 {
     // ) Check that the address isn't already registered

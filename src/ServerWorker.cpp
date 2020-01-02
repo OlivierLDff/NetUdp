@@ -10,7 +10,7 @@
 #include <QLoggingCategory>
 #include <QTimer>
 #include <QUdpSocket>
-#include <QNetworkInterface>
+#include <QCoreApplication>
 #include <QNetworkDatagram>
 
 // Dependencies Header
@@ -48,7 +48,7 @@ void ServerWorker::onStart()
 {
     if (_socket)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error: Can't start udp server worker because socket is already valid");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't start udp server worker because socket is already valid");
         return;
     }
 
@@ -57,7 +57,7 @@ void ServerWorker::onStart()
     _isBounded = false;
 
     // ) Create the socket
-    _socket = std::make_unique<QUdpSocket>();
+    _socket = std::make_unique<QUdpSocket>(this);
 
     // ) Connect to socket signals
     connect(_socket.get(), &QUdpSocket::readyRead, this, &ServerWorker::readPendingDatagrams);
@@ -73,7 +73,12 @@ void ServerWorker::onStart()
     connect(_watchdog.get(), &QTimer::timeout, this, &ServerWorker::onWatchdogTimeout);
 
     // ) Bind to socket
-    const bool bindSuccess = _inputEnabled ? _socket->bind(QHostAddress(_address), _port, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint) : _socket->bind();
+    // When only in output mode, calling _socket->bind() doesn't allow to set multicast ttl.
+    // But calling _socket->bind(QHostAddress()) allow to set the ttl.
+    // From what i understand, _socket->bind() will call _socket->bind(QHostAddress::Any) internally.
+    // _socket->bind(QHostAddress()) bind to a non valid host address and random port will be choose.
+    // Qt multicast issues are non resolved ? https://forum.qt.io/topic/78090/multicast-issue-possible-bug/17
+    const bool bindSuccess = _inputEnabled ? _socket->bind(QHostAddress(_address), _port, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint) : _socket->bind(QHostAddress(_address), 0, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
 
     if (bindSuccess)
     {
@@ -86,14 +91,20 @@ void ServerWorker::onStart()
         if(_inputEnabled)
         {
             for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
-                it.value() = _socket->joinMulticastGroup(QHostAddress(it.key()));
+            {
+                it.value() = _multicastInterface.isValid() ? _socket->joinMulticastGroup(QHostAddress(it.key()), _multicastInterface) : _socket->joinMulticastGroup(QHostAddress(it.key()));
+                if (it.value())
+                    qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success join multicast group %s", qPrintable(it.key()));
+                else
+                    qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to join multicast group %s", qPrintable(it.key()));
+            }
         }
 
         startBytesCounter();
     }
     else
     {
-        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error: Fail to bind to %s : %d", qPrintable(_address.isEmpty() ? "Any": _address), _port);
+        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to bind to %s : %d", qPrintable(_address.isEmpty() ? "Any": _address), _port);
         _socket = nullptr;
         startWatchdog();
     }
@@ -103,7 +114,7 @@ void ServerWorker::onStop()
 {
     if (!_socket)
     {
-        qDebug("Error: Can't stop udp server worker because socket isn't valid");
+        qDebug("Error : Can't stop udp server worker because socket isn't valid");
         return;
     }
 
@@ -111,12 +122,24 @@ void ServerWorker::onStop()
 
     stopBytesCounter();
 
+    for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
+    {
+        bool successLeave = false;
+        if (_multicastInterface.isValid())
+            successLeave = _socket->leaveMulticastGroup(QHostAddress(it.key()), _multicastInterface);
+        else
+            successLeave = _socket->leaveMulticastGroup(QHostAddress(it.key()));
+        if(successLeave)
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Leave multicast group %s", qPrintable(it.key()));
+        else
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to leave multicast group %s", qPrintable(it.key()));
+
+        it.value() = false;
+    }
+
     _watchdog = nullptr;
     _socket = nullptr;
     _multicastTtl = 0;
-
-    for (auto it : _multicastGroups)
-        it = false;
 }
 
 void ServerWorker::setWatchdogTimeout(const quint64 ms)
@@ -125,7 +148,7 @@ void ServerWorker::setWatchdogTimeout(const quint64 ms)
         _watchdogTimeout = ms;
 }
 
-void ServerWorker::setAddress(const QString address)
+void ServerWorker::setAddress(const QString& address)
 {
     if (address != _address)
     {
@@ -143,7 +166,7 @@ void ServerWorker::setPort(const quint16 port)
     }
 }
 
-void ServerWorker::joinMulticastGroup(const QString address)
+void ServerWorker::joinMulticastGroup(const QString& address)
 {
     qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Join Multicast group %s", qPrintable(address));
 
@@ -155,32 +178,32 @@ void ServerWorker::joinMulticastGroup(const QString address)
     {
         if (!_multicastGroups.contains(address))
         {
-            const bool successJoin = _socket && _socket->joinMulticastGroup(hostAddress);
+            const bool successJoin = _socket && (_multicastInterface.isValid() ? _socket->joinMulticastGroup(hostAddress, _multicastInterface) : _socket->joinMulticastGroup(hostAddress));
             _multicastGroups.insert(address, successJoin);
         }
     }
 }
 
-void ServerWorker::leaveMulticastGroup(const QString address)
+void ServerWorker::leaveMulticastGroup(const QString& address)
 {
     qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Leave Multicast group %s", qPrintable(address));
 
     if (_multicastGroups.contains(address))
     {
-        const bool successLeave = _socket && _socket->leaveMulticastGroup(QHostAddress(address));
+        const bool successLeave = _socket && (_multicastInterface.isValid() ? _socket->leaveMulticastGroup(QHostAddress(address), _multicastInterface) : _socket->leaveMulticastGroup(QHostAddress(address)));
         _multicastGroups.remove(address);
     }
 }
 
-void ServerWorker::setMulticastInterfaceName(const QString name)
+void ServerWorker::setMulticastInterfaceName(const QString& name)
 {
     qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Set Multicast Interface Name : %s", qPrintable(name));
 
-    if (_multicastInterfaceName != name)
+    if (name != _multicastInterface.name())
     {
-        _multicastInterfaceName = name;
-        if (_socket)
-            _socket->setMulticastInterface(QNetworkInterface::interfaceFromName(name));
+        const auto iface = QNetworkInterface::interfaceFromName(name);
+        _multicastInterface = iface;
+        onRestart();
     }
 }
 
@@ -206,18 +229,30 @@ void ServerWorker::setInputEnabled(const bool enabled)
 
 void ServerWorker::setMulticastInterfaceNameToSocket() const
 {
-    if (_socket && _multicastInterfaceName.isEmpty())
+    if (_socket && _multicastInterface.isValid())
     {
-        const auto iface = QNetworkInterface::interfaceFromName(_multicastInterfaceName);
-        if(iface.isValid())
-            _socket->setMulticastInterface(iface);
+        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Set outgoing interface %s for multicast packets", qPrintable(_multicastInterface.name()));
+        for(const auto& it : QNetworkInterface::allInterfaces())
+        {
+            if(it.name() == _multicastInterface.name())
+            {
+                _socket->setMulticastInterface(it);
+
+                const auto i = _socket->multicastInterface();
+                qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Current iface: %s for multicast packets", qPrintable(i.name()));
+
+            }
+        }
     }
 }
 
 void ServerWorker::setMulticastLoopbackToSocket() const
 {
     if (_socket && _inputEnabled)
+    {
+        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Set MulticastLoopbackOption to %d", int(_multicastLoopback));
         _socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback);
+    }
 }
 
 void ServerWorker::startWatchdog() const
@@ -247,39 +282,49 @@ void ServerWorker::setMulticastTtl(const quint8 ttl)
     }
 }
 
-void ServerWorker::onSendDatagram(SharedDatagram datagram)
+void ServerWorker::onSendDatagram(const SharedDatagram datagram)
 {
     if (!datagram)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send null datagram");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send null datagram");
         return;
     }
 
     if (!_socket)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send a datagram when the socket is null");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send a datagram when the socket is null");
         return;
     }
 
     if(datagram->destinationAddress.isNull())
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send datagram to null address");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send datagram to null address");
         return;
     }
 
     if (!datagram->buffer)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send datagram with empty buffer");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send datagram with empty buffer");
         return;
     }
 
     if (!datagram->length)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Can't send datagram with data length to 0");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Can't send datagram with data length to 0");
         return;
     }
 
     qint64 bytesWritten = 0;
+    /*if (_inputEnabled)
+    {
+        for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
+        {
+            if (it.value())
+                qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success join multicast group %s", qPrintable(it.key()));
+            else
+                qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to join multicast group %s", qPrintable(it.key()));
+        }
+    }*/
 
     if (datagram->destinationAddress.isMulticast())
     {
@@ -298,13 +343,13 @@ void ServerWorker::onSendDatagram(SharedDatagram datagram)
 
     if (bytesWritten <= 0)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error: Fail to send datagram, 0 bytes written");
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to send datagram, 0 bytes written");
         return;
     }
 
     if (bytesWritten != datagram->length)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error:  Fail to send datagram, %lld/%lld bytes written", bytesWritten, int64_t(datagram->length));
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error :  Fail to send datagram, %lld/%lld bytes written", bytesWritten, int64_t(datagram->length));
         return;
     }
 
@@ -351,7 +396,7 @@ void ServerWorker::onSocketError(QAbstractSocket::SocketError error)
 {
     if (_socket)
     {
-        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error: Socket Error (%d) : %s",
+        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Socket Error (%d) : %s",
                error, qPrintable(_socket->errorString()));
 
         Q_EMIT socketError(error, _socket->errorString());
@@ -404,6 +449,8 @@ void ServerWorker::startBytesCounter()
 
 void ServerWorker::stopBytesCounter()
 {
+    Q_EMIT rxBytesCounterChanged(0);
+    Q_EMIT txBytesCounterChanged(0);
     _bytesCounterTimer = nullptr;
 }
 

@@ -87,6 +87,7 @@ protected:
 public:
     Q_INVOKABLE virtual bool start();
     Q_INVOKABLE virtual bool stop();
+    Q_INVOKABLE virtual bool restart();
 
     Q_INVOKABLE virtual bool joinMulticastGroup(const QString& groupAddress);
 

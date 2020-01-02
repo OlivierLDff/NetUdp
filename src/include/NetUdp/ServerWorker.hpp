@@ -11,6 +11,7 @@
 
 // Qt Header
 #include <QObject>
+#include <QNetworkInterface>
 
 // Dependencies Header
 
@@ -49,10 +50,10 @@ private:
     QString _address;
     quint16 _port = 0;
     QMap<QString, bool> _multicastGroups;
-    QString _multicastInterfaceName;
+    QNetworkInterface _multicastInterface;
     bool _multicastLoopback = false;
     quint8 _multicastTtl = 0;
-    bool _inputEnabled = 0;
+    bool _inputEnabled = false;
 
     // ──────── STATUS CONTROL ────────
 public Q_SLOTS:
@@ -66,11 +67,11 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void setWatchdogTimeout(const quint64 ms);
-    void setAddress(const QString address);
+    void setAddress(const QString& address);
     void setPort(const quint16 port);
-    void joinMulticastGroup(const QString address);
-    void leaveMulticastGroup(const QString address);
-    void setMulticastInterfaceName(const QString name);
+    void joinMulticastGroup(const QString& address);
+    void leaveMulticastGroup(const QString& address);
+    void setMulticastInterfaceName(const QString& name);
     void setMulticastLoopback(const bool loopback);
     void setInputEnabled(const bool enabled);
 

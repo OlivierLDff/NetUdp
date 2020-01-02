@@ -84,12 +84,13 @@ bool Server::start()
     for (const auto& it : multicastGroupsSet())
         _worker->_multicastGroups.insert(it, false);
 
-    _worker->_multicastInterfaceName = multicastInterfaceName();
+    _worker->_multicastInterface = QNetworkInterface::interfaceFromName(multicastInterfaceName());
     _worker->_multicastLoopback = multicastLoopback();
     _worker->_inputEnabled = inputEnabled();
 
     connect(this, &Server::startWorker, _worker.get(), &ServerWorker::onStart);
     connect(this, &Server::stopWorker, _worker.get(), &ServerWorker::onStop);
+    connect(this, &Server::restartWorker, _worker.get(), &ServerWorker::onRestart);
 
     connect(this, &Server::joinMulticastGroupWorker, _worker.get(), &ServerWorker::joinMulticastGroup);
     connect(this, &Server::leaveMulticastGroupWorker, _worker.get(), &ServerWorker::leaveMulticastGroup);
@@ -124,10 +125,19 @@ bool Server::stop()
 
     Q_EMIT stopWorker();
 
+    setRxBytesPerSeconds(0);
+    setTxBytesPerSeconds(0);
+
     _workerThread->exit();
     _workerThread->wait();
     _workerThread = nullptr;
 
+    return true;
+}
+
+bool Server::restart()
+{
+    Q_EMIT restartWorker();
     return true;
 }
 
