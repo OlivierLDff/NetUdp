@@ -235,7 +235,7 @@ void ServerWorker::setMulticastInterfaceNameToSocket() const
         _socket->setMulticastInterface(_multicastInterface);
         const auto i = _socket->multicastInterface();
         if (!i.isValid())
-            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't use %s for output multicast packet", qPrintable(_multicastInterface.name()));            
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't use %s for output multicast packet", qPrintable(_multicastInterface.name()));
     }
 }
 
@@ -308,16 +308,6 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
     }
 
     qint64 bytesWritten = 0;
-    /*if (_inputEnabled)
-    {
-        for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
-        {
-            if (it.value())
-                qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success join multicast group %s", qPrintable(it.key()));
-            else
-                qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to join multicast group %s", qPrintable(it.key()));
-        }
-    }*/
 
     if (datagram->destinationAddress.isMulticast())
     {
