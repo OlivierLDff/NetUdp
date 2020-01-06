@@ -243,37 +243,63 @@ Qaterial.DebugObject
             }
         }
 
-        Qaterial.Label
+        Row
         {
-            text: "rxBytesPerSeconds : " + (root.object ? root.object.rxBytesPerSeconds : "")
-            width: parent.width
-            elide: Text.ElideRight
-            textType: Qaterial.Style.TextType.Caption
+            spacing: 10
+            Column
+            {
+                Qaterial.Label
+                {
+                    text: "rxBytesPerSeconds : " + (root.object ? root.object.rxBytesPerSeconds : "")
+                    textType: Qaterial.Style.TextType.Caption
+                }
+
+                Qaterial.Label
+                {
+                    text: "txBytesPerSeconds : " + (root.object ? root.object.txBytesPerSeconds : "")
+                    textType: Qaterial.Style.TextType.Caption
+                }
+
+                Qaterial.Label
+                {
+                    text: "rxBytesTotal : " + (root.object ? root.object.rxBytesTotal : "")
+                    textType: Qaterial.Style.TextType.Caption
+                }
+
+                Qaterial.Label
+                {
+                    text: "txBytesTotal : " + (root.object ? root.object.txBytesTotal : "")
+                    textType: Qaterial.Style.TextType.Caption
+                }
+            }
+            Column
+            {
+                Qaterial.Label
+                {
+                    text: "rxPacketsPerSeconds : " + (root.object ? root.object.rxPacketsPerSeconds : "")
+                    textType: Qaterial.Style.TextType.Caption
+                }
+
+                Qaterial.Label
+                {
+                    text: "txPacketsPerSeconds : " + (root.object ? root.object.txPacketsPerSeconds : "")
+                    textType: Qaterial.Style.TextType.Caption
+                }
+
+                Qaterial.Label
+                {
+                    text: "rxPacketsTotal : " + (root.object ? root.object.rxPacketsTotal : "")
+                    textType: Qaterial.Style.TextType.Caption
+                }
+
+                Qaterial.Label
+                {
+                    text: "txPacketsTotal : " + (root.object ? root.object.txPacketsTotal : "")
+                    textType: Qaterial.Style.TextType.Caption
+                }
+            }
         }
 
-        Qaterial.Label
-        {
-            text: "txBytesPerSeconds : " + (root.object ? root.object.txBytesPerSeconds : "")
-            width: parent.width
-            elide: Text.ElideRight
-            textType: Qaterial.Style.TextType.Caption
-        }
-
-        Qaterial.Label
-        {
-            text: "rxBytesTotal : " + (root.object ? root.object.rxBytesTotal : "")
-            width: parent.width
-            elide: Text.ElideRight
-            textType: Qaterial.Style.TextType.Caption
-        }
-
-        Qaterial.Label
-        {
-            text: "txBytesTotal : " + (root.object ? root.object.txBytesTotal : "")
-            width: parent.width
-            elide: Text.ElideRight
-            textType: Qaterial.Style.TextType.Caption
-        }
 
         Row
         {

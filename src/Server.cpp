@@ -110,6 +110,8 @@ bool Server::start()
 
     connect(_worker.get(), &ServerWorker::rxBytesCounterChanged, this, &Server::onWorkerRxPerSecondsChanged);
     connect(_worker.get(), &ServerWorker::txBytesCounterChanged, this, &Server::onWorkerTxPerSecondsChanged);
+    connect(_worker.get(), &ServerWorker::rxPacketsCounterChanged, this, &Server::onWorkerPacketsRxPerSecondsChanged);
+    connect(_worker.get(), &ServerWorker::txPacketsCounterChanged, this, &Server::onWorkerPacketsTxPerSecondsChanged);
 
     _workerThread->start();
 
@@ -127,6 +129,9 @@ bool Server::stop()
 
     setRxBytesPerSeconds(0);
     setTxBytesPerSeconds(0);
+
+    setRxPacketsPerSeconds(0);
+    setTxPacketsPerSeconds(0);
 
     _workerThread->exit();
     _workerThread->wait();
@@ -252,4 +257,16 @@ void Server::onWorkerTxPerSecondsChanged(const quint64 txBytes)
 {
     setTxBytesPerSeconds(txBytes);
     setTxBytesTotal(txBytesTotal() + txBytes);
+}
+
+void Server::onWorkerPacketsRxPerSecondsChanged(const quint64 rxPackets)
+{
+    setRxPacketsPerSeconds(rxPackets);
+    setRxPacketsTotal(rxPacketsTotal() + rxPackets);
+}
+
+void Server::onWorkerPacketsTxPerSecondsChanged(const quint64 txPackets)
+{
+    setTxPacketsPerSeconds(txPackets);
+    setTxPacketsTotal(txPacketsTotal() + txPackets);
 }

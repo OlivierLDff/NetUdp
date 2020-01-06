@@ -69,7 +69,6 @@ private:
     QString _multicastInterfaceName;
 public:
     QString multicastInterfaceName() const;
-
     bool setMulticastInterfaceName(const QString& name);
 Q_SIGNALS:
     void multicastInterfaceNameChanged(const QString name);
@@ -77,22 +76,26 @@ Q_SIGNALS:
 protected:
     QSM_WRITABLE_AUTO_PROPERTY(bool, multicastLoopback, MulticastLoopback);
 
-    // ──────── ATTRIBUTE STATUS ────────
+    // ──────── STATUS ────────
 protected:
-    QSM_WRITABLE_AUTO_PROPERTY(quint64, rxBytesPerSeconds, RxBytesPerSeconds);
-    QSM_WRITABLE_AUTO_PROPERTY(quint64, txBytesPerSeconds, TxBytesPerSeconds);
-    QSM_WRITABLE_AUTO_PROPERTY(quint64, rxBytesTotal, RxBytesTotal);
-    QSM_WRITABLE_AUTO_PROPERTY(quint64, txBytesTotal, TxBytesTotal);
+    QSM_READONLY_AUTO_PROPERTY(quint64, rxBytesPerSeconds, RxBytesPerSeconds);
+    QSM_READONLY_AUTO_PROPERTY(quint64, txBytesPerSeconds, TxBytesPerSeconds);
+    QSM_READONLY_AUTO_PROPERTY(quint64, rxBytesTotal, RxBytesTotal);
+    QSM_READONLY_AUTO_PROPERTY(quint64, txBytesTotal, TxBytesTotal);
 
+    QSM_READONLY_AUTO_PROPERTY(quint64, rxPacketsPerSeconds, RxPacketsPerSeconds);
+    QSM_READONLY_AUTO_PROPERTY(quint64, txPacketsPerSeconds, TxPacketsPerSeconds);
+    QSM_READONLY_AUTO_PROPERTY(quint64, rxPacketsTotal, RxPacketsTotal);
+    QSM_READONLY_AUTO_PROPERTY(quint64, txPacketsTotal, TxPacketsTotal);
+
+    // ──────── C++ API ────────
 public:
     Q_INVOKABLE virtual bool start();
     Q_INVOKABLE virtual bool stop();
     Q_INVOKABLE virtual bool restart();
 
     Q_INVOKABLE virtual bool joinMulticastGroup(const QString& groupAddress);
-
     Q_INVOKABLE virtual bool leaveMulticastGroup(const QString& groupAddress);
-
     bool isMulticastGroupPresent(const QString& groupAddress);
 };
 

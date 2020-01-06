@@ -86,6 +86,8 @@ private Q_SLOTS:
     void onBoundedChanged(const bool isBounded);
     void onWorkerRxPerSecondsChanged(const quint64 rxBytes);
     void onWorkerTxPerSecondsChanged(const quint64 txBytes);
+    void onWorkerPacketsRxPerSecondsChanged(const quint64 rxPackets);
+    void onWorkerPacketsTxPerSecondsChanged(const quint64 txPackets);
 };
 
 NETUDP_NAMESPACE_END

@@ -108,17 +108,21 @@ private:
 private:
     quint64 _rxBytesCounter = 0;
     quint64 _txBytesCounter = 0;
+    quint64 _rxPacketsCounter = 0;
+    quint64 _txPacketsCounter = 0;
     std::unique_ptr<QTimer> _bytesCounterTimer;
 
-private:
+protected:
     void startBytesCounter();
-    void stopBytesCounter();
+    virtual void stopBytesCounter();
 
-private Q_SLOTS:
-    void updateDataCounter();
+protected Q_SLOTS:
+    virtual void updateDataCounter();
 Q_SIGNALS:
     void rxBytesCounterChanged(const quint64 rx);
     void txBytesCounterChanged(const quint64 tx);
+    void rxPacketsCounterChanged(const quint64 rx);
+    void txPacketsCounterChanged(const quint64 tx);
 
     // ──────── FRIENDS ────────
 

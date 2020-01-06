@@ -325,6 +325,7 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
     }
 
     _txBytesCounter += bytesWritten;
+    ++_txPacketsCounter;
 }
 
 bool ServerWorker::isPacketValid(const uint8_t* buffer, const size_t length)
@@ -358,6 +359,7 @@ void ServerWorker::readPendingDatagrams()
         sharedDatagram->ttl = datagram.hopLimit();
 
         _rxBytesCounter += datagram.data().size();
+        ++_rxPacketsCounter;
 
         Q_EMIT receivedDatagram(sharedDatagram);
     }
@@ -422,6 +424,9 @@ void ServerWorker::stopBytesCounter()
 {
     Q_EMIT rxBytesCounterChanged(0);
     Q_EMIT txBytesCounterChanged(0);
+    Q_EMIT rxPacketsCounterChanged(0);
+    Q_EMIT txPacketsCounterChanged(0);
+
     _bytesCounterTimer = nullptr;
 }
 
@@ -429,7 +434,11 @@ void ServerWorker::updateDataCounter()
 {
     Q_EMIT rxBytesCounterChanged(_rxBytesCounter);
     Q_EMIT txBytesCounterChanged(_txBytesCounter);
+    Q_EMIT rxPacketsCounterChanged(_rxPacketsCounter);
+    Q_EMIT txPacketsCounterChanged(_txPacketsCounter);
 
     _rxBytesCounter = 0;
     _txBytesCounter = 0;
+    _rxPacketsCounter = 0;
+    _txPacketsCounter = 0;
 }
