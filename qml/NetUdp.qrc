@@ -4,6 +4,7 @@
     <!-- DEBUG -->
     <file>Debug/qmldir</file>
     <file>Debug/Server.qml</file>
+    <file>Debug/ServerContent.qml</file>
 
     </qresource>
 </RCC>

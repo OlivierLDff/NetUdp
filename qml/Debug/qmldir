@@ -1,2 +1,3 @@
 module NetUdp.Debug
-Server 1.0 Server.qml
+Server          1.0 Server.qml
+ServerContent   1.0 ServerContent.qml
