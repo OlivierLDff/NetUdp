@@ -77,16 +77,16 @@ Column
         textType: Qaterial.Style.TextType.Caption
         highlighted: false
         backgroundImplicitHeight: 20
-        text: "address : " + (root.object ? root.object.address : "")
+        text: "rxAddress : " + (root.object ? root.object.rxAddress : "")
         onClicked: if(root.object) dialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
                 if(acceptableInput)
-                    root.object.address = result
+                    root.object.rxAddress = result
                 else
-                    snackbarManager.show({text : result + " isn't an ipv4 address"})
+                    snackbarManager.show({text : result + " isn't an ipv4 rxAddress"})
             },
-            text: root.object.address,
+            text: root.object.rxAddress,
             title: qsTr("Enter Bind Ip Address"),
             textTitle: qsTr("Ip"),
             helperText: "Should be 0.0.0.0 for multicast input",
@@ -104,13 +104,37 @@ Column
         textType: Qaterial.Style.TextType.Caption
         highlighted: false
         backgroundImplicitHeight: 20
-        text: "port : " + (root.object ? root.object.port : "")
+        text: "rxPort : " + (root.object ? root.object.rxPort : "")
         onClicked: if(root.object) dialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
-                root.object.port = result
+                root.object.rxPort = result
             },
-            text: root.object.port,
+            text: root.object.rxPort,
+            title: qsTr("Enter Bind Listening port"),
+            textTitle: qsTr("Listening port"),
+            helperText: "Between 0 and 65535",
+            inputMethodHints: Qt.ImhFormattedNumbersOnly,
+            validator: StringifyValidator.SocketPort,
+            selectAllText: true,
+            standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
+        })
+    }
+
+    Qaterial.FlatButton
+    {
+        topInset: 0
+        bottomInset: 0
+        textType: Qaterial.Style.TextType.Caption
+        highlighted: false
+        backgroundImplicitHeight: 20
+        text: "txPort : " + (root.object ? root.object.txPort : "")
+        onClicked: if(root.object) dialogManager.openTextField({
+            acceptedCallback: function(result, acceptableInput)
+            {
+                root.object.txPort = result
+            },
+            text: root.object.txPort,
             title: qsTr("Enter Bind Listening port"),
             textTitle: qsTr("Listening port"),
             helperText: "Between 0 and 65535",

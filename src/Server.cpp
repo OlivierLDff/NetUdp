@@ -78,8 +78,9 @@ bool Server::start()
     _worker->moveToThread(_workerThread.get());
 
     _worker->_watchdogTimeout = watchdogPeriodMs();
-    _worker->_address = address();
-    _worker->_port = port();
+    _worker->_rxAddress = rxAddress();
+    _worker->_rxPort = rxPort();
+    _worker->_txPort = txPort();
 
     for (const auto& it : multicastGroupsSet())
         _worker->_multicastGroups.insert(it, false);
@@ -95,8 +96,9 @@ bool Server::start()
     connect(this, &Server::joinMulticastGroupWorker, _worker.get(), &ServerWorker::joinMulticastGroup);
     connect(this, &Server::leaveMulticastGroupWorker, _worker.get(), &ServerWorker::leaveMulticastGroup);
 
-    connect(this, &Server::addressChanged, _worker.get(), &ServerWorker::setAddress);
-    connect(this, &Server::portChanged, _worker.get(), &ServerWorker::setPort);
+    connect(this, &Server::rxAddressChanged, _worker.get(), &ServerWorker::setAddress);
+    connect(this, &Server::rxPortChanged, _worker.get(), &ServerWorker::setRxPort);
+    connect(this, &Server::txPortChanged, _worker.get(), &ServerWorker::setTxPort);
     connect(this, &Server::multicastLoopbackChanged, _worker.get(), &ServerWorker::setMulticastLoopback);
     connect(this, &Server::multicastInterfaceNameChanged, _worker.get(), &ServerWorker::setMulticastInterfaceName);
     connect(this, &Server::inputEnabledChanged, _worker.get(), &ServerWorker::setInputEnabled);

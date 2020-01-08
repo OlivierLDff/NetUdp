@@ -38,6 +38,56 @@ ServerWorker::~ServerWorker()
 {
 }
 
+bool ServerWorker::isBounded() const
+{
+    return _isBounded;
+}
+
+quint64 ServerWorker::watchdogTimeout() const
+{
+    return _watchdogTimeout;
+}
+
+QString ServerWorker::rxAddress() const
+{
+    return _rxAddress;
+}
+
+quint16 ServerWorker::rxPort() const
+{
+    return _rxPort;
+}
+
+quint16 ServerWorker::txPort() const
+{
+    return _txPort;
+}
+
+QMap<QString, bool> ServerWorker::multicastGroups() const
+{
+    return _multicastGroups;
+}
+
+QNetworkInterface ServerWorker::multicastInterface() const
+{
+    return _multicastInterface;
+}
+
+bool ServerWorker::multicastLoopback() const
+{
+    return _multicastLoopback;
+}
+
+quint8 ServerWorker::multicastTtl() const
+{
+    return _multicastTtl;
+}
+
+bool ServerWorker::inputEnabled() const
+{
+    return _inputEnabled;
+}
+
 void ServerWorker::onRestart()
 {
     onStop();
@@ -78,14 +128,14 @@ void ServerWorker::onStart()
     // From what i understand, _socket->bind() will call _socket->bind(QHostAddress::Any) internally.
     // _socket->bind(QHostAddress()) bind to a non valid host address and random port will be choose.
     // Qt multicast issues are non resolved ? https://forum.qt.io/topic/78090/multicast-issue-possible-bug/17
-    const bool bindSuccess = _inputEnabled ? _socket->bind(QHostAddress(_address), _port, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint) : _socket->bind(QHostAddress(_address), 0, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+    const bool bindSuccess = _inputEnabled ? _socket->bind(QHostAddress(_rxAddress), _rxPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint) : _socket->bind(QHostAddress(_rxAddress), _txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
 
     if (bindSuccess)
     {
-        if(_address.isEmpty())
-            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success bind to port %d", _port);
+        if(_rxAddress.isEmpty())
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success bind to port %d", _rxPort);
         else
-            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success bind to %s: %d", qPrintable(_address), _port);
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success bind to %s: %d", qPrintable(_rxAddress), _rxPort);
         setMulticastInterfaceNameToSocket();
         setMulticastLoopbackToSocket();
         if(_inputEnabled)
@@ -104,7 +154,7 @@ void ServerWorker::onStart()
     }
     else
     {
-        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to bind to %s : %d", qPrintable(_address.isEmpty() ? "Any": _address), _port);
+        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to bind to %s : %d", qPrintable(_rxAddress.isEmpty() ? "Any": _rxAddress), _rxPort);
         _socket = nullptr;
         startWatchdog();
     }
@@ -138,18 +188,28 @@ void ServerWorker::setWatchdogTimeout(const quint64 ms)
 
 void ServerWorker::setAddress(const QString& address)
 {
-    if (address != _address)
+    if (address != _rxAddress)
     {
-        _address = address;
+        _rxAddress = address;
         onRestart();
     }
 }
 
-void ServerWorker::setPort(const quint16 port)
+void ServerWorker::setRxPort(const quint16 port)
 {
-    if (port != _port)
+    if (port != _rxPort)
     {
-        _port = port;
+        _rxPort = port;
+        if(_inputEnabled)
+            onRestart();
+    }
+}
+
+void ServerWorker::setTxPort(const quint16 port)
+{
+    if (port != _txPort)
+    {
+        _txPort = port;
         onRestart();
     }
 }
@@ -361,8 +421,13 @@ void ServerWorker::readPendingDatagrams()
         _rxBytesCounter += datagram.data().size();
         ++_rxPacketsCounter;
 
-        Q_EMIT receivedDatagram(sharedDatagram);
+        onReceivedDatagram(sharedDatagram);
     }
+}
+
+void ServerWorker::onReceivedDatagram(const SharedDatagram& datagram)
+{
+    Q_EMIT receivedDatagram(datagram);
 }
 
 void ServerWorker::onSocketError(QAbstractSocket::SocketError error)

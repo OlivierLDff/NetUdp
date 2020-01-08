@@ -47,18 +47,18 @@ public:
 
     static std::shared_ptr<Datagram> makeDatagram() { return std::make_shared<Datagram>(); }
 
-    void setBufferSize(size_t length)
+    bool setBufferSize(size_t length)
     {
         if(length <= 0)
         {
             this->length = 0;
             buffer = nullptr;
+            return false;
         }
-        else
-        {
-            this->length = length;
-            buffer = std::make_unique<uint8_t[]>(length);
-        }
+
+        this->length = length;
+        buffer = std::make_unique<uint8_t[]>(length);
+        return true;
     }
 };
 

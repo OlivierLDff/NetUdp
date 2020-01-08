@@ -47,13 +47,26 @@ private:
     std::unique_ptr<QTimer> _watchdog;
     bool _isBounded = false;
     quint64 _watchdogTimeout = 5000;
-    QString _address;
-    quint16 _port = 0;
+    QString _rxAddress;
+    quint16 _rxPort = 0;
+    quint16 _txPort = 0;
     QMap<QString, bool> _multicastGroups;
     QNetworkInterface _multicastInterface;
     bool _multicastLoopback = false;
     quint8 _multicastTtl = 0;
     bool _inputEnabled = false;
+
+public:
+    bool isBounded() const;
+    quint64 watchdogTimeout() const;
+    QString rxAddress() const;
+    quint16 rxPort() const;
+    quint16 txPort() const;
+    QMap<QString, bool> multicastGroups() const;
+    QNetworkInterface multicastInterface() const;
+    bool multicastLoopback() const;
+    quint8 multicastTtl() const;
+    bool inputEnabled() const;
 
     // ──────── STATUS CONTROL ────────
 public Q_SLOTS:
@@ -68,7 +81,8 @@ Q_SIGNALS:
 public Q_SLOTS:
     void setWatchdogTimeout(const quint64 ms);
     void setAddress(const QString& address);
-    void setPort(const quint16 port);
+    void setRxPort(const quint16 port);
+    void setTxPort(const quint16 port);
     void joinMulticastGroup(const QString& address);
     void leaveMulticastGroup(const QString& address);
     void setMulticastInterfaceName(const QString& name);
@@ -92,6 +106,8 @@ protected:
 
 private Q_SLOTS:
     void readPendingDatagrams();
+protected:
+    virtual void onReceivedDatagram(const SharedDatagram& datagram);
 Q_SIGNALS:
     void receivedDatagram(const SharedDatagram datagram);
 
@@ -128,7 +144,6 @@ Q_SIGNALS:
 
     friend class Server;
 };
-
 
 
 NETUDP_NAMESPACE_END

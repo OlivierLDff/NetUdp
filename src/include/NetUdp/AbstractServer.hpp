@@ -48,8 +48,9 @@ Q_SIGNALS:
 
     // ──────── ATTRIBUTE INPUT ────────
 protected:
-    QSM_WRITABLE_AUTO_PROPERTY(QString, address, Address);
-    QSM_WRITABLE_AUTO_PROPERTY(quint16, port, Port);
+    QSM_WRITABLE_AUTO_PROPERTY(QString, rxAddress, RxAddress);
+    QSM_WRITABLE_AUTO_PROPERTY(quint16, rxPort, RxPort);
+    QSM_WRITABLE_AUTO_PROPERTY(quint16, txPort, TxPort);
 
     // ──────── ATTRIBUTE MULTICAST ────────
 protected:
