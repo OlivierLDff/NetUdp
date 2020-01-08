@@ -44,6 +44,7 @@ public:
     // ──────── ATTRIBUTE ────────
 private:
     std::unique_ptr<QUdpSocket> _socket;
+    std::unique_ptr<QUdpSocket> _rxSocket;
     std::unique_ptr<QTimer> _watchdog;
     bool _isBounded = false;
     quint64 _watchdogTimeout = 5000;
@@ -55,6 +56,7 @@ private:
     bool _multicastLoopback = false;
     quint8 _multicastTtl = 0;
     bool _inputEnabled = false;
+    bool _separateRxTxSocketsChanged = false;
 
 public:
     bool isBounded() const;
@@ -67,6 +69,9 @@ public:
     bool multicastLoopback() const;
     quint8 multicastTtl() const;
     bool inputEnabled() const;
+    bool separateRxTxSocketsChanged() const;
+
+    QUdpSocket* rxSocket() const;
 
     // ──────── STATUS CONTROL ────────
 public Q_SLOTS:
@@ -88,6 +93,7 @@ public Q_SLOTS:
     void setMulticastInterfaceName(const QString& name);
     void setMulticastLoopback(const bool loopback);
     void setInputEnabled(const bool enabled);
+    void setSeparateRxTxSockets(const bool separateRxTxSocketsChanged);
 
 private:
     void setMulticastInterfaceNameToSocket() const;
@@ -104,6 +110,9 @@ public Q_SLOTS:
 protected:
     virtual bool isPacketValid(const uint8_t* buffer, const size_t length);
 
+private:
+    // Avoid recursive call when reading datagram and processing events
+    bool _pendingReadingDatagrams = false;
 private Q_SLOTS:
     void readPendingDatagrams();
 protected:
@@ -112,8 +121,9 @@ Q_SIGNALS:
     void receivedDatagram(const SharedDatagram datagram);
 
     // ──────── STATUS ────────
-public Q_SLOTS:
+protected Q_SLOTS:
     void onSocketError(QAbstractSocket::SocketError error);
+    void onRxSocketError(QAbstractSocket::SocketError error);
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
     void onWatchdogTimeout();
 

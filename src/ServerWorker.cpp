@@ -9,6 +9,7 @@
 // Qt Header
 #include <QLoggingCategory>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QUdpSocket>
 #include <QCoreApplication>
 #include <QNetworkDatagram>
@@ -34,9 +35,7 @@ ServerWorker::ServerWorker(QObject* parent): QObject(parent)
 {
 }
 
-ServerWorker::~ServerWorker()
-{
-}
+ServerWorker::~ServerWorker() = default;
 
 bool ServerWorker::isBounded() const
 {
@@ -88,6 +87,18 @@ bool ServerWorker::inputEnabled() const
     return _inputEnabled;
 }
 
+bool ServerWorker::separateRxTxSocketsChanged() const
+{
+    return _separateRxTxSocketsChanged;
+}
+
+QUdpSocket* ServerWorker::rxSocket() const
+{
+    if (_separateRxTxSocketsChanged)
+        return _rxSocket.get();
+    return _socket.get();
+}
+
 void ServerWorker::onRestart()
 {
     onStop();
@@ -96,6 +107,7 @@ void ServerWorker::onRestart()
 
 void ServerWorker::onStart()
 {
+    const bool useTwoSockets = _separateRxTxSocketsChanged && _inputEnabled;
     if (_socket)
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't start udp server worker because socket is already valid");
@@ -108,12 +120,22 @@ void ServerWorker::onStart()
 
     // ) Create the socket
     _socket = std::make_unique<QUdpSocket>(this);
+    if (useTwoSockets)
+        _rxSocket = std::make_unique<QUdpSocket>(this);
 
     // ) Connect to socket signals
-    connect(_socket.get(), &QUdpSocket::readyRead, this, &ServerWorker::readPendingDatagrams);
+    connect(rxSocket(), &QUdpSocket::readyRead, this, &ServerWorker::readPendingDatagrams);
     connect(_socket.get(), QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this,
-            &ServerWorker::onSocketError);
-    connect(_socket.get(), &QUdpSocket::stateChanged, this, &ServerWorker::onSocketStateChanged);
+        &ServerWorker::onSocketError);
+    // _socket is always bounded because binded to QHostAddress(). Only rxSocket can go wrong
+    connect(rxSocket(), &QUdpSocket::stateChanged, this, &ServerWorker::onSocketStateChanged);
+
+    if (useTwoSockets)
+    {
+        connect(_rxSocket.get(), QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this,
+            &ServerWorker::onRxSocketError);
+        //connect(_rxSocket.get(), &QUdpSocket::stateChanged, this, &ServerWorker::onSocketStateChanged);
+    }
 
     // ) Create a watchdog timer
     _watchdog = std::make_unique<QTimer>();
@@ -128,7 +150,13 @@ void ServerWorker::onStart()
     // From what i understand, _socket->bind() will call _socket->bind(QHostAddress::Any) internally.
     // _socket->bind(QHostAddress()) bind to a non valid host address and random port will be choose.
     // Qt multicast issues are non resolved ? https://forum.qt.io/topic/78090/multicast-issue-possible-bug/17
-    const bool bindSuccess = _inputEnabled ? _socket->bind(QHostAddress(_rxAddress), _rxPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint) : _socket->bind(QHostAddress(_rxAddress), _txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+    bool bindSuccess = false;
+    if (useTwoSockets)
+        bindSuccess = _rxSocket->bind(QHostAddress(_rxAddress), _rxPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint) && _socket->bind(QHostAddress(), _txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+    else if (_inputEnabled)
+        bindSuccess = _socket->bind(QHostAddress(_rxAddress), _rxPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+    else
+        bindSuccess = _socket->bind(QHostAddress(), _txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
 
     if (bindSuccess)
     {
@@ -142,7 +170,7 @@ void ServerWorker::onStart()
         {
             for (auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
             {
-                it.value() = _multicastInterface.isValid() ? _socket->joinMulticastGroup(QHostAddress(it.key()), _multicastInterface) : _socket->joinMulticastGroup(QHostAddress(it.key()));
+                it.value() = _multicastInterface.isValid() ? rxSocket()->joinMulticastGroup(QHostAddress(it.key()), _multicastInterface) : rxSocket()->joinMulticastGroup(QHostAddress(it.key()));
                 if (it.value())
                     qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Success join multicast group %s", qPrintable(it.key()));
                 else
@@ -156,6 +184,7 @@ void ServerWorker::onStart()
     {
         qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to bind to %s : %d", qPrintable(_rxAddress.isEmpty() ? "Any": _rxAddress), _rxPort);
         _socket = nullptr;
+        _rxSocket = nullptr;
         startWatchdog();
     }
 }
@@ -174,6 +203,7 @@ void ServerWorker::onStop()
 
     _watchdog = nullptr;
     _socket = nullptr;
+    _rxSocket = nullptr;
     _multicastTtl = 0;
 
     for(auto& it: _multicastGroups)
@@ -226,7 +256,7 @@ void ServerWorker::joinMulticastGroup(const QString& address)
     {
         if (!_multicastGroups.contains(address))
         {
-            const bool successJoin = _socket && (_multicastInterface.isValid() ? _socket->joinMulticastGroup(hostAddress, _multicastInterface) : _socket->joinMulticastGroup(hostAddress));
+            const bool successJoin = rxSocket() && (_multicastInterface.isValid() ? rxSocket()->joinMulticastGroup(hostAddress, _multicastInterface) : rxSocket()->joinMulticastGroup(hostAddress));
             _multicastGroups.insert(address, successJoin);
         }
     }
@@ -238,7 +268,7 @@ void ServerWorker::leaveMulticastGroup(const QString& address)
 
     if (_multicastGroups.contains(address))
     {
-        const bool successLeave = _socket && (_multicastInterface.isValid() ? _socket->leaveMulticastGroup(QHostAddress(address), _multicastInterface) : _socket->leaveMulticastGroup(QHostAddress(address)));
+        const bool successLeave = rxSocket() && (_multicastInterface.isValid() ? rxSocket()->leaveMulticastGroup(QHostAddress(address), _multicastInterface) : rxSocket()->leaveMulticastGroup(QHostAddress(address)));
         _multicastGroups.remove(address);
     }
 }
@@ -275,6 +305,16 @@ void ServerWorker::setInputEnabled(const bool enabled)
     }
 }
 
+void ServerWorker::setSeparateRxTxSockets(const bool separateRxTxSocketsChanged)
+{
+    if (separateRxTxSocketsChanged != _separateRxTxSocketsChanged)
+    {
+        _separateRxTxSocketsChanged = separateRxTxSocketsChanged;
+        if(_inputEnabled)
+            onRestart();
+    }
+}
+
 void ServerWorker::setMulticastInterfaceNameToSocket() const
 {
     if (_socket && _multicastInterface.isValid())
@@ -289,10 +329,10 @@ void ServerWorker::setMulticastInterfaceNameToSocket() const
 
 void ServerWorker::setMulticastLoopbackToSocket() const
 {
-    if (_socket && _inputEnabled)
+    if (rxSocket() && _inputEnabled)
     {
         qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Set MulticastLoopbackOption to %d", int(_multicastLoopback));
-        _socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback);
+        rxSocket()->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback);
     }
 }
 
@@ -395,17 +435,22 @@ bool ServerWorker::isPacketValid(const uint8_t* buffer, const size_t length)
 
 void ServerWorker::readPendingDatagrams()
 {
-    if (!_socket)
+    if (!rxSocket())
         return;
 
-    while (_socket->hasPendingDatagrams())
+    _pendingReadingDatagrams = true;
+
+    QElapsedTimer elapsed;
+    elapsed.start();
+
+    while (rxSocket()->hasPendingDatagrams())
     {
-        QNetworkDatagram datagram = _socket->receiveDatagram();
+        QNetworkDatagram datagram = rxSocket()->receiveDatagram();
 
         if (!isPacketValid(reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size()))
         {
             qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Receive not valid datagram");
-            return;
+            continue;
         }
 
         SharedDatagram sharedDatagram = std::make_shared<Datagram>();
@@ -422,7 +467,16 @@ void ServerWorker::readPendingDatagrams()
         ++_rxPacketsCounter;
 
         onReceivedDatagram(sharedDatagram);
+
+        // Make sure the thread doesn't get stuck for more than 5ms in this loop
+        if(elapsed.elapsed() > 5)
+        {
+            elapsed.start();
+            QCoreApplication::processEvents();
+        }
     }
+
+    _pendingReadingDatagrams = false;
 }
 
 void ServerWorker::onReceivedDatagram(const SharedDatagram& datagram)
@@ -438,6 +492,17 @@ void ServerWorker::onSocketError(QAbstractSocket::SocketError error)
                error, qPrintable(_socket->errorString()));
 
         Q_EMIT socketError(error, _socket->errorString());
+    }
+}
+
+void ServerWorker::onRxSocketError(QAbstractSocket::SocketError error)
+{
+    if (_socket)
+    {
+        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Rx Socket Error (%d) : %s",
+            error, qPrintable(_rxSocket->errorString()));
+
+        Q_EMIT socketError(error, _rxSocket->errorString());
     }
 }
 

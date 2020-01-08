@@ -236,10 +236,11 @@ Column
         width: parent.width
         Qaterial.SwitchButton
         {
-            text: "multicastLoopback"
+            text: "loopback"
             implicitHeight: 32
             checked: root.object && root.object.multicastLoopback
             elide: Text.ElideRight
+            implicitWidth: parent.width/3
             textType: Qaterial.Style.TextType.Caption
             onCheckedChanged:
             {
@@ -250,10 +251,11 @@ Column
 
         Qaterial.SwitchButton
         {
-            text: "inputEnabled"
+            text: "input"
             implicitHeight: 32
             checked: root.object && root.object.inputEnabled
             elide: Text.ElideRight
+            implicitWidth: parent.width/3
             textType: Qaterial.Style.TextType.Caption
             onCheckedChanged:
             {
@@ -261,7 +263,22 @@ Column
                     root.object.inputEnabled = checked
             }
         }
-    }
+
+        Qaterial.SwitchButton
+        {
+            text: "2 sockets"
+            implicitHeight: 32
+            checked: root.object && root.object.separateRxTxSockets
+            elide: Text.ElideRight
+            implicitWidth: parent.width/3
+            textType: Qaterial.Style.TextType.Caption
+            onCheckedChanged:
+            {
+                if(root.object && root.object.separateRxTxSockets !== checked)
+                    root.object.separateRxTxSockets = checked
+            }
+        }
+    } // Row
 
     Row
     {

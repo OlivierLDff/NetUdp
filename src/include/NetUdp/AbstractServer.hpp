@@ -46,11 +46,12 @@ protected:
 Q_SIGNALS:
     void socketError(int error, const QString description);
 
-    // ──────── ATTRIBUTE INPUT ────────
+    // ──────── ATTRIBUTE ────────
 protected:
     QSM_WRITABLE_AUTO_PROPERTY(QString, rxAddress, RxAddress);
     QSM_WRITABLE_AUTO_PROPERTY(quint16, rxPort, RxPort);
     QSM_WRITABLE_AUTO_PROPERTY(quint16, txPort, TxPort);
+    QSM_WRITABLE_AUTO_PROPERTY(bool, separateRxTxSockets, SeparateRxTxSockets);
 
     // ──────── ATTRIBUTE MULTICAST ────────
 protected:

@@ -99,6 +99,7 @@ bool Server::start()
     connect(this, &Server::rxAddressChanged, _worker.get(), &ServerWorker::setAddress);
     connect(this, &Server::rxPortChanged, _worker.get(), &ServerWorker::setRxPort);
     connect(this, &Server::txPortChanged, _worker.get(), &ServerWorker::setTxPort);
+    connect(this, &Server::separateRxTxSocketsChanged, _worker.get(), &ServerWorker::setSeparateRxTxSockets);
     connect(this, &Server::multicastLoopbackChanged, _worker.get(), &ServerWorker::setMulticastLoopback);
     connect(this, &Server::multicastInterfaceNameChanged, _worker.get(), &ServerWorker::setMulticastInterfaceName);
     connect(this, &Server::inputEnabledChanged, _worker.get(), &ServerWorker::setInputEnabled);
