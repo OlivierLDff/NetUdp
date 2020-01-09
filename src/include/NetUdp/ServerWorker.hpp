@@ -54,7 +54,7 @@ private:
     bool _multicastLoopback = false;
     quint8 _multicastTtl = 0;
     bool _inputEnabled = false;
-    bool _separateRxTxSocketsChanged = false;
+    bool _separateRxTxSockets = false;
 
 public:
     bool isBounded() const;

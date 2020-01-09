@@ -87,12 +87,12 @@ bool ServerWorker::inputEnabled() const
 
 bool ServerWorker::separateRxTxSocketsChanged() const
 {
-    return _separateRxTxSocketsChanged;
+    return _separateRxTxSockets;
 }
 
 QUdpSocket* ServerWorker::rxSocket() const
 {
-    if (_separateRxTxSocketsChanged)
+    if (_separateRxTxSockets)
         return _rxSocket.get();
     return _socket.get();
 }
@@ -105,7 +105,7 @@ void ServerWorker::onRestart()
 
 void ServerWorker::onStart()
 {
-    const bool useTwoSockets = _separateRxTxSocketsChanged && _inputEnabled;
+    const bool useTwoSockets = _separateRxTxSockets && _inputEnabled;
     if (_socket)
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't start udp server worker because socket is already valid");
@@ -305,9 +305,9 @@ void ServerWorker::setInputEnabled(const bool enabled)
 
 void ServerWorker::setSeparateRxTxSockets(const bool separateRxTxSocketsChanged)
 {
-    if (separateRxTxSocketsChanged != _separateRxTxSocketsChanged)
+    if (separateRxTxSocketsChanged != _separateRxTxSockets)
     {
-        _separateRxTxSocketsChanged = separateRxTxSocketsChanged;
+        _separateRxTxSockets = separateRxTxSocketsChanged;
         if(_inputEnabled)
             onRestart();
     }
