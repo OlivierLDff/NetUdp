@@ -35,8 +35,6 @@ ServerWorker::ServerWorker(QObject* parent): QObject(parent)
 {
 }
 
-ServerWorker::~ServerWorker() = default;
-
 bool ServerWorker::isBounded() const
 {
     return _isBounded;

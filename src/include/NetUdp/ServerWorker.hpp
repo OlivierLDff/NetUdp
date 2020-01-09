@@ -12,6 +12,8 @@
 // Qt Header
 #include <QObject>
 #include <QNetworkInterface>
+#include <QUdpSocket>
+#include <QTimer>
 
 // Dependencies Header
 
@@ -22,9 +24,6 @@
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
-
-class QUdpSocket;
-class QTimer;
 
 NETUDP_NAMESPACE_START
 
@@ -39,7 +38,6 @@ class NETUDP_API_ ServerWorker: public QObject
     // ──────── CONSTRUCTOR ────────
 public:
     ServerWorker(QObject* parent = nullptr);
-    ~ServerWorker();
 
     // ──────── ATTRIBUTE ────────
 private:
