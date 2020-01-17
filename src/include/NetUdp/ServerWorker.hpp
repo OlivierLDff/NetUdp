@@ -14,6 +14,7 @@
 #include <QNetworkInterface>
 #include <QUdpSocket>
 #include <QTimer>
+#include <QThread>
 
 // Dependencies Header
 
@@ -38,6 +39,11 @@ class NETUDP_API_ ServerWorker: public QObject
     // ──────── CONSTRUCTOR ────────
 public:
     ServerWorker(QObject* parent = nullptr);
+
+    // ──────── WORKER ────────
+protected:
+    std::unique_ptr<ServerWorker> _worker;
+    std::unique_ptr<QThread> _workerThread;
 
     // ──────── ATTRIBUTE ────────
 private:
