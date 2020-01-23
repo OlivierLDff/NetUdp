@@ -34,7 +34,7 @@ class ServerWorker;
 class NETUDP_API_ Server : public AbstractServer
 {
     Q_OBJECT
-    QSM_REGISTER_OBJ_TO_QML_NO_NAME(Server);
+    QSM_REGISTER_TO_QML(Server);
 
     // ──────── CONSTRUCTOR ────────
 public:
