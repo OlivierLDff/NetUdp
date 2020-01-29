@@ -418,7 +418,7 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
 
     if (bytesWritten != datagram->length)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to send datagram, %lld/%lld bytes written", bytesWritten, int64_t(datagram->length));
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to send datagram, %ld/%ld bytes written", bytesWritten, int64_t(datagram->length));
         return;
     }
 
