@@ -5,19 +5,10 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
-
-// Qt Header
-#include <QObject>
-
-// Dependencies Header
-
 // Application Header
-#include <NetUdp/Export.hpp>
-#include <NetUdp/Datagram.hpp>
 #include <NetUdp/AbstractServer.hpp>
+#include <NetUdp/Datagram.hpp>
+#include <NetUdp/Export.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

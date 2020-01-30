@@ -5,9 +5,9 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
+// Application Header
+#include <NetUdp/Datagram.hpp>
+#include <NetUdp/Export.hpp>
 
 // Qt Header
 #include <QObject>
@@ -15,12 +15,6 @@
 #include <QUdpSocket>
 #include <QTimer>
 #include <QThread>
-
-// Dependencies Header
-
-// Application Header
-#include <NetUdp/Export.hpp>
-#include <NetUdp/Datagram.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -39,11 +33,6 @@ class NETUDP_API_ ServerWorker: public QObject
     // ──────── CONSTRUCTOR ────────
 public:
     ServerWorker(QObject* parent = nullptr);
-
-    // ──────── WORKER ────────
-protected:
-    std::unique_ptr<ServerWorker> _worker;
-    std::unique_ptr<QThread> _workerThread;
 
     // ──────── ATTRIBUTE ────────
 private:

@@ -5,19 +5,15 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
-#include <cstdint>
-#include <memory>
+// Application Header
+#include <NetUdp/Export.hpp>
 
 // Qt Header
 #include <QHostAddress>
 
-// Dependencies Header
-
-// Application Header
-#include <NetUdp/Export.hpp>
+// C++ Header
+#include <cstdint>
+#include <memory>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

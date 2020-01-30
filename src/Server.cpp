@@ -2,19 +2,13 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
+// Application Header
+#include <NetUdp/Server.hpp>
+#include <NetUdp/ServerWorker.hpp>
 
 // Qt Header
 #include <QThread>
 #include <QLoggingCategory>
-
-// Dependencies Header
-
-// Application Header
-#include <NetUdp/Server.hpp>
-#include <NetUdp/ServerWorker.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -129,6 +123,9 @@ bool Server::stop()
         return false;
 
     Q_EMIT stopWorker();
+
+    disconnect(_worker.get());
+    _worker.get()->disconnect();
 
     setRxBytesPerSeconds(0);
     setTxBytesPerSeconds(0);

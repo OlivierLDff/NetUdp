@@ -5,20 +5,13 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-#include <stdint.h>
-
-// C++ Header
+// Application Header
+#include <NetUdp/Export.hpp>
 
 // Qt Header
 #include <QObject>
 #include <QQmlSingletonHelper.h>
 #include <QQmlAutoPropertyHelpers.h>
-
-// Dependencies Header
-
-// Application Header
-#include <NetUdp/Export.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

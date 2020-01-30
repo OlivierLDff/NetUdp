@@ -2,22 +2,16 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
-
-// Qt Header
-#include <QCoreApplication> // Call register type at startup when loaded as a dynamic library
-#include <QLoggingCategory> // Logging support
-
-// Dependencies Header
-
 // Application Header
 #include <NetUdp/Utils.hpp>
 #include <NetUdp/Datagram.hpp>
 #include <NetUdp/AbstractServer.hpp>
 #include <NetUdp/Server.hpp>
 #include <NetUdp/Version.hpp>
+
+// Qt Header
+#include <QCoreApplication>
+#include <QLoggingCategory>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

@@ -2,18 +2,11 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
-
-// Qt Header
-#include <QString>
+// Application Header
+#include <NetUdp/Version.hpp>
 
 // Dependencies Header
 #include <Stringify/VersionRegex.hpp>
-
-// Application Header
-#include <NetUdp/Version.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

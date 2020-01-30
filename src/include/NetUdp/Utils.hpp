@@ -5,16 +5,11 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
-
-// Qt Header
-
-// Dependencies Header
-
 // Application Header
 #include <NetUdp/Export.hpp>
+
+// C++ Header
+#include <QtGlobal>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

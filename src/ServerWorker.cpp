@@ -2,22 +2,18 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
-
-// Qt Header
-#include <QLoggingCategory>
-#include <QTimer>
-#include <QElapsedTimer>
-#include <QUdpSocket>
-#include <QCoreApplication>
-#include <QNetworkDatagram>
-
-// Dependencies Header
-
 // Application Header
 #include <NetUdp/ServerWorker.hpp>
+
+// Qt Header
+#include <QTimer>
+#include <QElapsedTimer>
+
+#include <QUdpSocket>
+#include <QNetworkDatagram>
+
+#include <QCoreApplication>
+#include <QLoggingCategory>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -470,7 +466,7 @@ void ServerWorker::readPendingDatagrams()
         if(elapsed.elapsed() > 5)
         {
             elapsed.start();
-            QCoreApplication::processEvents();
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
         }
     }
 

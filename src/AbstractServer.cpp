@@ -2,18 +2,12 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
+// Application Header
+#include <NetUdp/AbstractServer.hpp>
 
 // Qt Header
 #include <QNetworkInterface>
 #include <QHostAddress>
-
-// Dependencies Header
-
-// Application Header
-#include <NetUdp/AbstractServer.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
