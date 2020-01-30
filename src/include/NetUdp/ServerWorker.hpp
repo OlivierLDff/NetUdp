@@ -102,10 +102,6 @@ public Q_SLOTS:
     // ──────── RX ────────
 protected:
     virtual bool isPacketValid(const uint8_t* buffer, const size_t length);
-
-private:
-    // Avoid recursive call when reading datagram and processing events
-    bool _pendingReadingDatagrams = false;
 private Q_SLOTS:
     void readPendingDatagrams();
 protected:

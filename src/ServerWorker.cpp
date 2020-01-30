@@ -187,7 +187,7 @@ void ServerWorker::onStop()
 {
     if (!_socket)
     {
-        qDebug("Error : Can't stop udp server worker because socket isn't valid");
+        qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't stop udp server worker because socket isn't valid");
         return;
     }
 
@@ -414,7 +414,7 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
 
     if (bytesWritten != datagram->length)
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to send datagram, %ld/%ld bytes written", bytesWritten, int64_t(datagram->length));
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to send datagram, %lld/%lld bytes written", static_cast<long long>(bytesWritten), static_cast<long long>(datagram->length));
         return;
     }
 
@@ -432,12 +432,7 @@ void ServerWorker::readPendingDatagrams()
     if (!rxSocket())
         return;
 
-    _pendingReadingDatagrams = true;
-
-    QElapsedTimer elapsed;
-    elapsed.start();
-
-    while (rxSocket()->hasPendingDatagrams())
+    while (rxSocket() && rxSocket()->hasPendingDatagrams())
     {
         QNetworkDatagram datagram = rxSocket()->receiveDatagram();
 
@@ -461,16 +456,7 @@ void ServerWorker::readPendingDatagrams()
         ++_rxPacketsCounter;
 
         onReceivedDatagram(sharedDatagram);
-
-        // Make sure the thread doesn't get stuck for more than 5ms in this loop
-        if(elapsed.elapsed() > 5)
-        {
-            elapsed.start();
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-        }
     }
-
-    _pendingReadingDatagrams = false;
 }
 
 void ServerWorker::onReceivedDatagram(const SharedDatagram& datagram)
