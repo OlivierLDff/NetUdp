@@ -70,6 +70,7 @@ bool AbstractServer::stop()
     if (!isRunning())
         return false;
 
+    setIsBounded(false);
     setIsRunning(false);
 
     return true;
