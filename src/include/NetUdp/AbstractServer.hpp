@@ -97,7 +97,8 @@ public:
 
     Q_INVOKABLE virtual bool joinMulticastGroup(const QString& groupAddress);
     Q_INVOKABLE virtual bool leaveMulticastGroup(const QString& groupAddress);
-    bool isMulticastGroupPresent(const QString& groupAddress);
+    Q_INVOKABLE bool leaveAllMulticastGroups();
+    Q_INVOKABLE bool isMulticastGroupPresent(const QString& groupAddress);
 };
 
 NETUDP_NAMESPACE_END

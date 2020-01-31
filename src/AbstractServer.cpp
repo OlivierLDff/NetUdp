@@ -116,6 +116,18 @@ bool AbstractServer::leaveMulticastGroup(const QString& groupAddress)
     return true;
 }
 
+bool AbstractServer::leaveAllMulticastGroups()
+{
+    bool allSuccess = true;
+    while(!_multicastGroups.empty())
+    {
+        const auto group = _multicastGroups.begin();
+        if (!leaveMulticastGroup(*group))
+            allSuccess = false;
+    }
+    return allSuccess;
+}
+
 bool AbstractServer::isMulticastGroupPresent(const QString& groupAddress)
 {
     return _multicastGroups.find(groupAddress) != _multicastGroups.end();
