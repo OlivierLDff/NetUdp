@@ -9,13 +9,17 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-using namespace Net::Udp;;
+using namespace Net::Udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
-//
-void Datagram::registerType()
+
+void Datagram::reset()
 {
-    qRegisterMetaType<SharedDatagram>("SharedDatagram");
+    destinationAddress = {};
+    destinationPort = 0;
+    senderAddress = {};
+    senderPort = 0;
+    ttl = 8;
 }

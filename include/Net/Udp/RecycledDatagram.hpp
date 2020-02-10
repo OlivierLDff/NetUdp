@@ -1,20 +1,15 @@
-#ifndef __NETUDP_DATAGRAM_HPP__
-#define __NETUDP_DATAGRAM_HPP__
+#ifndef __NETUDP_RECYCLED_DATAGRAM_HPP__
+#define __NETUDP_RECYCLED_DATAGRAM_HPP__
 
 // ─────────────────────────────────────────────────────────────
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Export.hpp>
+#include <Net/Udp/Datagram.hpp>
 
 // Dependencies Headers
-
-// Qt Header
-#include <QHostAddress>
-
-// C++ Header
-#include <cstdint>
+#include <Recycler/Buffer.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -27,33 +22,24 @@ namespace Udp {
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-class NETUDP_API_ Datagram
+class NETUDP_API_ RecycledDatagram : public Datagram
 {
     // ────── CONSTRUCTOR ────────
 public:
-    virtual ~Datagram() = default;
-    void reset();
+    RecycledDatagram(const size_t length);
+    void reset(const size_t length);
+
+private:
+    Recycler::Buffer<uint8_t> _buffer;
 
     // ────── API ────────
 public:
-    virtual uint8_t* buffer() = 0;
-    virtual const uint8_t* buffer() const = 0;
-    virtual size_t length() const = 0;
-
-    // ────── ATTRIBUTES ────────
-public:
-    QHostAddress destinationAddress;
-    uint16_t destinationPort = 0;
-
-    QHostAddress senderAddress;
-    uint16_t senderPort = 0;
-
-    uint8_t ttl = 8;
+    uint8_t* buffer() override;
+    const uint8_t* buffer() const override;
+    size_t length() const override;
 };
 
-typedef std::shared_ptr<Datagram> SharedDatagram;
-
 }
 }
 
-#endif // __NETUDP_DATAGRAM_HPP__
+#endif

@@ -122,6 +122,8 @@ bool Server::stop()
     if (!AbstractServer::stop())
         return false;
 
+    _cache.clear();
+
     Q_EMIT stopWorker();
 
     disconnect(_worker.get());
@@ -174,8 +176,13 @@ std::unique_ptr<ServerWorker> Server::createWorker() const
     return std::make_unique<ServerWorker>();
 }
 
+std::shared_ptr<RecycledDatagram> Server::makeDatagram(const size_t length)
+{
+    return _cache.make(length);
+}
+
 bool Server::sendDatagram(uint8_t* buffer, const size_t length, const QHostAddress& address, const uint16_t port,
-    const uint8_t ttl)
+                          const uint8_t ttl)
 {
     if (!isRunning() && !isBounded())
     {
@@ -198,11 +205,8 @@ bool Server::sendDatagram(uint8_t* buffer, const size_t length, const QHostAddre
         return false;
     }
 
-    auto datagram = std::make_shared<Datagram>();
-    const auto datagramLength = length;
-    datagram->buffer = std::make_unique<uint8_t[]>(datagramLength);
-    memcpy(datagram->buffer.get(), buffer, length);
-    datagram->length = datagramLength;
+    auto datagram = _cache.make(length);
+    memcpy(datagram->buffer(), buffer, length);
     datagram->destinationAddress = address;
     datagram->destinationPort = port;
     datagram->ttl = ttl;
@@ -212,7 +216,7 @@ bool Server::sendDatagram(uint8_t* buffer, const size_t length, const QHostAddre
     return true;
 }
 
-bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
+bool Server::sendDatagram(std::shared_ptr<RecycledDatagram> datagram)
 {
     if (!isRunning() && !isBounded())
     {
@@ -223,7 +227,7 @@ bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
         return false;
     }
 
-    if (datagram->length <= 0)
+    if (datagram->length() <= 0)
     {
         qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the length is <= 0");
         return false;

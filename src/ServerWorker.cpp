@@ -93,6 +93,31 @@ QUdpSocket* ServerWorker::rxSocket() const
     return _socket.get();
 }
 
+size_t ServerWorker::cacheSize() const
+{
+    return _cache.size();
+}
+
+bool ServerWorker::resizeCache(size_t length)
+{
+    return _cache.resize(length);
+}
+
+void ServerWorker::clearCache()
+{
+    _cache.clear();
+}
+
+void ServerWorker::releaseCache()
+{
+    _cache.release();
+}
+
+std::shared_ptr<RecycledDatagram> ServerWorker::makeDatagram(const size_t length)
+{
+    return _cache.make(length);
+}
+
 void ServerWorker::onRestart()
 {
     onStop();
@@ -377,13 +402,13 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
         return;
     }
 
-    if (!datagram->buffer)
+    if (!datagram->buffer())
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send datagram with empty buffer");
         return;
     }
 
-    if (!datagram->length)
+    if (!datagram->length())
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send datagram with data length to 0");
         return;
@@ -394,12 +419,14 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
     if (datagram->destinationAddress.isMulticast())
     {
         setMulticastTtl(datagram->ttl);
-        bytesWritten = _socket->writeDatagram(reinterpret_cast<const char*>(datagram->buffer.get()), datagram->length,
+        bytesWritten = _socket->writeDatagram(reinterpret_cast<const char*>(datagram->buffer()), datagram->length(),
                                               datagram->destinationAddress, datagram->destinationPort);
     }
     else
     {
-        QNetworkDatagram d(QByteArray(reinterpret_cast<const char*>(datagram->buffer.get()), int(datagram->length)),
+        // Copy will happen :(
+        // Don't have other choice in order to set ttl
+        QNetworkDatagram d(QByteArray(reinterpret_cast<const char*>(datagram->buffer()), int(datagram->length())),
                            datagram->destinationAddress, datagram->destinationPort);
         if (datagram->ttl)
             d.setHopLimit(datagram->ttl);
@@ -412,9 +439,9 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
         return;
     }
 
-    if (bytesWritten != datagram->length)
+    if (bytesWritten != datagram->length())
     {
-        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to send datagram, %lld/%lld bytes written", static_cast<long long>(bytesWritten), static_cast<long long>(datagram->length));
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Fail to send datagram, %lld/%lld bytes written", static_cast<long long>(bytesWritten), static_cast<long long>(datagram->length()));
         return;
     }
 
@@ -442,10 +469,14 @@ void ServerWorker::readPendingDatagrams()
             continue;
         }
 
-        SharedDatagram sharedDatagram = std::make_shared<Datagram>();
-        sharedDatagram->buffer = std::make_unique<uint8_t[]>(datagram.data().size());
-        memcpy(sharedDatagram->buffer.get(), reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size());
-        sharedDatagram->length = datagram.data().size();
+        if(datagram.data().size() > 65535)
+        {
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Receive a datagram with size of %lld", (long long)datagram.data().size());
+            continue;
+        }
+
+        SharedDatagram sharedDatagram = makeDatagram(datagram.data().size());
+        memcpy(sharedDatagram.get()->buffer(), reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size());
         sharedDatagram->destinationAddress = datagram.destinationAddress();
         sharedDatagram->destinationPort = datagram.destinationPort();
         sharedDatagram->senderAddress = datagram.senderAddress();

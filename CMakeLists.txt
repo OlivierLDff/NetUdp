@@ -12,6 +12,9 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 # DEPENDENCIES
 
+set(RECYCLER_REPOSITORY "https://github.com/OlivierLDff/Recycler.git" CACHE STRING "Repository of Recycler")
+set(RECYCLER_TAG "master" CACHE STRING "Git Tag of Recycler")
+
 set(QSUPERMACROS_REPOSITORY "https://github.com/OlivierLDff/QSuperMacros" CACHE STRING "Repository of QSuperMacros")
 set(QSUPERMACROS_TAG "master" CACHE STRING "Git tag/branch of QSuperMacros")
 
@@ -99,6 +102,13 @@ endif() # NETUDP_ENABLE_QML
 
 include(FetchContent)
 
+# Recycler
+FetchContent_Declare(
+    Recycler
+    GIT_REPOSITORY ${RECYCLER_REPOSITORY}
+    GIT_TAG        ${RECYCLER_TAG}
+)
+
 # QSuperMacros
 set(QSUPERMACROS_FOLDER_PREFIX "Dependencies/QSuperMacros" CACHE STRING "")
 FetchContent_Declare(
@@ -119,7 +129,7 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 set(FETCHCONTENT_QUIET ON)
 
 # Make all dependencies avaiables
-FetchContent_MakeAvailable(QSuperMacros)
+FetchContent_MakeAvailable(QSuperMacros Recycler Stringify)
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                          NETUDP                                  │
@@ -164,6 +174,7 @@ set(NETUDP_UTILS_SRCS
 set(NETUDP_API_SRCS
     ${NETUDP_SRCS_FOLDER}/AbstractServer.cpp
     ${NETUDP_SRCS_FOLDER}/Datagram.cpp
+    ${NETUDP_SRCS_FOLDER}/RecycledDatagram.cpp
     ${NETUDP_SRCS_FOLDER}/Server.cpp
     ${NETUDP_SRCS_FOLDER}/ServerWorker.cpp
 )
@@ -185,6 +196,7 @@ set(NETUDP_API_INCS
     ${NETUDP_PRIVATE_INCS_FOLDER}/AbstractServer.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/Export.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/Datagram.hpp
+    ${NETUDP_PRIVATE_INCS_FOLDER}/RecycledDatagram.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/Server.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/ServerWorker.hpp
 )
@@ -220,7 +232,7 @@ target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_IN
 set_target_properties(${NETUDP_TARGET} PROPERTIES PREFIX "")
 
 # Link libraries
-target_link_libraries(${NETUDP_TARGET} QSuperMacros Stringify)
+target_link_libraries(${NETUDP_TARGET} QSuperMacros Stringify Recycler)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)

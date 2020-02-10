@@ -5,11 +5,14 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// Application Header
-#include <Net/Udp/Datagram.hpp>
+// Application Headers
+#include <Net/Udp/RecycledDatagram.hpp>
 #include <Net/Udp/Export.hpp>
 
-// Qt Header
+// Dependencies Headers
+#include <Recycler/Circular.hpp>
+
+// Qt Headers
 #include <QObject>
 #include <QNetworkInterface>
 #include <QUdpSocket>
@@ -39,6 +42,7 @@ private:
     std::unique_ptr<QUdpSocket> _socket;
     std::unique_ptr<QUdpSocket> _rxSocket;
     std::unique_ptr<QTimer> _watchdog;
+    Recycler::Circular<RecycledDatagram> _cache;
     bool _isBounded = false;
     quint64 _watchdogTimeout = 5000;
     QString _rxAddress;
@@ -65,6 +69,12 @@ public:
     bool separateRxTxSocketsChanged() const;
 
     QUdpSocket* rxSocket() const;
+
+    size_t cacheSize() const;
+    bool resizeCache(size_t length);
+    void clearCache();
+    void releaseCache();
+    std::shared_ptr<RecycledDatagram> makeDatagram(const size_t length);
 
     // ──────── STATUS CONTROL ────────
 public Q_SLOTS:

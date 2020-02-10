@@ -4,7 +4,7 @@
 
 // Application Header
 #include <Net/Udp/Utils.hpp>
-#include <Net/Udp/Datagram.hpp>
+#include <Net/Udp/RecycledDatagram.hpp>
 #include <Net/Udp/AbstractServer.hpp>
 #include <Net/Udp/Server.hpp>
 #include <Net/Udp/Version.hpp>
@@ -38,8 +38,10 @@ static void NetUdp_registerTypes()
     qCDebug(NETUDP_UTILS_LOG_CAT, "Register %s.Server %d.%d to QML", *_uri, _major, _minor);
     Net::Udp::Server::registerToQml(*_uri, _major, _minor);
 
-    qCDebug(NETUDP_UTILS_LOG_CAT, "Register SharedDatagram to QML");
-    Net::Udp::Datagram::registerType();
+    qCDebug(NETUDP_UTILS_LOG_CAT, "Register Net::Udp::SharedDatagram to QML");
+    qRegisterMetaType<Net::Udp::SharedDatagram>("Net::Udp::SharedDatagram");
+    qRegisterMetaType<Net::Udp::SharedDatagram>("Udp::SharedDatagram");
+    qRegisterMetaType<Net::Udp::SharedDatagram>("SharedDatagram");
 }
 
 static void NetUdp_registerTypes(const char* uri, const quint8 major, const quint8 minor)

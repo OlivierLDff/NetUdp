@@ -11,7 +11,7 @@
 
 // Library code
 #include <Net/Udp/AbstractServer.hpp>
-#include <Net/Udp/Datagram.hpp>
+#include <Net/Udp/RecycledDatagram.hpp>
 #include <Net/Udp/Server.hpp>
 
 #endif // __NETUDP_HPP__

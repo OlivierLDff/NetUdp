@@ -7,8 +7,11 @@
 
 // Application Header
 #include <Net/Udp/AbstractServer.hpp>
-#include <Net/Udp/Datagram.hpp>
+#include <Net/Udp/RecycledDatagram.hpp>
 #include <Net/Udp/Export.hpp>
+
+// Dependencies Header
+#include <Recycler/Circular.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -37,6 +40,7 @@ public:
 protected:
     std::unique_ptr<ServerWorker> _worker;
     std::unique_ptr<QThread> _workerThread;
+    Recycler::Circular<RecycledDatagram> _cache;
 
     // ──────── INPUT / OUTPUT ────────
 protected:
@@ -58,9 +62,10 @@ public:
     Q_INVOKABLE bool joinMulticastGroup(const QString& groupAddress) override final;
     Q_INVOKABLE bool leaveMulticastGroup(const QString& groupAddress) override final;
     virtual std::unique_ptr<ServerWorker> createWorker() const;
+    std::shared_ptr<RecycledDatagram> makeDatagram(const size_t length);
 
     virtual bool sendDatagram(uint8_t* buffer, const size_t length, const QHostAddress& address, const uint16_t port, const uint8_t ttl = 0);
-    virtual bool sendDatagram(std::shared_ptr<Datagram> datagram);
+    virtual bool sendDatagram(std::shared_ptr<RecycledDatagram> datagram);
 
 public Q_SLOTS:
     virtual void onDatagramReceived(const SharedDatagram datagram);
