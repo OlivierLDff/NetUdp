@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/AbstractServer.hpp>
+#include <Net/Udp/AbstractServer.hpp>
 
 // Qt Header
 #include <QNetworkInterface>
@@ -13,7 +13,7 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_USING_NAMESPACE;
+using namespace Net::Udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS

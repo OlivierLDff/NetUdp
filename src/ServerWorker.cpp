@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/ServerWorker.hpp>
+#include <Net/Udp/ServerWorker.hpp>
 
 // Qt Header
 #include <QTimer>
@@ -21,7 +21,7 @@
 
 Q_LOGGING_CATEGORY(NETUDP_SERVERWORKER_LOGCAT, "net.udp.server.worker")
 
-NETUDP_USING_NAMESPACE;
+using namespace Net::Udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS

@@ -1,65 +1,42 @@
-#ifndef __NETUDP_DATAGRAM_HPP__
-#define __NETUDP_DATAGRAM_HPP__
+#ifndef __NETUDP_UTILS_HPP__
+#define __NETUDP_UTILS_HPP__
 
 // ─────────────────────────────────────────────────────────────
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/Export.hpp>
-
-// Qt Header
-#include <QHostAddress>
+#include <Net/Udp/Export.hpp>
 
 // C++ Header
-#include <cstdint>
-#include <memory>
+#include <QtGlobal>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_NAMESPACE_START
+namespace Net {
+namespace Udp {
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-class NETUDP_API_ Datagram
+/**
+ */
+class NETUDP_API_ Utils
 {
 public:
-    std::unique_ptr<uint8_t[]> buffer;
-    size_t length = 0;
-
-    QHostAddress destinationAddress;
-    uint16_t destinationPort = 0;
-
-    QHostAddress senderAddress;
-    uint16_t senderPort = 0;
-
-    uint8_t ttl = 8;
-
-    static void registerType();
-
-    static std::shared_ptr<Datagram> makeDatagram() { return std::make_shared<Datagram>(); }
-
-    bool setBufferSize(size_t length)
-    {
-        if(length <= 0)
-        {
-            this->length = 0;
-            buffer = nullptr;
-            return false;
-        }
-
-        this->length = length;
-        buffer = std::make_unique<uint8_t[]>(length);
-        return true;
-    }
+    /**
+     * Register type to the qml engines
+     * Registered types are:
+     * -
+     */
+    static void registerTypes(const char* uri = nullptr, const quint8 major = 1, const quint8 minor = 0);
+    static void loadResources();
 };
 
-typedef std::shared_ptr<Datagram> SharedDatagram;
+}
+}
 
-NETUDP_NAMESPACE_END
-
-#endif // __NETUDP_DATAGRAM_HPP__
+#endif

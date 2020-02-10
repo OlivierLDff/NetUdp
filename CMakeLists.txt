@@ -49,9 +49,6 @@ set(NETUDP_VERSION ${NETUDP_VERSION_MAJOR}.${NETUDP_VERSION_MINOR}.${NETUDP_VERS
 set(NETUDP_BUILD_SHARED OFF CACHE BOOL "Build as a shared library (ON) or as static (OFF)")
 set(NETUDP_FOLDER_PREFIX ${NETUDP_PROJECT} CACHE STRING "Prefix folder for all NetUdp generated targets in generated project (only decorative)")
 
-set(NETUDP_USE_NAMESPACE ON CACHE BOOL "Should we use namespace")
-set(NETUDP_NAMESPACE ${NETUDP_PROJECT} CACHE STRING "Namespace for the library")
-
 set(NETUDP_ENABLE_QML ON CACHE BOOL "Embedded Debug Qml module for NetUdp class")
 
 # Install
@@ -155,8 +152,8 @@ if(NETUDP_ENABLE_QML)
 endif() # NETUDP_ENABLE_QML
 
 set(NETUDP_SRCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(NETUDP_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src/include)
-set(NETUDP_PRIVATE_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src/include/NetUdp)
+set(NETUDP_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(NETUDP_PRIVATE_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/include/Net/Udp)
 
 # NETUDP SOURCES
 set(NETUDP_UTILS_SRCS
@@ -197,11 +194,11 @@ set(NETUDP_INCS ${NETUDP_UTILS_INCS}
     ${NETUDP_API_INCS}
 )
 
-source_group("Utils" FILES ${NETUDP_UTILS_INCS})
-source_group("Api" FILES ${NETUDP_API_INCS})
+source_group("Udp\\Utils" FILES ${NETUDP_UTILS_INCS})
+source_group("Udp" FILES ${NETUDP_API_INCS})
 
-source_group("Utils" FILES ${NETUDP_UTILS_SRCS})
-source_group("Api" FILES ${NETUDP_API_SRCS})
+source_group("Udp\\Utils" FILES ${NETUDP_UTILS_SRCS})
+source_group("Udp" FILES ${NETUDP_API_SRCS})
 
 # NETUDP TARGET
 if(NETUDP_BUILD_SHARED)
@@ -239,11 +236,6 @@ target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_MINOR=${NET
 target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_PATCH=${NETUDP_VERSION_PATCH})
 target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_TAG=${NETUDP_VERSION_TAG})
 target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_TAG_HEX=${NETUDP_VERSION_TAG_HEX})
-
-if(NETUDP_USE_NAMESPACE)
-    target_compile_definitions(${NETUDP_TARGET} PUBLIC -DNETUDP_USE_NAMESPACE)
-    target_compile_definitions(${NETUDP_TARGET} PUBLIC -DNETUDP_NAMESPACE=${NETUDP_NAMESPACE})
-endif(NETUDP_USE_NAMESPACE)
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                           TESTS                                  │

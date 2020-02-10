@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/Export.hpp>
+#include <Net/Udp/Export.hpp>
 
 // Qt Header
 #include <QObject>
@@ -17,7 +17,8 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_NAMESPACE_START
+namespace Net {
+namespace Udp {
 
 class NETUDP_API_ Version : public QObject
 {
@@ -46,6 +47,7 @@ private:
     QSM_CONSTANT_AUTO_PROPERTY(QString, readable, Readable)
 };
 
-NETUDP_NAMESPACE_END
+}
+}
 
 #endif

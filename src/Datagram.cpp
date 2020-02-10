@@ -2,22 +2,14 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
-
-// Qt Header
-
-// Dependencies Header
-
 // Application Header
-#include <NetUdp/Datagram.hpp>
+#include <Net/Udp/Datagram.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_USING_NAMESPACE;
+using namespace Net::Udp;;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS

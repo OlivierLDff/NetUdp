@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/Version.hpp>
+#include <Net/Udp/Version.hpp>
 
 // Dependencies Header
 #include <Stringify/VersionRegex.hpp>
@@ -12,7 +12,7 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_USING_NAMESPACE
+using namespace Net::Udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS

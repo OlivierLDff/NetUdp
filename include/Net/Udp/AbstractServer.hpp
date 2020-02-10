@@ -7,7 +7,7 @@
 
 
 // Application Header
-#include <NetUdp/Export.hpp>
+#include <Net/Udp/Export.hpp>
 
 // Dependencies Header
 #include <QQmlAutoPropertyHelpers.h>
@@ -16,14 +16,14 @@
 #include <QObject>
 
 // C++ Header
-#include <cstdint>
 #include <set>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_NAMESPACE_START
+namespace Net {
+namespace Udp {
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
@@ -101,6 +101,7 @@ public:
     Q_INVOKABLE bool isMulticastGroupPresent(const QString& groupAddress);
 };
 
-NETUDP_NAMESPACE_END
+}
+}
 
 #endif // __NETUDP_ABSTRACT_SERVER_HPP__

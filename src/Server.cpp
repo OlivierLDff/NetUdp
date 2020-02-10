@@ -3,8 +3,8 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/Server.hpp>
-#include <NetUdp/ServerWorker.hpp>
+#include <Net/Udp/Server.hpp>
+#include <Net/Udp/ServerWorker.hpp>
 
 // Qt Header
 #include <QThread>
@@ -16,7 +16,7 @@
 
 Q_LOGGING_CATEGORY(NETUDP_SERVER_LOGCAT, "net.udp.server")
 
-NETUDP_USING_NAMESPACE;
+using namespace Net::Udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
@@ -198,7 +198,7 @@ bool Server::sendDatagram(uint8_t* buffer, const size_t length, const QHostAddre
         return false;
     }
 
-    auto datagram = std::make_shared<NetUdp::Datagram>();
+    auto datagram = std::make_shared<Datagram>();
     const auto datagramLength = length;
     datagram->buffer = std::make_unique<uint8_t[]>(datagramLength);
     memcpy(datagram->buffer.get(), buffer, length);

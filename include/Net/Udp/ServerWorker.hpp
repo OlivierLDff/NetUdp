@@ -6,21 +6,21 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/Datagram.hpp>
-#include <NetUdp/Export.hpp>
+#include <Net/Udp/Datagram.hpp>
+#include <Net/Udp/Export.hpp>
 
 // Qt Header
 #include <QObject>
 #include <QNetworkInterface>
 #include <QUdpSocket>
 #include <QTimer>
-#include <QThread>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_NAMESPACE_START
+namespace Net {
+namespace Udp {
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
@@ -144,7 +144,7 @@ Q_SIGNALS:
     friend class Server;
 };
 
-
-NETUDP_NAMESPACE_END
+}
+}
 
 #endif // __NETUDP_SERVER_WORKER_HPP__

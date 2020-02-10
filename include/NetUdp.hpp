@@ -6,12 +6,12 @@
 // ─────────────────────────────────────────────────────────────
 
 // Private Utils
-#include <NetUdp/Version.hpp>
-#include <NetUdp/Utils.hpp>
+#include <Net/Udp/Version.hpp>
+#include <Net/Udp/Utils.hpp>
 
 // Library code
-#include <NetUdp/AbstractServer.hpp>
-#include <NetUdp/Datagram.hpp>
-#include <NetUdp/Server.hpp>
+#include <Net/Udp/AbstractServer.hpp>
+#include <Net/Udp/Datagram.hpp>
+#include <Net/Udp/Server.hpp>
 
 #endif // __NETUDP_HPP__

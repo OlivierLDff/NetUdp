@@ -6,15 +6,16 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/AbstractServer.hpp>
-#include <NetUdp/Datagram.hpp>
-#include <NetUdp/Export.hpp>
+#include <Net/Udp/AbstractServer.hpp>
+#include <Net/Udp/Datagram.hpp>
+#include <Net/Udp/Export.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_NAMESPACE_START
+namespace Net {
+namespace Udp {
 
 class ServerWorker;
 
@@ -81,6 +82,7 @@ private Q_SLOTS:
     void onWorkerPacketsTxPerSecondsChanged(const quint64 txPackets);
 };
 
-NETUDP_NAMESPACE_END
+}
+}
 
 #endif // __NETUDP_SERVER_HPP__
