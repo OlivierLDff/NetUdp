@@ -133,9 +133,12 @@ bool Server::stop()
     setRxPacketsPerSeconds(0);
     setTxPacketsPerSeconds(0);
 
-    _workerThread->exit();
-    _workerThread->wait();
-    _workerThread = nullptr;
+    if(_workerThread)
+    {
+        _workerThread->exit();
+        _workerThread->wait();
+        _workerThread = nullptr;        
+    }
 
     return true;
 }
