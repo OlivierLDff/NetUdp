@@ -50,6 +50,23 @@ void Server::setInputEnabled(const bool enabled)
     }
 }
 
+bool Server::useWorkerThread() const
+{
+    return _useWorkerThread;
+}
+
+void Server::setUseWorkerThread(const bool enabled)
+{
+    if (enabled != _useWorkerThread)
+    {
+        _useWorkerThread = enabled;
+        Q_EMIT useWorkerThreadChanged(enabled);
+
+        stop();
+        start();
+    }
+}
+
 bool Server::start()
 {
     if (!AbstractServer::start())
@@ -59,17 +76,20 @@ bool Server::start()
     Q_ASSERT(_workerThread.get() == nullptr);
 
     _worker = createWorker();
-    _workerThread = std::make_unique<QThread>();
+    if(_useWorkerThread)
+    {
+        _workerThread = std::make_unique<QThread>();
 
-    connect(_workerThread.get(), &QThread::finished,
-        [this]() { _worker = nullptr; }
-    );
+        connect(_workerThread.get(), &QThread::finished,
+            [this]() { _worker = nullptr; }
+        );
 
-    if (objectName().size())
-        _workerThread->setObjectName(objectName() + " Worker");
-    else
-        _workerThread->setObjectName("Server Worker");
-    _worker->moveToThread(_workerThread.get());
+        if (objectName().size())
+            _workerThread->setObjectName(objectName() + " Worker");
+        else
+            _workerThread->setObjectName("Server Worker");
+        _worker->moveToThread(_workerThread.get());        
+    }
 
     _worker->_watchdogTimeout = watchdogPeriodMs();
     _worker->_rxAddress = rxAddress();
@@ -110,7 +130,8 @@ bool Server::start()
     connect(_worker.get(), &ServerWorker::rxPacketsCounterChanged, this, &Server::onWorkerPacketsRxPerSecondsChanged);
     connect(_worker.get(), &ServerWorker::txPacketsCounterChanged, this, &Server::onWorkerPacketsTxPerSecondsChanged);
 
-    _workerThread->start();
+    if (_useWorkerThread)
+        _workerThread->start();
 
     Q_EMIT startWorker();
 
@@ -140,6 +161,11 @@ bool Server::stop()
         _workerThread->exit();
         _workerThread->wait();
         _workerThread = nullptr;        
+    }
+    else
+    {
+        _worker->deleteLater();
+        _worker.release();
     }
 
     return true;

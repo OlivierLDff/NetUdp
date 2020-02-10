@@ -54,6 +54,18 @@ public:
 Q_SIGNALS:
     void inputEnabledChanged(bool enabled);
 
+    // ──────── WORKER THREAD USE ────────
+protected:
+    Q_PROPERTY(bool useWorkerThread READ useWorkerThread WRITE setUseWorkerThread NOTIFY useWorkerThreadChanged);
+private:
+    bool _useWorkerThread = true;
+public:
+    bool useWorkerThread() const;
+    void setUseWorkerThread(const bool enabled);
+
+Q_SIGNALS:
+    void useWorkerThreadChanged(bool enabled);
+
     // ──────── C++ API ────────
 public:
     Q_INVOKABLE bool start() override;

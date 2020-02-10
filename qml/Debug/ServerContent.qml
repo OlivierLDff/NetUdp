@@ -240,13 +240,9 @@ Column
             implicitHeight: 32
             checked: root.object && root.object.multicastLoopback
             elide: Text.ElideRight
-            implicitWidth: parent.width/3
+            implicitWidth: parent.width/4
             textType: Qaterial.Style.TextType.Caption
-            onCheckedChanged:
-            {
-                if(root.object && root.object.multicastLoopback !== checked)
-                    root.object.multicastLoopback = checked
-            }
+            onClicked: if(root.object) root.object.multicastLoopback = checked
         }
 
         Qaterial.SwitchButton
@@ -255,13 +251,9 @@ Column
             implicitHeight: 32
             checked: root.object && root.object.inputEnabled
             elide: Text.ElideRight
-            implicitWidth: parent.width/3
+            implicitWidth: parent.width/4
             textType: Qaterial.Style.TextType.Caption
-            onCheckedChanged:
-            {
-                if(root.object && root.object.inputEnabled !== checked)
-                    root.object.inputEnabled = checked
-            }
+            onClicked: if(root.object) root.object.inputEnabled = checked
         }
 
         Qaterial.SwitchButton
@@ -270,13 +262,20 @@ Column
             implicitHeight: 32
             checked: root.object && root.object.separateRxTxSockets
             elide: Text.ElideRight
-            implicitWidth: parent.width/3
+            implicitWidth: parent.width/4
             textType: Qaterial.Style.TextType.Caption
-            onCheckedChanged:
-            {
-                if(root.object && root.object.separateRxTxSockets !== checked)
-                    root.object.separateRxTxSockets = checked
-            }
+            onClicked: if(root.object) root.object.separateRxTxSockets = checked
+        }
+
+        Qaterial.SwitchButton
+        {
+            text: "worker thread"
+            implicitHeight: 32
+            checked: root.object && root.object.useWorkerThread
+            elide: Text.ElideRight
+            implicitWidth: parent.width/4
+            textType: Qaterial.Style.TextType.Caption
+            onClicked: if(root.object) root.object.useWorkerThread = checked
         }
     } // Row
 
