@@ -15,6 +15,7 @@
 
 // C++ Header
 #include <cstdint>
+#include <memory>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
