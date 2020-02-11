@@ -33,7 +33,8 @@ class NETUDP_API_ Datagram
     // ────── CONSTRUCTOR ────────
 public:
     virtual ~Datagram() = default;
-    void reset();
+    virtual void reset();
+    virtual void reset(size_t length);
 
     // ────── API ────────
 public:

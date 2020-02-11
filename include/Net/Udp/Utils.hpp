@@ -30,7 +30,9 @@ public:
     /**
      * Register type to the qml engines
      * Registered types are:
-     * -
+     * - AbstractServer
+     * - Server
+     * - SharedDatagram
      */
     static void registerTypes(const char* uri = nullptr, const quint8 major = 1, const quint8 minor = 0);
     static void loadResources();

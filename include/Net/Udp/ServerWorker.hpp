@@ -74,7 +74,7 @@ public:
     bool resizeCache(size_t length);
     void clearCache();
     void releaseCache();
-    std::shared_ptr<RecycledDatagram> makeDatagram(const size_t length);
+    virtual std::shared_ptr<Datagram> makeDatagram(const size_t length);
 
     // ──────── STATUS CONTROL ────────
 public Q_SLOTS:
@@ -107,17 +107,17 @@ private:
 
     // ──────── TX ────────
 public Q_SLOTS:
-    virtual void onSendDatagram(SharedDatagram datagram);
+    virtual void onSendDatagram(const SharedDatagram& datagram);
 
     // ──────── RX ────────
 protected:
-    virtual bool isPacketValid(const uint8_t* buffer, const size_t length);
+    virtual bool isPacketValid(const uint8_t* buffer, const size_t length) const;
 private Q_SLOTS:
     void readPendingDatagrams();
 protected:
-    virtual void onReceivedDatagram(const SharedDatagram& datagram);
+    virtual void onDatagramReceived(const SharedDatagram& datagram);
 Q_SIGNALS:
-    void receivedDatagram(const SharedDatagram datagram);
+    void datagramReceived(const SharedDatagram datagram);
 
     // ──────── STATUS ────────
 protected Q_SLOTS:
@@ -135,6 +135,7 @@ private:
     quint64 _txBytesCounter = 0;
     quint64 _rxPacketsCounter = 0;
     quint64 _txPacketsCounter = 0;
+    quint64 _rxInvalidPacket = 0;
     std::unique_ptr<QTimer> _bytesCounterTimer;
 
 protected:
@@ -148,9 +149,9 @@ Q_SIGNALS:
     void txBytesCounterChanged(const quint64 tx);
     void rxPacketsCounterChanged(const quint64 rx);
     void txPacketsCounterChanged(const quint64 tx);
+    void rxInvalidPacketsCounterChanged(const quint64 rx);
 
     // ──────── FRIENDS ────────
-
     friend class Server;
 };
 

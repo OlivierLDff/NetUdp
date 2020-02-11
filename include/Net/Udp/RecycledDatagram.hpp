@@ -27,16 +27,17 @@ class NETUDP_API_ RecycledDatagram : public Datagram
     // ────── CONSTRUCTOR ────────
 public:
     RecycledDatagram(const size_t length);
-    void reset(const size_t length);
+    void reset() override final;
+    void reset(const size_t length) override final;
 
 private:
     Recycler::Buffer<uint8_t> _buffer;
 
     // ────── API ────────
 public:
-    uint8_t* buffer() override;
-    const uint8_t* buffer() const override;
-    size_t length() const override;
+    uint8_t* buffer() override final;
+    const uint8_t* buffer() const override final;
+    size_t length() const override final;
 };
 
 }

@@ -89,16 +89,23 @@ protected:
     QSM_READONLY_AUTO_PROPERTY(quint64, rxPacketsTotal, RxPacketsTotal);
     QSM_READONLY_AUTO_PROPERTY(quint64, txPacketsTotal, TxPacketsTotal);
 
-    // ──────── C++ API ────────
-public:
-    Q_INVOKABLE virtual bool start();
-    Q_INVOKABLE virtual bool stop();
-    Q_INVOKABLE virtual bool restart();
+    QSM_READONLY_AUTO_PROPERTY(quint64, rxInvalidPacketTotal, RxInvalidPacketTotal);
 
-    Q_INVOKABLE virtual bool joinMulticastGroup(const QString& groupAddress);
-    Q_INVOKABLE virtual bool leaveMulticastGroup(const QString& groupAddress);
-    Q_INVOKABLE bool leaveAllMulticastGroups();
-    Q_INVOKABLE bool isMulticastGroupPresent(const QString& groupAddress);
+    // ──────── C++ API ────────
+public Q_SLOTS:
+    virtual bool start();
+    virtual bool stop();
+    virtual bool restart();
+
+    virtual bool joinMulticastGroup(const QString& groupAddress);
+    virtual bool leaveMulticastGroup(const QString& groupAddress);
+    bool leaveAllMulticastGroups();
+    bool isMulticastGroupPresent(const QString& groupAddress);
+
+    void clearRxCounter();
+    void clearTxCounter();
+    void clearRxInvalidCounter();
+    void clearCounters();
 };
 
 }

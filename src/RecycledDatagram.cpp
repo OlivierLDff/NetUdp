@@ -19,10 +19,16 @@ RecycledDatagram::RecycledDatagram(const size_t length): _buffer(length)
 {
 }
 
+void RecycledDatagram::reset()
+{
+    _buffer.reset(0);
+    Datagram::reset();
+}
+
 void RecycledDatagram::reset(const size_t length)
 {
     _buffer.reset(length);
-    Datagram::reset();
+    Datagram::reset(length);
 }
 
 uint8_t* RecycledDatagram::buffer()

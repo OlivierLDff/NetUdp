@@ -113,7 +113,7 @@ void ServerWorker::releaseCache()
     _cache.release();
 }
 
-std::shared_ptr<RecycledDatagram> ServerWorker::makeDatagram(const size_t length)
+std::shared_ptr<Datagram> ServerWorker::makeDatagram(const size_t length)
 {
     return _cache.make(length);
 }
@@ -382,7 +382,7 @@ void ServerWorker::setMulticastTtl(const quint8 ttl)
     }
 }
 
-void ServerWorker::onSendDatagram(const SharedDatagram datagram)
+void ServerWorker::onSendDatagram(const SharedDatagram& datagram)
 {
     if (!datagram)
     {
@@ -449,7 +449,7 @@ void ServerWorker::onSendDatagram(const SharedDatagram datagram)
     ++_txPacketsCounter;
 }
 
-bool ServerWorker::isPacketValid(const uint8_t* buffer, const size_t length)
+bool ServerWorker::isPacketValid(const uint8_t* buffer, const size_t length) const
 {
     return true;
 }
@@ -466,6 +466,7 @@ void ServerWorker::readPendingDatagrams()
         if (!isPacketValid(reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size()))
         {
             qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Receive not valid datagram");
+            ++_rxInvalidPacket;
             continue;
         }
 
@@ -486,13 +487,13 @@ void ServerWorker::readPendingDatagrams()
         _rxBytesCounter += datagram.data().size();
         ++_rxPacketsCounter;
 
-        onReceivedDatagram(sharedDatagram);
+        onDatagramReceived(sharedDatagram);
     }
 }
 
-void ServerWorker::onReceivedDatagram(const SharedDatagram& datagram)
+void ServerWorker::onDatagramReceived(const SharedDatagram& datagram)
 {
-    Q_EMIT receivedDatagram(datagram);
+    Q_EMIT datagramReceived(datagram);
 }
 
 void ServerWorker::onSocketError(QAbstractSocket::SocketError error)
@@ -577,9 +578,11 @@ void ServerWorker::updateDataCounter()
     Q_EMIT txBytesCounterChanged(_txBytesCounter);
     Q_EMIT rxPacketsCounterChanged(_rxPacketsCounter);
     Q_EMIT txPacketsCounterChanged(_txPacketsCounter);
+    Q_EMIT rxInvalidPacketsCounterChanged(_rxInvalidPacket);
 
     _rxBytesCounter = 0;
     _txBytesCounter = 0;
     _rxPacketsCounter = 0;
     _txPacketsCounter = 0;
+    _rxInvalidPacket = 0;
 }

@@ -73,6 +73,11 @@ bool AbstractServer::stop()
     setIsBounded(false);
     setIsRunning(false);
 
+    resetRxBytesPerSeconds();
+    resetTxBytesPerSeconds();
+    resetRxPacketsPerSeconds();
+    resetTxPacketsPerSeconds();
+
     return true;
 }
 
@@ -131,4 +136,31 @@ bool AbstractServer::leaveAllMulticastGroups()
 bool AbstractServer::isMulticastGroupPresent(const QString& groupAddress)
 {
     return _multicastGroups.find(groupAddress) != _multicastGroups.end();
+}
+
+void AbstractServer::clearRxCounter()
+{
+    resetRxPacketsPerSeconds();
+    resetRxPacketsTotal();
+    resetRxBytesPerSeconds();
+    resetRxBytesTotal();
+}
+
+void AbstractServer::clearTxCounter()
+{
+    resetTxPacketsPerSeconds();
+    resetTxPacketsTotal();
+    resetTxBytesPerSeconds();
+    resetTxBytesTotal();
+}
+
+void AbstractServer::clearRxInvalidCounter()
+{
+    resetRxInvalidPacketTotal();
+}
+
+void AbstractServer::clearCounters()
+{
+    clearRxCounter();
+    clearTxCounter();
 }

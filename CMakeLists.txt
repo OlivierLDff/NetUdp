@@ -55,6 +55,9 @@ set(NETUDP_FOLDER_PREFIX ${NETUDP_PROJECT} CACHE STRING "Prefix folder for all N
 set(NETUDP_ENABLE_QML ON CACHE BOOL "Embedded Debug Qml module for NetUdp class")
 
 # Install
+set(NETUDP_ENABLE_EXAMPLES OFF CACHE BOOL "Create or not a target for examples")
+
+# Install
 set(NETUDP_ENABLE_INSTALL OFF CACHE BOOL "Create or not a target for install")
 set(NETUDP_INSTALL_PREFIX ${NETUDP_PROJECT} CACHE STRING "Prefix for all NetUdp headers in the install folder")
 
@@ -256,6 +259,22 @@ target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_TAG_HEX=${N
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                         EXAMPLES                                 │
 # └──────────────────────────────────────────────────────────────────┘
+
+if(NETUDP_ENABLE_EXAMPLES)
+
+    set(NETUDP_EXAMPLE1_TARGET ${NETUDP_TARGET}_EchoClientServer)
+    message(STATUS "Add Example ${NETUDP_EXAMPLE1_TARGET}")
+    add_executable(${NETUDP_EXAMPLE1_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/examples/EchoClientServer.cpp")
+    target_link_libraries(${NETUDP_EXAMPLE1_TARGET} NetUdp)
+    set_target_properties(${NETUDP_EXAMPLE1_TARGET} PROPERTIES FOLDER "${NETUDP_FOLDER_PREFIX}/Examples")
+
+    set(NETUDP_EXAMPLE2_TARGET ${NETUDP_TARGET}_EchoMulticastLoopback)
+    message(STATUS "Add Example ${NETUDP_EXAMPLE2_TARGET}")
+    add_executable(${NETUDP_EXAMPLE2_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/examples/EchoMulticastLoopback.cpp")
+    target_link_libraries(${NETUDP_EXAMPLE2_TARGET} NetUdp)
+    set_target_properties(${NETUDP_EXAMPLE2_TARGET} PROPERTIES FOLDER "${NETUDP_FOLDER_PREFIX}/Examples")
+
+endif(NETUDP_ENABLE_EXAMPLES)
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                         INSTALL                                  │

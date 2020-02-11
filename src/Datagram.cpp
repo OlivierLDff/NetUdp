@@ -23,3 +23,8 @@ void Datagram::reset()
     senderPort = 0;
     ttl = 8;
 }
+
+void Datagram::reset(size_t length)
+{
+    Datagram::reset();
+}
