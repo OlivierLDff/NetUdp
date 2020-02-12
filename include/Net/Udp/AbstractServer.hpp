@@ -36,8 +36,8 @@ public:
 
     // ──────── ATTRIBUTE STATE ────────
 protected:
-    NETUDP_PROPERTY_RO          (bool, isRunning, IsRunning);
-    NETUDP_PROPERTY_RO          (bool, isBounded, IsBounded);
+    NETUDP_PROPERTY_RO          (bool, isRunning, Running);
+    NETUDP_PROPERTY_RO          (bool, isBounded, Bounded);
     NETUDP_PROPERTY_D           (quint64, watchdogPeriod, WatchdogPeriod, 5000);
 
     // ──────── ATTRIBUTE ────────

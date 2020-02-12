@@ -103,7 +103,7 @@ bool Server::start()
     connect(_impl.get(), &ServerImpl::sendDatagramToWorker, _worker.get(), &ServerWorker::onSendDatagram);
     connect(_worker.get(), &ServerWorker::datagramReceived, this, &Server::onDatagramReceived);
 
-    connect(_worker.get(), &ServerWorker::isBoundedChanged, this, &Server::onBoundedChanged);
+    connect(_worker.get(), &ServerWorker::isBoundedChanged, this, &Server::setBounded);
     connect(_worker.get(), &ServerWorker::socketError, this, &Server::socketError);
 
     connect(_worker.get(), &ServerWorker::rxBytesCounterChanged, this, &Server::onWorkerRxPerSecondsChanged);
@@ -276,11 +276,6 @@ void Server::onDatagramReceived(const SharedDatagram& datagram)
 {
     Q_CHECK_PTR(datagram.get());
     Q_EMIT datagramReceived(datagram);
-}
-
-void Server::onBoundedChanged(const bool isBounded)
-{
-    setIsBounded(isBounded);
 }
 
 void Server::onWorkerRxPerSecondsChanged(const quint64 rxBytes)

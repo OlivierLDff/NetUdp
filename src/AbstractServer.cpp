@@ -58,7 +58,7 @@ bool AbstractServer::start()
     if (isRunning())
         return false;
 
-    setIsRunning(true);
+    setRunning(true);
 
     return true;
 }
@@ -69,8 +69,8 @@ bool AbstractServer::stop()
     if (!isRunning())
         return false;
 
-    setIsBounded(false);
-    setIsRunning(false);
+    setBounded(false);
+    setRunning(false);
 
     resetRxBytesPerSeconds();
     resetTxBytesPerSeconds();
