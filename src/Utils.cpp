@@ -35,6 +35,9 @@ static void NetUdp_registerTypes()
     qCDebug(NETUDP_UTILS_LOG_CAT, "Register Singleton %s.Version %d.%d to QML", *_uri, _major, _minor);
     Net::Udp::Version::registerSingleton(*_uri, _major, _minor);
 
+    qCDebug(NETUDP_UTILS_LOG_CAT, "Register %s.AbstractServer %d.%d to QML", *_uri, _major, _minor);
+    Net::Udp::AbstractServer::registerToQml(*_uri, _major, _minor);
+
     qCDebug(NETUDP_UTILS_LOG_CAT, "Register %s.Server %d.%d to QML", *_uri, _major, _minor);
     Net::Udp::Server::registerToQml(*_uri, _major, _minor);
 

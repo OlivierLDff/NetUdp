@@ -24,10 +24,11 @@ Every datagram allocation is stored in `std::shared_ptr<Datagram>`. This allow t
 
 * The library depends on C++ 14 STL.
 * [Recycler](https://github.com/OlivierLDff/Recycler.git) library to reuse allocated datagram.
-* [Stringify](https://github.com/OlivierLDff/Stringify) for version to string and qml regex.
 * Qt Core and Network for the backend.
-* Qt Qml Quick Control2 for Qml Debugging.
-* [Qaterial](https://github.com/OlivierLDff/Qaterial) for qml debugging.
+* Qml dependencies:
+  * Qt Qml Quick Control2
+  * [Stringify](https://github.com/OlivierLDff/Stringify)
+  * [Qaterial](https://github.com/OlivierLDff/Qaterial) 
 
 ### Tools
 
@@ -94,7 +95,7 @@ int main(int argc, char* argv[])
 
 Errors can be observed via `socketError(int error, QString description)` signals. If the socket fail to bind, or if anything happened, the worker will start a watchdog timer to restart the socket.
 
-The default restart time is set to 5 seconds but can be changed via `watchdogPeriodMs` property.
+The default restart time is set to 5 seconds but can be changed via `watchdogPeriod` property. The property is expressed in milliseconds.
 
 #### Disable Input
 
@@ -116,7 +117,7 @@ Internally the `Server` track multiple information to have an idea of what is go
 * `*xPacketsPerSeconds` is an average value of all packets received/sent in the last second. This value is updated every seconds. `* can be replaced by t and r`
 * `*xPacketsTotal` total received/sent packets since start. `* can be replaced by t and r`
 
-Those indicate can be cleared with `clearRxCounter`/`clearTxCounter`/`clearCounters`.
+Those property can be cleared with `clearRxCounter`/`clearTxCounter`/`clearCounters`.
 
 #### How to avoid memory copy
 

@@ -26,10 +26,28 @@ class ServerWorker;
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
+/*
+ * \brief Hide from the user signal used to communicate with worker
+ */
+class ServerImpl : public QObject
+{
+    Q_OBJECT
+public:
+    ServerImpl(QObject* parent = nullptr) : QObject(parent) {}
+
+Q_SIGNALS:
+    void startWorker();
+    void stopWorker();
+    void restartWorker();
+    void joinMulticastGroupWorker(const QString address);
+    void leaveMulticastGroupWorker(const QString address);
+    void sendDatagramToWorker(SharedDatagram datagram);
+};
+
 class NETUDP_API_ Server : public AbstractServer
 {
     Q_OBJECT
-    QSM_REGISTER_TO_QML(Server);
+    NETUDP_REGISTER_TO_QML(Server);
 
     // ──────── CONSTRUCTOR ────────
 public:
@@ -38,33 +56,13 @@ public:
 
     // ──────── WORKER ────────
 protected:
+    std::unique_ptr<ServerImpl> _impl;
     std::unique_ptr<ServerWorker> _worker;
     std::unique_ptr<QThread> _workerThread;
     Recycler::Circular<RecycledDatagram> _cache;
 
-    // ──────── INPUT / OUTPUT ────────
-protected:
-    Q_PROPERTY(bool inputEnabled READ inputEnabled WRITE setInputEnabled NOTIFY inputEnabledChanged);
-private:
-    bool _inputEnabled = true;
 public:
-    bool inputEnabled() const;
-    void setInputEnabled(const bool enabled);
-
-Q_SIGNALS:
-    void inputEnabledChanged(bool enabled);
-
-    // ──────── WORKER THREAD USE ────────
-protected:
-    Q_PROPERTY(bool useWorkerThread READ useWorkerThread WRITE setUseWorkerThread NOTIFY useWorkerThreadChanged);
-private:
-    bool _useWorkerThread = false;
-public:
-    bool useWorkerThread() const;
-    void setUseWorkerThread(const bool enabled);
-
-Q_SIGNALS:
-    void useWorkerThreadChanged(bool enabled);
+    bool setUseWorkerThread(const bool& enabled) override;
 
     // ──────── C++ API ────────
 public Q_SLOTS:
@@ -73,13 +71,16 @@ public Q_SLOTS:
     bool joinMulticastGroup(const QString& groupAddress) override final;
     bool leaveMulticastGroup(const QString& groupAddress) override final;
 
+    // ──────── CUSTOM WORKER API ────────
 protected:
     virtual std::unique_ptr<ServerWorker> createWorker();
 
-    // ──────── DATAGRAM API ────────
+    // ──────── CUSTOM DATAGRAM API ────────
 public:
     virtual std::shared_ptr<Datagram> makeDatagram(const size_t length);
 
+    // ──────── SEND DATAGRAM API ────────
+public:
     virtual bool sendDatagram(const uint8_t* buffer, const size_t length, const QHostAddress& address, const uint16_t port, const uint8_t ttl = 0);
     virtual bool sendDatagram(const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0);
     virtual bool sendDatagram(const char* buffer, const size_t length, const QHostAddress& address, const uint16_t port, const uint8_t ttl = 0);
@@ -87,20 +88,13 @@ public:
     virtual bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0);
     virtual bool sendDatagram(std::shared_ptr<Datagram> datagram);
 
+    // ──────── RECEIVE DATAGRAM API ────────
 protected Q_SLOTS:
     virtual void onDatagramReceived(const SharedDatagram& datagram);
 Q_SIGNALS:
     void datagramReceived(const SharedDatagram& datagram);
 
     // ──────── WORKER COMMUNICATION ────────
-Q_SIGNALS:
-    void startWorker();
-    void stopWorker();
-    void restartWorker();
-    void joinMulticastGroupWorker(const QString address);
-    void leaveMulticastGroupWorker(const QString address);
-    void sendDatagramToWorker(SharedDatagram datagram);
-
 private Q_SLOTS:
     void onBoundedChanged(const bool isBounded);
     void onWorkerRxPerSecondsChanged(const quint64 rxBytes);

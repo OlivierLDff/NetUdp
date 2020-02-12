@@ -14,7 +14,7 @@ import NetUdp 1.0 as NetUdp
 Column
 {
     id: root
-    property NetUdp.Server object: null
+    property NetUdp.AbstractServer object: null
     Qaterial.Label
     {
         text: "isRunning : " + (root.object ? root.object.isRunning : "")
@@ -33,8 +33,6 @@ Column
     }
     Qaterial.Label
     {
-        //visible: root.object && root.object.error
-        //text: "error : " + (root.object ? root.object.error : "")
         id: _errorLabel
         Connections
         {

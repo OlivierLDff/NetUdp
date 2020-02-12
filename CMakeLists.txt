@@ -15,12 +15,6 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(RECYCLER_REPOSITORY "https://github.com/OlivierLDff/Recycler.git" CACHE STRING "Repository of Recycler")
 set(RECYCLER_TAG "master" CACHE STRING "Git Tag of Recycler")
 
-set(QSUPERMACROS_REPOSITORY "https://github.com/OlivierLDff/QSuperMacros" CACHE STRING "Repository of QSuperMacros")
-set(QSUPERMACROS_TAG "master" CACHE STRING "Git tag/branch of QSuperMacros")
-
-set(STRINGIFY_REPOSITORY "https://github.com/OlivierLDff/Stringify" CACHE STRING "Repository of Stringify")
-set(STRINGIFY_TAG "master" CACHE STRING "Git tag/branch of Stringify")
-
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                       PROJECT SETTINGS                           │
 # └──────────────────────────────────────────────────────────────────┘
@@ -93,6 +87,7 @@ message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
 # └──────────────────────────────────────────────────────────────────┘
 
 find_package(Qt5Core CONFIG REQUIRED)
+find_package(Qt5Qml CONFIG REQUIRED)
 find_package(Qt5Network CONFIG REQUIRED)
 
 if(NETUDP_ENABLE_QML)
@@ -112,27 +107,11 @@ FetchContent_Declare(
     GIT_TAG        ${RECYCLER_TAG}
 )
 
-# QSuperMacros
-set(QSUPERMACROS_FOLDER_PREFIX "Dependencies/QSuperMacros" CACHE STRING "")
-FetchContent_Declare(
-    QSuperMacros
-    GIT_REPOSITORY ${QSUPERMACROS_REPOSITORY}
-    GIT_TAG        ${QSUPERMACROS_TAG}
-)
-
-# Stringify
-set(STRINGIFY_FOLDER_PREFIX "Dependencies/Stringify" CACHE STRING "")
-FetchContent_Declare(
-    Stringify
-    GIT_REPOSITORY ${STRINGIFY_REPOSITORY}
-    GIT_TAG        ${STRINGIFY_TAG}
-)
-
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 set(FETCHCONTENT_QUIET ON)
 
 # Make all dependencies avaiables
-FetchContent_MakeAvailable(QSuperMacros Recycler Stringify)
+FetchContent_MakeAvailable(Recycler)
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                          NETUDP                                  │
@@ -191,13 +170,13 @@ set(NETUDP_SRCS ${NETUDP_UTILS_SRCS}
 set(NETUDP_UTILS_INCS
     ${NETUDP_INCS_FOLDER}/NetUdp.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/Export.hpp
+    ${NETUDP_PRIVATE_INCS_FOLDER}/Property.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/Utils.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/Version.hpp
 )
 
 set(NETUDP_API_INCS
     ${NETUDP_PRIVATE_INCS_FOLDER}/AbstractServer.hpp
-    ${NETUDP_PRIVATE_INCS_FOLDER}/Export.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/Datagram.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/RecycledDatagram.hpp
     ${NETUDP_PRIVATE_INCS_FOLDER}/Server.hpp
@@ -235,13 +214,13 @@ target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_IN
 set_target_properties(${NETUDP_TARGET} PROPERTIES PREFIX "")
 
 # Link libraries
-target_link_libraries(${NETUDP_TARGET} QSuperMacros Stringify Recycler)
+target_link_libraries(${NETUDP_TARGET} Recycler)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)
     set_target_properties(${NETUDP_TARGET} PROPERTIES AUTORCC TRUE)
 endif() # NETUDP_ENABLE_QML
-qt5_use_modules(${NETUDP_TARGET} Core Network)
+qt5_use_modules(${NETUDP_TARGET} Core Qml Network)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES FOLDER ${NETUDP_FOLDER_PREFIX})
 

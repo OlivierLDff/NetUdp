@@ -22,7 +22,8 @@ using namespace Net::Udp;
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
-Server::Server(QObject* parent): AbstractServer(parent)
+Server::Server(QObject* parent): AbstractServer(parent),
+_impl(std::make_unique<ServerImpl>())
 {
 }
 
@@ -36,35 +37,15 @@ Server::~Server()
     }
 }
 
-bool Server::inputEnabled() const
+bool Server::setUseWorkerThread(const bool& enabled)
 {
-    return _inputEnabled;
-}
-
-void Server::setInputEnabled(const bool enabled)
-{
-    if (enabled != _inputEnabled)
+    if(AbstractServer::setUseWorkerThread(enabled))
     {
-        _inputEnabled = enabled;
-        Q_EMIT inputEnabledChanged(enabled);
-    }
-}
-
-bool Server::useWorkerThread() const
-{
-    return _useWorkerThread;
-}
-
-void Server::setUseWorkerThread(const bool enabled)
-{
-    if (enabled != _useWorkerThread)
-    {
-        _useWorkerThread = enabled;
-        Q_EMIT useWorkerThreadChanged(enabled);
-
         stop();
         start();
+        return true;
     }
+    return false;
 }
 
 bool Server::start()
@@ -76,7 +57,7 @@ bool Server::start()
     Q_ASSERT(_workerThread.get() == nullptr);
 
     _worker = createWorker();
-    if(_useWorkerThread)
+    if(useWorkerThread())
     {
         _workerThread = std::make_unique<QThread>();
 
@@ -91,7 +72,7 @@ bool Server::start()
         _worker->moveToThread(_workerThread.get());        
     }
 
-    _worker->_watchdogTimeout = watchdogPeriodMs();
+    _worker->_watchdogTimeout = watchdogPeriod();
     _worker->_rxAddress = rxAddress();
     _worker->_rxPort = rxPort();
     _worker->_txPort = txPort();
@@ -103,12 +84,12 @@ bool Server::start()
     _worker->_multicastLoopback = multicastLoopback();
     _worker->_inputEnabled = inputEnabled();
 
-    connect(this, &Server::startWorker, _worker.get(), &ServerWorker::onStart);
-    connect(this, &Server::stopWorker, _worker.get(), &ServerWorker::onStop);
-    connect(this, &Server::restartWorker, _worker.get(), &ServerWorker::onRestart);
+    connect(_impl.get(), &ServerImpl::startWorker, _worker.get(), &ServerWorker::onStart);
+    connect(_impl.get(), &ServerImpl::stopWorker, _worker.get(), &ServerWorker::onStop);
+    connect(_impl.get(), &ServerImpl::restartWorker, _worker.get(), &ServerWorker::onRestart);
 
-    connect(this, &Server::joinMulticastGroupWorker, _worker.get(), &ServerWorker::joinMulticastGroup);
-    connect(this, &Server::leaveMulticastGroupWorker, _worker.get(), &ServerWorker::leaveMulticastGroup);
+    connect(_impl.get(), &ServerImpl::joinMulticastGroupWorker, _worker.get(), &ServerWorker::joinMulticastGroup);
+    connect(_impl.get(), &ServerImpl::leaveMulticastGroupWorker, _worker.get(), &ServerWorker::leaveMulticastGroup);
 
     connect(this, &Server::rxAddressChanged, _worker.get(), &ServerWorker::setAddress);
     connect(this, &Server::rxPortChanged, _worker.get(), &ServerWorker::setRxPort);
@@ -117,9 +98,9 @@ bool Server::start()
     connect(this, &Server::multicastLoopbackChanged, _worker.get(), &ServerWorker::setMulticastLoopback);
     connect(this, &Server::multicastInterfaceNameChanged, _worker.get(), &ServerWorker::setMulticastInterfaceName);
     connect(this, &Server::inputEnabledChanged, _worker.get(), &ServerWorker::setInputEnabled);
-    connect(this, &Server::watchdogPeriodMsChanged, _worker.get(), &ServerWorker::setWatchdogTimeout);
+    connect(this, &Server::watchdogPeriodChanged, _worker.get(), &ServerWorker::setWatchdogTimeout);
 
-    connect(this, &Server::sendDatagramToWorker, _worker.get(), &ServerWorker::onSendDatagram);
+    connect(_impl.get(), &ServerImpl::sendDatagramToWorker, _worker.get(), &ServerWorker::onSendDatagram);
     connect(_worker.get(), &ServerWorker::datagramReceived, this, &Server::onDatagramReceived);
 
     connect(_worker.get(), &ServerWorker::isBoundedChanged, this, &Server::onBoundedChanged);
@@ -130,10 +111,10 @@ bool Server::start()
     connect(_worker.get(), &ServerWorker::rxPacketsCounterChanged, this, &Server::onWorkerPacketsRxPerSecondsChanged);
     connect(_worker.get(), &ServerWorker::txPacketsCounterChanged, this, &Server::onWorkerPacketsTxPerSecondsChanged);
 
-    if (_useWorkerThread)
+    if (_workerThread)
         _workerThread->start();
 
-    Q_EMIT startWorker();
+    Q_EMIT _impl->startWorker();
 
     return true;
 }
@@ -145,7 +126,7 @@ bool Server::stop()
 
     _cache.clear();
 
-    Q_EMIT stopWorker();
+    Q_EMIT _impl->stopWorker();
 
     disconnect(_worker.get(), nullptr, this, nullptr);
     disconnect(this, nullptr, _worker.get(), nullptr);
@@ -169,7 +150,7 @@ bool Server::joinMulticastGroup(const QString& groupAddress)
 {
     if (AbstractServer::joinMulticastGroup(groupAddress))
     {
-        Q_EMIT joinMulticastGroupWorker(groupAddress);
+        Q_EMIT _impl->joinMulticastGroupWorker(groupAddress);
         return true;
     }
     return false;
@@ -179,7 +160,7 @@ bool Server::leaveMulticastGroup(const QString& groupAddress)
 {
     if (AbstractServer::leaveMulticastGroup(groupAddress))
     {
-        Q_EMIT leaveMulticastGroupWorker(groupAddress);
+        Q_EMIT _impl->leaveMulticastGroupWorker(groupAddress);
         return true;
     }
     return false;
@@ -219,7 +200,7 @@ bool Server::sendDatagram(const uint8_t* buffer, const size_t length, const QHos
     datagram->destinationPort = port;
     datagram->ttl = ttl;
 
-    Q_EMIT sendDatagramToWorker(std::move(datagram));
+    Q_EMIT _impl->sendDatagramToWorker(std::move(datagram));
 
     return true;
 }
@@ -286,7 +267,7 @@ bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
         return false;
     }
 
-    Q_EMIT sendDatagramToWorker(std::move(datagram));
+    Q_EMIT _impl->sendDatagramToWorker(std::move(datagram));
 
     return true;
 }

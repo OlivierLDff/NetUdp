@@ -15,7 +15,7 @@ import NetUdp.Debug 1.0 as Debug
 Qaterial.DebugObject
 {
     id: root
-    property NetUdp.Server object: null
+    property NetUdp.AbstractServer object: null
     title: "" + (root.object ? root.object : "Server null")
 
     content: Debug.ServerContent

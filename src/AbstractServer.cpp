@@ -19,13 +19,23 @@ using namespace Net::Udp;
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 //
-AbstractServer::AbstractServer(QObject* parent): QObject(parent)
+AbstractServer::AbstractServer(QObject* parent): IAbstractServer(parent)
 {
 }
 
 const std::set<QString>& AbstractServer::multicastGroupsSet() const
 {
     return _multicastGroups;
+}
+
+bool AbstractServer::setMulticastGroups(const QList<QString>& value)
+{
+    leaveAllMulticastGroups();
+    for(const auto& it : value)
+    {
+        joinMulticastGroup(it);
+    }
+    return true;
 }
 
 QList<QString> AbstractServer::multicastGroups() const
@@ -36,21 +46,10 @@ QList<QString> AbstractServer::multicastGroups() const
     return res;
 }
 
-QString AbstractServer::multicastInterfaceName() const
-{
-    return _multicastInterfaceName;
-}
-
 bool AbstractServer::setMulticastInterfaceName(const QString& name)
 {
-    if (name != _multicastInterfaceName &&
-        (name.isEmpty() || QNetworkInterface::interfaceFromName(name).isValid()))
-    {
-        _multicastInterfaceName = name;
-        Q_EMIT multicastInterfaceNameChanged(_multicastInterfaceName);
-        return true;
-    }
-    return false;
+    return (name.isEmpty() || QNetworkInterface::interfaceFromName(name).isValid()) &&
+        IAbstractServer::setMulticastInterfaceName(name);
 }
 
 bool AbstractServer::start()
@@ -99,7 +98,7 @@ bool AbstractServer::joinMulticastGroup(const QString& groupAddress)
 
     // ) Insert in the set and emit signal to say the multicast list changed
     _multicastGroups.insert(groupAddress);
-    Q_EMIT multicastGroupsChanged();
+    Q_EMIT multicastGroupsChanged(multicastGroups());
 
     // ) This function should be overriden to really join the multicast interface if possible
     return true;
@@ -115,7 +114,7 @@ bool AbstractServer::leaveMulticastGroup(const QString& groupAddress)
 
     // ) Remove the multicast address from the list, then emit a signal to say the list changed
     _multicastGroups.erase(it);
-    Q_EMIT multicastGroupsChanged();
+    Q_EMIT multicastGroupsChanged(multicastGroups());
 
     // ) You should override this function to really implement the leave of the group
     return true;
