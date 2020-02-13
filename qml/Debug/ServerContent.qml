@@ -52,15 +52,15 @@ Column
         textType: Qaterial.Style.TextType.Caption
         highlighted: false
         backgroundImplicitHeight: 20
-        text: "watchdogPeriodMs : " + (root.object ? root.object.watchdogPeriodMs : "")
+        text: "watchdogPeriod : " + (root.object ? root.object.watchdogPeriod : "")
         onClicked: if(root.object) dialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
-                root.object.watchdogPeriodMs = result
+                root.object.watchdogPeriod = result
             },
-            text: root.object.watchdogPeriodMs,
-            title: qsTr("Enter watchdogPeriodMs"),
-            textTitle: qsTr("watchdogPeriodMs"),
+            text: root.object.watchdogPeriod,
+            title: qsTr("Enter watchdogPeriod"),
+            textTitle: qsTr("watchdogPeriod"),
             helperText: "In Ms",
             inputMethodHints: Qt.ImhFormattedNumbersOnly,
             selectAllText: true,

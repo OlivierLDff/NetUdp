@@ -41,6 +41,8 @@ static void NetUdp_registerTypes()
     qCDebug(NETUDP_UTILS_LOG_CAT, "Register %s.Server %d.%d to QML", *_uri, _major, _minor);
     Net::Udp::Server::registerToQml(*_uri, _major, _minor);
 
+    qRegisterMetaType<QAbstractSocket::SocketState>();
+
     qCDebug(NETUDP_UTILS_LOG_CAT, "Register Net::Udp::SharedDatagram to QML");
     qRegisterMetaType<Net::Udp::SharedDatagram>("Net::Udp::SharedDatagram");
     qRegisterMetaType<Net::Udp::SharedDatagram>("Udp::SharedDatagram");
