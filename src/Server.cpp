@@ -69,7 +69,7 @@ bool Server::start()
             _workerThread->setObjectName(objectName() + " Worker");
         else
             _workerThread->setObjectName("Server Worker");
-        _worker->moveToThread(_workerThread.get());        
+        _worker->moveToThread(_workerThread.get());
     }
 
     _worker->_watchdogTimeout = watchdogPeriod();
@@ -135,7 +135,7 @@ bool Server::stop()
     {
         _workerThread->exit();
         _workerThread->wait();
-        _workerThread = nullptr;        
+        _workerThread = nullptr;
     }
     else
     {
