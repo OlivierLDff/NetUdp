@@ -384,6 +384,11 @@ void ServerWorker::setMulticastTtl(const quint8 ttl)
 
 void ServerWorker::onSendDatagram(const SharedDatagram& datagram)
 {
+    if(!isBounded())
+    {
+        qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send datagram is socket isn't bounded");
+        return;        
+    }
     if (!datagram)
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send null datagram");
