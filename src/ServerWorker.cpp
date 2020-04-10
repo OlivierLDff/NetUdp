@@ -387,7 +387,7 @@ void ServerWorker::onSendDatagram(const SharedDatagram& datagram)
     if(!isBounded())
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't send datagram is socket isn't bounded");
-        return;        
+        return;
     }
     if (!datagram)
     {
@@ -464,9 +464,17 @@ void ServerWorker::readPendingDatagrams()
     if (!rxSocket())
         return;
 
-    while (rxSocket() && rxSocket()->hasPendingDatagrams())
+    while (rxSocket() && rxSocket()->isValid() && rxSocket()->hasPendingDatagrams())
     {
         QNetworkDatagram datagram = rxSocket()->receiveDatagram();
+
+        if(!datagram.isValid())
+        {
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Receive datagram that is marked not valid. Discard it.");
+            ++_rxInvalidPacket;
+            // todo : proper restart with watchdog
+            return;
+        }
 
         if(datagram.data().size() <= 0)
         {
