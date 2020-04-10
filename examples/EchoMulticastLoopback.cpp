@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Dependencies
-#include <NetUdp.hpp>
+#include <Net/Udp/NetUdp.hpp>
 
 // Qt
 #include <QCoreApplication>
