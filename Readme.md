@@ -269,6 +269,14 @@ public Q_SLOTS:
         return std::move(myWorker);
     }
 
+    
+    // This is called before creating a SharedDatagram and calling onDatagramReceived
+    bool isPacketValid(const uint8_t* buffer, const size_t length) const override
+    {
+        // Add your checks, like header, fixed size, crc, etc...
+        return buffer && length;
+    }
+    
     void onDatagramReceived(const SharedDatagram& datagram) override
     {
         // Do your business ...
