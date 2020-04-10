@@ -456,7 +456,7 @@ void ServerWorker::onSendDatagram(const SharedDatagram& datagram)
 
 bool ServerWorker::isPacketValid(const uint8_t* buffer, const size_t length) const
 {
-    return true;
+    return buffer && length;
 }
 
 void ServerWorker::readPendingDatagrams()
@@ -467,6 +467,13 @@ void ServerWorker::readPendingDatagrams()
     while (rxSocket() && rxSocket()->hasPendingDatagrams())
     {
         QNetworkDatagram datagram = rxSocket()->receiveDatagram();
+
+        if(datagram.data().size() <= 0)
+        {
+            qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Receive datagram with size %d. Discard it.", datagram.data().size());
+            ++_rxInvalidPacket;
+            continue;
+        }
 
         if (!isPacketValid(reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size()))
         {
