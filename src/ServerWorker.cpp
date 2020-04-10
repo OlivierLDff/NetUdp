@@ -326,9 +326,10 @@ void ServerWorker::setInputEnabled(const bool enabled)
 
 void ServerWorker::setSeparateRxTxSockets(const bool separateRxTxSocketsChanged)
 {
-    if (separateRxTxSocketsChanged != _separateRxTxSockets)
+    const bool shouldUseSeparate = separateRxTxSocketsChanged || _multicastLoopback || _txPort;
+    if (shouldUseSeparate != _separateRxTxSockets)
     {
-        _separateRxTxSockets = separateRxTxSocketsChanged;
+        _separateRxTxSockets = shouldUseSeparate;
         if(_inputEnabled)
             onRestart();
     }
