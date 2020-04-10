@@ -1,10 +1,10 @@
 <RCC>
-    <qresource prefix="/NetUdp">
+    <qresource prefix="">
 
     <!-- DEBUG -->
-    <file>Debug/qmldir</file>
-    <file>Debug/Server.qml</file>
-    <file>Debug/ServerContent.qml</file>
+    <file>NetUdp/Debug/qmldir</file>
+    <file>NetUdp/Debug/Server.qml</file>
+    <file>NetUdp/Debug/ServerContent.qml</file>
 
     </qresource>
 </RCC>
