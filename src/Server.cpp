@@ -110,7 +110,7 @@ bool Server::start()
     for (const auto& it : multicastGroupsSet())
         _worker->_multicastGroups.insert(it, false);
 
-    _worker->_separateRxTxSockets = separateRxTxSockets() || txPort() || multicastLoopback();
+    _worker->_separateRxTxSockets = separateRxTxSockets() || txPort();
     _worker->_multicastInterface = QNetworkInterface::interfaceFromName(multicastInterfaceName());
     _worker->_multicastLoopback = multicastLoopback();
     _worker->_inputEnabled = inputEnabled();
