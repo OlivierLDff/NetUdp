@@ -102,8 +102,8 @@ public Q_SLOTS:
 private:
     void setMulticastInterfaceNameToSocket() const;
     void setMulticastLoopbackToSocket() const;
-    void startWatchdog() const;
-    void stopWatchdog() const;
+    void startWatchdog();
+    void stopWatchdog();
     void setMulticastTtl(const quint8 ttl);
 
     // ──────── TX ────────
@@ -125,7 +125,6 @@ protected Q_SLOTS:
     void onSocketError(QAbstractSocket::SocketError error);
     void onRxSocketError(QAbstractSocket::SocketError error);
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
-    void onWatchdogTimeout();
 
 private:
     static QString socketStateToString(QAbstractSocket::SocketState socketState);

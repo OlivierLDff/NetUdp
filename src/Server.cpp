@@ -5,18 +5,45 @@
 // Application Header
 #include <Net/Udp/Server.hpp>
 #include <Net/Udp/ServerWorker.hpp>
+#include <Net/Udp/Logger.hpp>
 
 // Qt Header
 #include <QThread>
-#include <QLoggingCategory>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-Q_LOGGING_CATEGORY(NETUDP_SERVER_LOGCAT, "net.udp.server")
-
 using namespace Net::Udp;
+
+#ifdef NDEBUG
+# define LOG_DEV_DEBUG(str, ...) do {} while (0)
+#else
+# define LOG_DEV_DEBUG(str, ...) Logger::SERVER->debug( "[{}] " str, (void*)(this), ## __VA_ARGS__);
+#endif
+
+#ifdef NDEBUG
+# define LOG_DEV_INFO(str, ...)  do {} while (0)
+#else
+# define LOG_DEV_INFO(str, ...)  Logger::SERVER->info(  "[{}] " str, (void*)(this), ## __VA_ARGS__);
+#endif
+
+#ifdef NDEBUG
+# define LOG_DEV_WARN(str, ...)  do {} while (0)
+#else
+# define LOG_DEV_WARN(str, ...)  Logger::SERVER->warn(  "[{}] " str, (void*)(this), ## __VA_ARGS__);
+#endif
+
+#ifdef NDEBUG
+# define LOG_DEV_ERR(str, ...)   do {} while (0)
+#else
+# define LOG_DEV_ERR(str, ...)   Logger::SERVER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__);
+#endif
+
+#define LOG_DEBUG(str, ...)      Logger::SERVER->debug( "[{}] " str, (void*)(this), ## __VA_ARGS__);
+#define LOG_INFO(str, ...)       Logger::SERVER->info(  "[{}] " str, (void*)(this), ## __VA_ARGS__);
+#define LOG_WARN(str, ...)       Logger::SERVER->warn(  "[{}] " str, (void*)(this), ## __VA_ARGS__);
+#define LOG_ERR(str, ...)        Logger::SERVER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__);
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
@@ -24,18 +51,19 @@ using namespace Net::Udp;
 
 Server::Server(QObject* parent): AbstractServer(parent)
 {
-    qCDebug(NETUDP_SERVER_LOGCAT, "Constructor");
+    LOG_DEV_DEBUG("Constructor");
 }
 
 Server::~Server()
 {
-    qCDebug(NETUDP_SERVER_LOGCAT, "Destructor");
+    LOG_DEV_DEBUG("Destructor");
     // ) We can't destroy a thread that is running
     if (_workerThread)
     {
-        qCDebug(NETUDP_SERVER_LOGCAT, "Kill worker in destructor");
+        LOG_DEV_INFO("Kill worker thread in destructor ...");
         _workerThread->exit();
         _workerThread->wait();
+        LOG_DEV_INFO("Done");
     }
 }
 
@@ -153,7 +181,7 @@ bool Server::joinMulticastGroup(const QString& groupAddress)
 {
     if (AbstractServer::joinMulticastGroup(groupAddress))
     {
-        qCDebug(NETUDP_SERVER_LOGCAT, "Join multicast group %s request", qPrintable(groupAddress));
+        LOG_DEV_INFO("Join multicast group %s request", qPrintable(groupAddress));
         Q_EMIT joinMulticastGroupWorker(groupAddress);
         return true;
     }
@@ -164,7 +192,7 @@ bool Server::leaveMulticastGroup(const QString& groupAddress)
 {
     if (AbstractServer::leaveMulticastGroup(groupAddress))
     {
-        qCDebug(NETUDP_SERVER_LOGCAT, "Leave multicast group %s request", qPrintable(groupAddress));
+        LOG_DEV_INFO("Leave multicast group %s request", qPrintable(groupAddress));
         Q_EMIT leaveMulticastGroupWorker(groupAddress);
         return true;
     }
@@ -187,15 +215,19 @@ bool Server::sendDatagram(const uint8_t* buffer, const size_t length, const QHos
     if (!isRunning() && !isBounded())
     {
         if (!isRunning())
-            qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Udp Server isn't running");
+        {
+            LOG_DEV_ERR("Error: Fail to send datagram because the Udp Server isn't running");
+        }
         else if (!isBounded())
-            qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Udp Server isn't bounded to any interfaces.");
+        {
+            LOG_ERR("Error: Fail to send datagram because the Udp Server isn't bounded to any interfaces.");
+        }
         return false;
     }
 
     if (length <= 0)
     {
-        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the length is <= 0");
+        LOG_DEV_ERR("Error: Fail to send datagram because the length is <= 0");
         return false;
     }
 
@@ -233,7 +265,7 @@ bool Server::sendDatagram(std::shared_ptr<Datagram> datagram, const QString& add
 {
     if (!datagram)
     {
-        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send null datagram");
+        LOG_DEV_ERR("Error: Fail to send null datagram");
         return false;
     }
 
@@ -247,28 +279,32 @@ bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
 {
     if (!datagram)
     {
-        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send null datagram");
+        LOG_DEV_ERR("Error: Fail to send null datagram");
         return false;
     }
 
     if (!isRunning() && !isBounded())
     {
         if (!isRunning())
-            qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Udp Server isn't running");
+        {
+            LOG_DEV_ERR("Error: Fail to send datagram because the Udp Server isn't running");            
+        }
         else if (!isBounded())
-            qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Udp Server isn't bounded to any interfaces.");
+        {
+            LOG_ERR("Error: Fail to send datagram because the Udp Server isn't bounded to any interfaces.");            
+        }
         return false;
     }
 
     if (datagram->length() <= 0)
     {
-        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the length is <= 0");
+        LOG_DEV_ERR("Error: Fail to send datagram because the length is <= 0");
         return false;
     }
 
     if (datagram->ttl == 0)
     {
-        qCDebug(NETUDP_SERVER_LOGCAT, "Error: Fail to send datagram because the Ttl is 0");
+        LOG_ERR("Error: Fail to send datagram because the Ttl is 0");
         return false;
     }
 

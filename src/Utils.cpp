@@ -8,16 +8,44 @@
 #include <Net/Udp/AbstractServer.hpp>
 #include <Net/Udp/Server.hpp>
 #include <Net/Udp/Version.hpp>
+#include <Net/Udp/Logger.hpp>
 
 // Qt Header
 #include <QCoreApplication>
-#include <QLoggingCategory>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-Q_LOGGING_CATEGORY(NETUDP_UTILS_LOG_CAT, "net.udp.utils")
+#ifdef NDEBUG
+# define LOG_DEV_DEBUG(str, ...) do {} while (0)
+#else
+# define LOG_DEV_DEBUG(str, ...) Net::Udp::Logger::UTILS->debug(str, ## __VA_ARGS__);
+#endif
+
+#ifdef NDEBUG
+# define LOG_DEV_INFO(str, ...)  do {} while (0)
+#else
+# define LOG_DEV_INFO(str, ...)  Net::Udp::Logger::UTILS->info( str, ## __VA_ARGS__);
+#endif
+
+#ifdef NDEBUG
+# define LOG_DEV_WARN(str, ...)  do {} while (0)
+#else
+# define LOG_DEV_WARN(str, ...)  Net::Udp::Logger::UTILS->warn( str, ## __VA_ARGS__);
+#endif
+
+#ifdef NDEBUG
+# define LOG_DEV_ERR(str, ...)   do {} while (0)
+#else
+# define LOG_DEV_ERR(str, ...)   Net::Udp::Logger::UTILS->error(str, ## __VA_ARGS__);
+#endif
+
+#define LOG_DEBUG(str, ...)      Net::Udp::Logger::UTILS->debug(str, ## __VA_ARGS__);
+#define LOG_INFO(str, ...)       Net::Udp::Logger::UTILS->info( str, ## __VA_ARGS__);
+#define LOG_WARN(str, ...)       Net::Udp::Logger::UTILS->warn( str, ## __VA_ARGS__);
+#define LOG_ERR(str, ...)        Net::Udp::Logger::UTILS->error(str, ## __VA_ARGS__);
+
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
@@ -30,20 +58,20 @@ static quint8 _minor = 0;
 
 static void NetUdp_registerTypes()
 {
-    qCDebug(NETUDP_UTILS_LOG_CAT, "Register NetUdp v%s", qPrintable(Net::Udp::Version::version().readable()));
+    LOG_DEV_INFO("Register NetUdp v{}", qPrintable(Net::Udp::Version::version().readable()));
 
-    qCDebug(NETUDP_UTILS_LOG_CAT, "Register Singleton %s.Version %d.%d to QML", *_uri, _major, _minor);
+    LOG_DEV_INFO("Register Singleton {}.Version {}.{} to QML", *_uri, _major, _minor);
     Net::Udp::Version::registerSingleton(*_uri, _major, _minor);
 
-    qCDebug(NETUDP_UTILS_LOG_CAT, "Register %s.AbstractServer %d.%d to QML", *_uri, _major, _minor);
+    LOG_DEV_INFO("Register {}.AbstractServer {}.{} to QML", *_uri, _major, _minor);
     Net::Udp::AbstractServer::registerToQml(*_uri, _major, _minor);
 
-    qCDebug(NETUDP_UTILS_LOG_CAT, "Register %s.Server %d.%d to QML", *_uri, _major, _minor);
+    LOG_DEV_INFO("Register {}.Server {}.{} to QML", *_uri, _major, _minor);
     Net::Udp::Server::registerToQml(*_uri, _major, _minor);
 
     qRegisterMetaType<QAbstractSocket::SocketState>();
 
-    qCDebug(NETUDP_UTILS_LOG_CAT, "Register Net::Udp::SharedDatagram to QML");
+    LOG_DEV_INFO("Register Net::Udp::SharedDatagram to QML");
     qRegisterMetaType<Net::Udp::SharedDatagram>("Net::Udp::SharedDatagram");
     qRegisterMetaType<Net::Udp::SharedDatagram>("Udp::SharedDatagram");
     qRegisterMetaType<Net::Udp::SharedDatagram>("SharedDatagram");
@@ -60,7 +88,7 @@ static void NetUdp_registerTypes(const char* uri, const quint8 major, const quin
 
 void NetUdp_loadResources()
 {
-    qCDebug(NETUDP_UTILS_LOG_CAT, "Load NetUdp.qrc v%s", qPrintable(Net::Udp::Version::version().readable()));
+    LOG_DEV_INFO("Load NetUdp.qrc v{}", qPrintable(Net::Udp::Version::version().readable()));
     Q_INIT_RESOURCE(NetUdp);
 }
 

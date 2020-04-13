@@ -8,10 +8,11 @@
 // Private Utils
 #include <Net/Udp/Version.hpp>
 #include <Net/Udp/Utils.hpp>
+#include <Net/Udp/Logger.hpp>
 
 // Library code
 #include <Net/Udp/AbstractServer.hpp>
 #include <Net/Udp/RecycledDatagram.hpp>
 #include <Net/Udp/Server.hpp>
 
-#endif // __NETUDP_HPP__
+#endif
