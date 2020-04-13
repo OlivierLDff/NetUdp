@@ -29,6 +29,12 @@ using namespace Net::Udp;
 
 ServerWorker::ServerWorker(QObject* parent): QObject(parent)
 {
+    qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Constructor");
+}
+
+ServerWorker::~ServerWorker()
+{
+    qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Destructor");
 }
 
 bool ServerWorker::isBounded() const

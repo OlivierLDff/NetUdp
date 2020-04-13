@@ -125,8 +125,9 @@ bool AbstractServer::leaveAllMulticastGroups()
     bool allSuccess = true;
     while(!_multicastGroups.empty())
     {
-        const auto group = _multicastGroups.begin();
-        if (!leaveMulticastGroup(*group))
+        // Copy is required here because leaveMulticastGroup will erase the iterator
+        const auto group = *_multicastGroups.begin();
+        if (!leaveMulticastGroup(group))
             allSuccess = false;
     }
     return allSuccess;

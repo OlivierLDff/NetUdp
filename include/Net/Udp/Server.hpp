@@ -26,24 +26,6 @@ class ServerWorker;
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-/*
- * \brief Hide from the user signal used to communicate with worker
- */
-class ServerImpl : public QObject
-{
-    Q_OBJECT
-public:
-    ServerImpl(QObject* parent = nullptr) : QObject(parent) {}
-
-Q_SIGNALS:
-    void startWorker();
-    void stopWorker();
-    void restartWorker();
-    void joinMulticastGroupWorker(const QString address);
-    void leaveMulticastGroupWorker(const QString address);
-    void sendDatagramToWorker(SharedDatagram datagram);
-};
-
 class NETUDP_API_ Server : public AbstractServer
 {
     Q_OBJECT
@@ -56,7 +38,6 @@ public:
 
     // ──────── WORKER ────────
 protected:
-    std::unique_ptr<ServerImpl> _impl;
     std::unique_ptr<ServerWorker> _worker;
     std::unique_ptr<QThread> _workerThread;
     Recycler::Circular<RecycledDatagram> _cache;
@@ -94,13 +75,22 @@ protected Q_SLOTS:
 Q_SIGNALS:
     void datagramReceived(const SharedDatagram& datagram);
 
-    // ──────── WORKER COMMUNICATION ────────
+    // ──────── PRIVATE WORKER COMMUNICATION (FROM) ────────
 private Q_SLOTS:
     void onWorkerRxPerSecondsChanged(const quint64 rxBytes);
     void onWorkerTxPerSecondsChanged(const quint64 txBytes);
     void onWorkerPacketsRxPerSecondsChanged(const quint64 rxPackets);
     void onWorkerPacketsTxPerSecondsChanged(const quint64 txPackets);
     void onWorkerRxInvalidPacketsCounterChanged(const quint64 rxPackets);
+
+    // ──────── PRIVATE WORKER COMMUNICATION (TO) ────────
+Q_SIGNALS:
+    void startWorker();
+    void stopWorker();
+    void restartWorker();
+    void joinMulticastGroupWorker(const QString address);
+    void leaveMulticastGroupWorker(const QString address);
+    void sendDatagramToWorker(SharedDatagram datagram);
 };
 
 }

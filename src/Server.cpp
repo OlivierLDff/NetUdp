@@ -22,16 +22,18 @@ using namespace Net::Udp;
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
-Server::Server(QObject* parent): AbstractServer(parent),
-_impl(std::make_unique<ServerImpl>())
+Server::Server(QObject* parent): AbstractServer(parent)
 {
+    qCDebug(NETUDP_SERVER_LOGCAT, "Constructor");
 }
 
 Server::~Server()
 {
+    qCDebug(NETUDP_SERVER_LOGCAT, "Destructor");
     // ) We can't destroy a thread that is running
     if (_workerThread)
     {
+        qCDebug(NETUDP_SERVER_LOGCAT, "Kill worker in destructor");
         _workerThread->exit();
         _workerThread->wait();
     }
@@ -85,12 +87,12 @@ bool Server::start()
     _worker->_multicastLoopback = multicastLoopback();
     _worker->_inputEnabled = inputEnabled();
 
-    connect(_impl.get(), &ServerImpl::startWorker, _worker.get(), &ServerWorker::onStart);
-    connect(_impl.get(), &ServerImpl::stopWorker, _worker.get(), &ServerWorker::onStop);
-    connect(_impl.get(), &ServerImpl::restartWorker, _worker.get(), &ServerWorker::onRestart);
+    connect(this, &Server::startWorker, _worker.get(), &ServerWorker::onStart);
+    connect(this, &Server::stopWorker, _worker.get(), &ServerWorker::onStop);
+    connect(this, &Server::restartWorker, _worker.get(), &ServerWorker::onRestart);
 
-    connect(_impl.get(), &ServerImpl::joinMulticastGroupWorker, _worker.get(), &ServerWorker::joinMulticastGroup);
-    connect(_impl.get(), &ServerImpl::leaveMulticastGroupWorker, _worker.get(), &ServerWorker::leaveMulticastGroup);
+    connect(this, &Server::joinMulticastGroupWorker, _worker.get(), &ServerWorker::joinMulticastGroup);
+    connect(this, &Server::leaveMulticastGroupWorker, _worker.get(), &ServerWorker::leaveMulticastGroup);
 
     connect(this, &Server::rxAddressChanged, _worker.get(), &ServerWorker::setAddress);
     connect(this, &Server::rxPortChanged, _worker.get(), &ServerWorker::setRxPort);
@@ -101,7 +103,7 @@ bool Server::start()
     connect(this, &Server::inputEnabledChanged, _worker.get(), &ServerWorker::setInputEnabled);
     connect(this, &Server::watchdogPeriodChanged, _worker.get(), &ServerWorker::setWatchdogTimeout);
 
-    connect(_impl.get(), &ServerImpl::sendDatagramToWorker, _worker.get(), &ServerWorker::onSendDatagram);
+    connect(this, &Server::sendDatagramToWorker, _worker.get(), &ServerWorker::onSendDatagram);
     connect(_worker.get(), &ServerWorker::datagramReceived, this, &Server::onDatagramReceived);
 
     connect(_worker.get(), &ServerWorker::isBoundedChanged, this, &Server::setBounded);
@@ -115,7 +117,7 @@ bool Server::start()
     if (_workerThread)
         _workerThread->start();
 
-    Q_EMIT _impl->startWorker();
+    Q_EMIT startWorker();
 
     return true;
 }
@@ -127,7 +129,7 @@ bool Server::stop()
 
     _cache.clear();
 
-    Q_EMIT _impl->stopWorker();
+    Q_EMIT stopWorker();
 
     disconnect(_worker.get(), nullptr, this, nullptr);
     disconnect(this, nullptr, _worker.get(), nullptr);
@@ -141,7 +143,7 @@ bool Server::stop()
     else
     {
         _worker->deleteLater();
-        _worker.release();
+        (void)_worker.release();
     }
 
     return true;
@@ -151,7 +153,8 @@ bool Server::joinMulticastGroup(const QString& groupAddress)
 {
     if (AbstractServer::joinMulticastGroup(groupAddress))
     {
-        Q_EMIT _impl->joinMulticastGroupWorker(groupAddress);
+        qCDebug(NETUDP_SERVER_LOGCAT, "Join multicast group %s request", qPrintable(groupAddress));
+        Q_EMIT joinMulticastGroupWorker(groupAddress);
         return true;
     }
     return false;
@@ -161,7 +164,8 @@ bool Server::leaveMulticastGroup(const QString& groupAddress)
 {
     if (AbstractServer::leaveMulticastGroup(groupAddress))
     {
-        Q_EMIT _impl->leaveMulticastGroupWorker(groupAddress);
+        qCDebug(NETUDP_SERVER_LOGCAT, "Leave multicast group %s request", qPrintable(groupAddress));
+        Q_EMIT leaveMulticastGroupWorker(groupAddress);
         return true;
     }
     return false;
@@ -201,7 +205,7 @@ bool Server::sendDatagram(const uint8_t* buffer, const size_t length, const QHos
     datagram->destinationPort = port;
     datagram->ttl = ttl;
 
-    Q_EMIT _impl->sendDatagramToWorker(std::move(datagram));
+    Q_EMIT sendDatagramToWorker(std::move(datagram));
 
     return true;
 }
@@ -268,7 +272,7 @@ bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
         return false;
     }
 
-    Q_EMIT _impl->sendDatagramToWorker(std::move(datagram));
+    Q_EMIT sendDatagramToWorker(std::move(datagram));
 
     return true;
 }
