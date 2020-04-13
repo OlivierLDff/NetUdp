@@ -132,7 +132,7 @@ void ServerWorker::onRestart()
 
 void ServerWorker::onStart()
 {
-    const bool useTwoSockets = _separateRxTxSockets && _inputEnabled;
+    const bool useTwoSockets = (_separateRxTxSockets || _txPort) && _inputEnabled;
     if (_socket)
     {
         qCWarning(NETUDP_SERVERWORKER_LOGCAT, "Error : Can't start udp server worker because socket is already valid");
@@ -332,7 +332,7 @@ void ServerWorker::setInputEnabled(const bool enabled)
 
 void ServerWorker::setSeparateRxTxSockets(const bool separateRxTxSocketsChanged)
 {
-    const bool shouldUseSeparate = separateRxTxSocketsChanged || _multicastLoopback || _txPort;
+    const bool shouldUseSeparate = separateRxTxSocketsChanged || _txPort;
     if (shouldUseSeparate != _separateRxTxSockets)
     {
         _separateRxTxSockets = shouldUseSeparate;
@@ -480,6 +480,10 @@ void ServerWorker::readPendingDatagrams()
             qCDebug(NETUDP_SERVERWORKER_LOGCAT, "Error : Receive datagram that is marked not valid. Discard it.");
             ++_rxInvalidPacket;
             // todo : proper restart with watchdog
+            // this can happen if IGMP isn't supported on the system
+            // > netstat -g
+            // > netstat: no support for `AF INET (igmp)' on this system.
+            // Maybe we should have a special error for that
             return;
         }
 

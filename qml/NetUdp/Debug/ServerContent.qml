@@ -8,7 +8,8 @@ import QtQuick 2.12
 
 // Backend
 import Qaterial 1.0 as Qaterial
-import Stringify.Validator 1.0 as StringifyValidator
+import Stringify.Validator 1.0 as Validator
+import Stringify.Formatter 1.0 as Formatter
 import NetUdp 1.0 as NetUdp
 
 Column
@@ -88,7 +89,7 @@ Column
             title: qsTr("Enter Bind Ip Address"),
             textTitle: qsTr("Ip"),
             helperText: "Should be 0.0.0.0 for multicast input",
-            validator: StringifyValidator.Ipv4,
+            validator: Validator.Ipv4,
             inputMethodHints: Qt.ImhFormattedNumbersOnly,
             selectAllText: true,
             standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
@@ -113,7 +114,7 @@ Column
             textTitle: qsTr("Listening port"),
             helperText: "Between 0 and 65535",
             inputMethodHints: Qt.ImhFormattedNumbersOnly,
-            validator: StringifyValidator.SocketPort,
+            validator: Validator.SocketPort,
             selectAllText: true,
             standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
         })
@@ -137,7 +138,7 @@ Column
             textTitle: qsTr("Listening port"),
             helperText: "Between 0 and 65535",
             inputMethodHints: Qt.ImhFormattedNumbersOnly,
-            validator: StringifyValidator.SocketPort,
+            validator: Validator.SocketPort,
             selectAllText: true,
             standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
         })
@@ -174,7 +175,7 @@ Column
                 },
                 title: qsTr("Enter New ip address to join"),
                 textTitle: qsTr("Ip"),
-                validator: StringifyValidator.Ipv4,
+                validator: Validator.Ipv4,
                 inputMethodHints: Qt.ImhFormattedNumbersOnly,
                 selectAllText: true,
                 standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
@@ -202,7 +203,7 @@ Column
                 },
                 title: qsTr("Enter ip address to leave"),
                 textTitle: qsTr("Ip"),
-                validator: StringifyValidator.Ipv4,
+                validator: Validator.Ipv4,
                 inputMethodHints: Qt.ImhFormattedNumbersOnly,
                 selectAllText: true,
                 standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
@@ -284,25 +285,25 @@ Column
         {
             Qaterial.Label
             {
-                text: "rxBytesPerSeconds : " + (root.object ? root.object.rxBytesPerSeconds : "")
+                text: "rxBytesPerSeconds : " + (root.object ? Formatter.Data.formatBytes(root.object.rxBytesPerSeconds) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "txBytesPerSeconds : " + (root.object ? root.object.txBytesPerSeconds : "")
+                text: "txBytesPerSeconds : " + (root.object ? Formatter.Data.formatBytes(root.object.txBytesPerSeconds) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "rxBytesTotal : " + (root.object ? root.object.rxBytesTotal : "")
+                text: "rxBytesTotal : " + (root.object ? Formatter.Data.formatBytes(root.object.rxBytesTotal) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "txBytesTotal : " + (root.object ? root.object.txBytesTotal : "")
+                text: "txBytesTotal : " + (root.object ? Formatter.Data.formatBytes(root.object.txBytesTotal) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
         }
