@@ -54,7 +54,7 @@ Column
         highlighted: false
         backgroundImplicitHeight: 20
         text: "watchdogPeriod : " + (root.object ? root.object.watchdogPeriod : "")
-        onClicked: if(root.object) dialogManager.openTextField({
+        onClicked: if(root.object) Qaterial.DialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
                 root.object.watchdogPeriod = result
@@ -77,13 +77,13 @@ Column
         highlighted: false
         backgroundImplicitHeight: 20
         text: "rxAddress : " + (root.object ? root.object.rxAddress : "")
-        onClicked: if(root.object) dialogManager.openTextField({
+        onClicked: if(root.object) Qaterial.DialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
                 if(acceptableInput)
                     root.object.rxAddress = result
                 else
-                    snackbarManager.show({text : result + " isn't an ipv4 rxAddress"})
+                    Qaterial.SnackbarManager.show({text : result + " isn't an ipv4 rxAddress"})
             },
             text: root.object.rxAddress,
             title: qsTr("Enter Bind Ip Address"),
@@ -104,7 +104,7 @@ Column
         highlighted: false
         backgroundImplicitHeight: 20
         text: "rxPort : " + (root.object ? root.object.rxPort : "")
-        onClicked: if(root.object) dialogManager.openTextField({
+        onClicked: if(root.object) Qaterial.DialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
                 root.object.rxPort = result
@@ -128,7 +128,7 @@ Column
         highlighted: false
         backgroundImplicitHeight: 20
         text: "txPort : " + (root.object ? root.object.txPort : "")
-        onClicked: if(root.object) dialogManager.openTextField({
+        onClicked: if(root.object) Qaterial.DialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
                 root.object.txPort = result
@@ -160,18 +160,18 @@ Column
             textType: Qaterial.Style.TextType.Caption
             backgroundImplicitHeight: 20
             text: "Add Multicast address"
-            onClicked: if(root.object) dialogManager.openTextField({
+            onClicked: if(root.object) Qaterial.DialogManager.openTextField({
                 acceptedCallback: function(result, acceptableInput)
                 {
                     if(acceptableInput)
                     {
                         if(!root.object.joinMulticastGroup(result))
                         {
-                            snackbarManager.show({text : "Fail to join " + result})
+                            Qaterial.SnackbarManager.show({text : "Fail to join " + result})
                         }
                     }
                     else
-                        snackbarManager.show({text : result + " isn't an ipv4 address"})
+                        Qaterial.SnackbarManager.show({text : result + " isn't an ipv4 address"})
                 },
                 title: qsTr("Enter New ip address to join"),
                 textTitle: qsTr("Ip"),
@@ -188,18 +188,18 @@ Column
             textType: Qaterial.Style.TextType.Caption
             backgroundImplicitHeight: 20
             text: "Remove Multicast address"
-            onClicked: if(root.object) dialogManager.openTextField({
+            onClicked: if(root.object) Qaterial.DialogManager.openTextField({
                 acceptedCallback: function(result, acceptableInput)
                 {
                     if(acceptableInput)
                     {
                         if(!root.object.leaveMulticastGroup(result))
                         {
-                            snackbarManager.show({text : "Fail to leave " + result})
+                            Qaterial.SnackbarManager.show({text : "Fail to leave " + result})
                         }
                     }
                     else
-                        snackbarManager.show({text : result + " isn't an ipv4 address"})
+                        Qaterial.SnackbarManager.show({text : result + " isn't an ipv4 address"})
                 },
                 title: qsTr("Enter ip address to leave"),
                 textTitle: qsTr("Ip"),
@@ -218,7 +218,7 @@ Column
         highlighted: false
         backgroundImplicitHeight: 20
         text: "multicastInterfaceName : " + (root.object ? root.object.multicastInterfaceName : "")
-        onClicked: if(root.object) dialogManager.openTextField({
+        onClicked: if(root.object) Qaterial.DialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
                 root.object.multicastInterfaceName = result
