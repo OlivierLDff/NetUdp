@@ -22,14 +22,14 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-namespace Net {
-namespace Udp {
+namespace net {
+namespace udp {
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-class NETUDP_API_ ServerWorker: public QObject
+class NETUDP_API_ ServerWorker : public QObject
 {
     Q_OBJECT
 
@@ -43,7 +43,7 @@ private:
     std::unique_ptr<QUdpSocket> _socket;
     std::unique_ptr<QUdpSocket> _rxSocket;
     std::unique_ptr<QTimer> _watchdog;
-    Recycler::Circular<RecycledDatagram> _cache;
+    recycler::Circular<RecycledDatagram> _cache;
     bool _isBounded = false;
     quint64 _watchdogTimeout = 5000;
     QString _rxAddress;
@@ -105,6 +105,8 @@ private:
     void startWatchdog();
     void stopWatchdog();
     void setMulticastTtl(const quint8 ttl);
+Q_SIGNALS:
+    void queueStartWatchdog();
 
     // ──────── TX ────────
 public Q_SLOTS:
@@ -115,6 +117,7 @@ protected:
     virtual bool isPacketValid(const uint8_t* buffer, const size_t length) const;
 private Q_SLOTS:
     void readPendingDatagrams();
+
 protected:
     virtual void onDatagramReceived(const SharedDatagram& datagram);
 Q_SIGNALS:
@@ -142,8 +145,6 @@ protected:
     void startBytesCounter();
     virtual void stopBytesCounter();
 
-protected Q_SLOTS:
-    virtual void updateDataCounter();
 Q_SIGNALS:
     void rxBytesCounterChanged(const quint64 rx);
     void txBytesCounterChanged(const quint64 tx);
@@ -158,4 +159,4 @@ Q_SIGNALS:
 }
 }
 
-#endif // __NETUDP_SERVER_WORKER_HPP__
+#endif  // __NETUDP_SERVER_WORKER_HPP__

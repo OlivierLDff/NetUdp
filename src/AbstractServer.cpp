@@ -13,49 +13,40 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-using namespace Net::Udp;
+using namespace net::udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 //
-AbstractServer::AbstractServer(QObject* parent): IAbstractServer(parent)
-{
-}
+AbstractServer::AbstractServer(QObject* parent) : IAbstractServer(parent) {}
 
-const std::set<QString>& AbstractServer::multicastGroupsSet() const
-{
-    return _multicastGroups;
-}
+const std::set<QString>& AbstractServer::multicastGroupsSet() const { return _multicastGroups; }
 
 bool AbstractServer::setMulticastGroups(const QList<QString>& value)
 {
     leaveAllMulticastGroups();
-    for(const auto& it : value)
-    {
-        joinMulticastGroup(it);
-    }
+    for(const auto& it: value) { joinMulticastGroup(it); }
     return true;
 }
 
 QList<QString> AbstractServer::multicastGroups() const
 {
     QList<QString> res;
-    for (const auto& it : _multicastGroups)
-        res.append(it);
+    for(const auto& it: _multicastGroups) res.append(it);
     return res;
 }
 
 bool AbstractServer::setMulticastInterfaceName(const QString& name)
 {
     return (name.isEmpty() || QNetworkInterface::interfaceFromName(name).isValid()) &&
-        IAbstractServer::setMulticastInterfaceName(name);
+           IAbstractServer::setMulticastInterfaceName(name);
 }
 
 bool AbstractServer::start()
 {
     // ) We can't start if we are already running
-    if (isRunning())
+    if(isRunning())
         return false;
 
     setRunning(true);
@@ -66,7 +57,7 @@ bool AbstractServer::start()
 bool AbstractServer::stop()
 {
     // ) We can't stop if we are not running
-    if (!isRunning())
+    if(!isRunning())
         return false;
 
     setBounded(false);
@@ -89,11 +80,11 @@ bool AbstractServer::restart()
 bool AbstractServer::joinMulticastGroup(const QString& groupAddress)
 {
     // ) Check that the address isn't already registered
-    if (_multicastGroups.find(groupAddress) != _multicastGroups.end())
+    if(_multicastGroups.find(groupAddress) != _multicastGroups.end())
         return false;
 
     // ) Check that this is a real multicast address
-    if (!QHostAddress(groupAddress).isMulticast())
+    if(!QHostAddress(groupAddress).isMulticast())
         return false;
 
     // ) Insert in the set and emit signal to say the multicast list changed
@@ -109,7 +100,7 @@ bool AbstractServer::leaveMulticastGroup(const QString& groupAddress)
     const auto it = _multicastGroups.find(groupAddress);
 
     // ) Is the multicast group present
-    if (it == _multicastGroups.end())
+    if(it == _multicastGroups.end())
         return false;
 
     // ) Remove the multicast address from the list, then emit a signal to say the list changed
@@ -127,7 +118,7 @@ bool AbstractServer::leaveAllMulticastGroups()
     {
         // Copy is required here because leaveMulticastGroup will erase the iterator
         const auto group = *_multicastGroups.begin();
-        if (!leaveMulticastGroup(group))
+        if(!leaveMulticastGroup(group))
             allSuccess = false;
     }
     return allSuccess;
@@ -154,10 +145,7 @@ void AbstractServer::clearTxCounter()
     resetTxBytesTotal();
 }
 
-void AbstractServer::clearRxInvalidCounter()
-{
-    resetRxInvalidPacketTotal();
-}
+void AbstractServer::clearRxInvalidCounter() { resetRxInvalidPacketTotal(); }
 
 void AbstractServer::clearCounters()
 {

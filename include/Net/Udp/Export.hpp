@@ -6,15 +6,15 @@
 // ─────────────────────────────────────────────────────────────
 
 #ifdef WIN32
-    #ifdef NETUDP_DLL_EXPORT  // Shared build
-        #define NETUDP_API_ __declspec(dllexport)
-    #elif NETUDP_STATIC       // No decoration when building staticlly
-        #define NETUDP_API_
-    #else                       // Link to lib
-        #define NETUDP_API_ __declspec(dllimport)
-    #endif
+#    ifdef NETUDP_DLL_EXPORT
+#        define NETUDP_API_ __declspec(dllexport)
+#    elif NETUDP_STATIC
+#        define NETUDP_API_
+#    else
+#        define NETUDP_API_ __declspec(dllimport)
+#    endif
 #else
-    #define NETUDP_API_
-#endif // WIN32
+#    define NETUDP_API_
+#endif
 
-#endif // __NETUDP_EXPORT_HPP__
+#endif

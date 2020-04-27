@@ -16,8 +16,8 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-namespace Net {
-namespace Udp {
+namespace net {
+namespace udp {
 
 class NETUDP_API_ Version : public QObject
 {

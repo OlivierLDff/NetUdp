@@ -9,7 +9,7 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-using namespace Net::Udp;
+using namespace net::udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
@@ -17,14 +17,11 @@ using namespace Net::Udp;
 
 void Datagram::reset()
 {
-    destinationAddress = {};
+    destinationAddress = QString();
     destinationPort = 0;
-    senderAddress = {};
+    senderAddress = QString();
     senderPort = 0;
     ttl = 8;
 }
 
-void Datagram::reset(size_t length)
-{
-    Datagram::reset();
-}
+void Datagram::reset(std::size_t length) { Datagram::reset(); }

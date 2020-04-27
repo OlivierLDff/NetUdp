@@ -9,25 +9,23 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-using namespace Net::Udp;
+using namespace net::udp;
 
 template<typename... Args>
-static Logger::LogPtr makeLog(Args&&... args) { return std::make_shared<Logger::Log>(std::forward<Args>(args)...); }
-
-const char* const Logger::WORKER_NAME           = "net.udp.worker";
-const char* const Logger::SERVER_NAME           = "net.udp.server";
-const char* const Logger::UTILS_NAME            = "net.udp.utils";
-
-const Logger::LogPtr Logger::WORKER             = makeLog(WORKER_NAME);
-const Logger::LogPtr Logger::SERVER             = makeLog(SERVER_NAME);
-const Logger::LogPtr Logger::UTILS              = makeLog(UTILS_NAME);
-
-const Logger::LogList Logger::LOGGERS =
+static Logger::LogPtr makeLog(Args&&... args)
 {
-    WORKER,
-    SERVER,
-    UTILS
-};
+    return std::make_shared<Logger::Log>(std::forward<Args>(args)...);
+}
+
+const char* const Logger::WORKER_NAME = "net.udp.worker";
+const char* const Logger::SERVER_NAME = "net.udp.server";
+const char* const Logger::UTILS_NAME = "net.udp.utils";
+
+const Logger::LogPtr Logger::WORKER = makeLog(WORKER_NAME);
+const Logger::LogPtr Logger::SERVER = makeLog(SERVER_NAME);
+const Logger::LogPtr Logger::UTILS = makeLog(UTILS_NAME);
+
+const Logger::LogList Logger::LOGGERS = {WORKER, SERVER, UTILS};
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
@@ -35,13 +33,12 @@ const Logger::LogList Logger::LOGGERS =
 
 void Logger::registerSink(const SinkPtr& sink)
 {
-    for(const auto& it : LOGGERS)
-        it->sinks().emplace_back(sink);
+    for(const auto& it: LOGGERS) it->sinks().emplace_back(sink);
 }
 
 void Logger::unRegisterSink(const SinkPtr& sink)
 {
-    for (const auto& it : LOGGERS)
+    for(const auto& it: LOGGERS)
     {
         auto& sinks = it->sinks();
 

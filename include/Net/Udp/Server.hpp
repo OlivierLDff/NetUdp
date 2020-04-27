@@ -17,8 +17,8 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-namespace Net {
-namespace Udp {
+namespace net {
+namespace udp {
 
 class ServerWorker;
 
@@ -40,7 +40,7 @@ public:
 protected:
     std::unique_ptr<ServerWorker> _worker;
     std::unique_ptr<QThread> _workerThread;
-    Recycler::Circular<RecycledDatagram> _cache;
+    recycler::Circular<RecycledDatagram> _cache;
 
 public:
     bool setUseWorkerThread(const bool& enabled) override;
@@ -62,11 +62,12 @@ public:
 
     // ──────── SEND DATAGRAM API ────────
 public:
-    virtual bool sendDatagram(const uint8_t* buffer, const size_t length, const QHostAddress& address, const uint16_t port, const uint8_t ttl = 0);
-    virtual bool sendDatagram(const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0);
-    virtual bool sendDatagram(const char* buffer, const size_t length, const QHostAddress& address, const uint16_t port, const uint8_t ttl = 0);
-    virtual bool sendDatagram(const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0);
-    virtual bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0);
+    virtual bool sendDatagram(const uint8_t* buffer, const size_t length, const QString& address,
+        const uint16_t port, const uint8_t ttl = 0);
+    virtual bool sendDatagram(const char* buffer, const size_t length, const QString& address,
+        const uint16_t port, const uint8_t ttl = 0);
+    virtual bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address,
+        const uint16_t port, const uint8_t ttl = 0);
     virtual bool sendDatagram(std::shared_ptr<Datagram> datagram);
 
     // ──────── RECEIVE DATAGRAM API ────────
@@ -96,4 +97,4 @@ Q_SIGNALS:
 }
 }
 
-#endif // __NETUDP_SERVER_HPP__
+#endif

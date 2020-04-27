@@ -15,8 +15,8 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-namespace Net {
-namespace Udp {
+namespace net {
+namespace udp {
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
@@ -26,18 +26,18 @@ class NETUDP_API_ RecycledDatagram : public Datagram
 {
     // ────── CONSTRUCTOR ────────
 public:
-    RecycledDatagram(const size_t length);
+    RecycledDatagram(const std::size_t length);
     void reset() override final;
-    void reset(const size_t length) override final;
+    void reset(const std::size_t length) override final;
 
 private:
-    Recycler::Buffer<uint8_t> _buffer;
+    recycler::Buffer<std::uint8_t> _buffer;
 
     // ────── API ────────
 public:
-    uint8_t* buffer() override final;
-    const uint8_t* buffer() const override final;
-    size_t length() const override final;
+    std::uint8_t* buffer() override final;
+    const std::uint8_t* buffer() const override final;
+    std::size_t length() const override final;
 };
 
 }

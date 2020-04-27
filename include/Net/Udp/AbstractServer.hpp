@@ -5,7 +5,6 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-
 // Application Header
 #include <Net/Udp/Export.hpp>
 #include <Net/Udp/Property.hpp>
@@ -20,8 +19,8 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-namespace Net {
-namespace Udp {
+namespace net {
+namespace udp {
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
@@ -36,38 +35,38 @@ public:
 
     // ──────── ATTRIBUTE STATE ────────
 protected:
-    NETUDP_PROPERTY_RO          (bool, isRunning, Running);
-    NETUDP_PROPERTY_RO          (bool, isBounded, Bounded);
-    NETUDP_PROPERTY_D           (quint64, watchdogPeriod, WatchdogPeriod, 5000);
+    NETUDP_PROPERTY_RO(bool, isRunning, Running);
+    NETUDP_PROPERTY_RO(bool, isBounded, Bounded);
+    NETUDP_PROPERTY_D(quint64, watchdogPeriod, WatchdogPeriod, 5000);
 
     // ──────── ATTRIBUTE ────────
 protected:
-    NETUDP_PROPERTY             (QString, rxAddress, RxAddress);
-    NETUDP_PROPERTY             (quint16, rxPort, RxPort);
-    NETUDP_PROPERTY             (quint16, txPort, TxPort);
-    NETUDP_PROPERTY             (bool, separateRxTxSockets, SeparateRxTxSockets);
-    NETUDP_PROPERTY             (bool, inputEnabled, InputEnabled);
-    NETUDP_PROPERTY             (bool, useWorkerThread, UseWorkerThread);
+    NETUDP_PROPERTY(QString, rxAddress, RxAddress);
+    NETUDP_PROPERTY(quint16, rxPort, RxPort);
+    NETUDP_PROPERTY(quint16, txPort, TxPort);
+    NETUDP_PROPERTY(bool, separateRxTxSockets, SeparateRxTxSockets);
+    NETUDP_PROPERTY(bool, inputEnabled, InputEnabled);
+    NETUDP_PROPERTY(bool, useWorkerThread, UseWorkerThread);
 
     // ──────── ATTRIBUTE MULTICAST ────────
 protected:
-    NETUDP_ABSTRACT_PROPERTY    (QList<QString>, multicastGroups, MulticastGroups);
-    NETUDP_PROPERTY             (QString, multicastInterfaceName, MulticastInterfaceName);
-    NETUDP_PROPERTY             (bool, multicastLoopback, MulticastLoopback);
+    NETUDP_ABSTRACT_PROPERTY(QList<QString>, multicastGroups, MulticastGroups);
+    NETUDP_PROPERTY(QString, multicastInterfaceName, MulticastInterfaceName);
+    NETUDP_PROPERTY(bool, multicastLoopback, MulticastLoopback);
 
     // ──────── STATUS ────────
 protected:
-    NETUDP_PROPERTY_RO          (quint64, rxBytesPerSeconds, RxBytesPerSeconds);
-    NETUDP_PROPERTY_RO          (quint64, txBytesPerSeconds, TxBytesPerSeconds);
-    NETUDP_PROPERTY_RO          (quint64, rxBytesTotal, RxBytesTotal);
-    NETUDP_PROPERTY_RO          (quint64, txBytesTotal, TxBytesTotal);
+    NETUDP_PROPERTY_RO(quint64, rxBytesPerSeconds, RxBytesPerSeconds);
+    NETUDP_PROPERTY_RO(quint64, txBytesPerSeconds, TxBytesPerSeconds);
+    NETUDP_PROPERTY_RO(quint64, rxBytesTotal, RxBytesTotal);
+    NETUDP_PROPERTY_RO(quint64, txBytesTotal, TxBytesTotal);
 
-    NETUDP_PROPERTY_RO          (quint64, rxPacketsPerSeconds, RxPacketsPerSeconds);
-    NETUDP_PROPERTY_RO          (quint64, txPacketsPerSeconds, TxPacketsPerSeconds);
-    NETUDP_PROPERTY_RO          (quint64, rxPacketsTotal, RxPacketsTotal);
-    NETUDP_PROPERTY_RO          (quint64, txPacketsTotal, TxPacketsTotal);
+    NETUDP_PROPERTY_RO(quint64, rxPacketsPerSeconds, RxPacketsPerSeconds);
+    NETUDP_PROPERTY_RO(quint64, txPacketsPerSeconds, TxPacketsPerSeconds);
+    NETUDP_PROPERTY_RO(quint64, rxPacketsTotal, RxPacketsTotal);
+    NETUDP_PROPERTY_RO(quint64, txPacketsTotal, TxPacketsTotal);
 
-    NETUDP_PROPERTY_RO          (quint64, rxInvalidPacketTotal, RxInvalidPacketTotal);
+    NETUDP_PROPERTY_RO(quint64, rxInvalidPacketTotal, RxInvalidPacketTotal);
 
     // ──────── C++ API ────────
 public Q_SLOTS:
@@ -94,6 +93,7 @@ class NETUDP_API_ AbstractServer : public IAbstractServer
 {
     Q_OBJECT
     NETUDP_REGISTER_TO_QML(AbstractServer);
+
     // ──────── CONSTRUCTOR ────────
 public:
     AbstractServer(QObject* parent = nullptr);
@@ -101,8 +101,10 @@ public:
     // ──────── MULTICAST ────────
 private:
     std::set<QString> _multicastGroups;
+
 protected:
     const std::set<QString>& multicastGroupsSet() const;
+
 public:
     bool setMulticastGroups(const QList<QString>& value) override;
     QList<QString> multicastGroups() const override;

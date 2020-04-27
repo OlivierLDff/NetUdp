@@ -9,15 +9,13 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-using namespace Net::Udp;
+using namespace net::udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
-RecycledDatagram::RecycledDatagram(const size_t length): _buffer(length)
-{
-}
+RecycledDatagram::RecycledDatagram(const std::size_t length) : _buffer(length) {}
 
 void RecycledDatagram::reset()
 {
@@ -25,23 +23,16 @@ void RecycledDatagram::reset()
     Datagram::reset();
 }
 
-void RecycledDatagram::reset(const size_t length)
+void RecycledDatagram::reset(const std::size_t length)
 {
     _buffer.reset(length);
     Datagram::reset(length);
 }
 
-uint8_t* RecycledDatagram::buffer()
-{
-    return _buffer;
-}
+std::uint8_t* RecycledDatagram::buffer() { return _buffer; }
 
-const uint8_t* RecycledDatagram::buffer() const
-{
-    return _buffer;
-}
+const std::uint8_t* RecycledDatagram::buffer() const { return _buffer; }
 
-size_t RecycledDatagram::length() const
-{
-    return _buffer.length();;
+std::size_t RecycledDatagram::length() const {
+    return _buffer.length();
 }
