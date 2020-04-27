@@ -17,14 +17,12 @@
 #include <QLoggingCategory>
 #include <QCommandLineParser>
 #include <QTimer>
-#include <QNetworkInterface>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
 Q_LOGGING_CATEGORY(APP_LOG_CAT, "app")
-Q_LOGGING_CATEGORY(SERVER_LOG_CAT, "server")
 Q_LOGGING_CATEGORY(CLIENT_LOG_CAT, "client")
 
 class App
@@ -32,11 +30,13 @@ class App
 public:
     int counter = 0;
 
-    uint16_t port = 11111;
-    QString ip = QStringLiteral("239.0.0.1");
-    QString iface;
+    uint16_t src = 11111;
+    uint16_t dst = 11112;
 
-    net::udp::Server server;
+    QString srcAddr = QStringLiteral("127.0.0.1");
+    QString dstAddr = QStringLiteral("127.0.0.1");
+
+    net::udp::Server client;
 
     bool multiThreaded = false;
 
@@ -47,42 +47,31 @@ public:
     {
         qCInfo(APP_LOG_CAT, "Init application");
 
-        qCInfo(SERVER_LOG_CAT, "Join multicast group %s", qPrintable(ip));
-        server.joinMulticastGroup(ip);
-        qCInfo(SERVER_LOG_CAT, "Set Rx Port to %d", signed(port));
-        server.setRxPort(port);
-        if(!iface.isEmpty())
-        {
-            qCInfo(SERVER_LOG_CAT, "Set Multicast Interface Name to %s", qPrintable(iface));
-            server.setMulticastInterfaceName(iface);
-        }
+        qCInfo(CLIENT_LOG_CAT, "Set Rx Address to %s:%d", qPrintable(dstAddr), signed(dst));
+        client.setRxAddress(dstAddr);
+        client.setRxPort(dst);
+        client.setInputEnabled(true);
 
-        server.setUseWorkerThread(multiThreaded);
-        server.setMulticastLoopback(true);
-        server.setInputEnabled(true);
+        client.setUseWorkerThread(multiThreaded);
 
-        QObject::connect(&timer, &QTimer::timeout,
-            [this]()
+        QObject::connect(&client, &net::udp::Server::datagramReceived,
+            [this](const net::udp::SharedDatagram& d)
             {
-                const std::string data = "Echo " + std::to_string(counter++);
-                server.sendDatagram(data.c_str(), data.length() + 1, ip, port);
+                qCInfo(CLIENT_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer()));
+                client.sendDatagram(d->buffer(), d->length(), srcAddr, src);
             });
-
-        QObject::connect(&server, &net::udp::Server::datagramReceived,
-            [](const net::udp::SharedDatagram& d)
-            { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
 
         qCInfo(APP_LOG_CAT, "Start application");
 
-        QObject::connect(&server, &net::udp::Server::isRunningChanged,
-            [](bool value) { qCInfo(SERVER_LOG_CAT, "isRunning : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Server::isBoundedChanged,
-            [](bool value) { qCInfo(SERVER_LOG_CAT, "isBounded : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Server::socketError,
+        QObject::connect(&client, &net::udp::Server::isRunningChanged,
+            [](bool value) { qCInfo(CLIENT_LOG_CAT, "isRunning : %d", signed(value)); });
+        QObject::connect(&client, &net::udp::Server::isBoundedChanged,
+            [](bool value) { qCInfo(CLIENT_LOG_CAT, "isBounded : %d", signed(value)); });
+        QObject::connect(&client, &net::udp::Server::socketError,
             [](int value, const QString error)
-            { qCInfo(SERVER_LOG_CAT, "error : %s", qPrintable(error)); });
+            { qCInfo(CLIENT_LOG_CAT, "error : %s", qPrintable(error)); });
 
-        server.start();
+        client.start();
         timer.start(1000);
     }
 };
@@ -112,43 +101,34 @@ int main(int argc, char* argv[])
                                   "Make the worker live in a different thread. Default false"));
     parser.addOption(multiThreadOption);
 
-    QCommandLineOption printIfaceName(QStringList() << "p",
-        QCoreApplication::translate("main", "Print available multicast interface name"));
-    parser.addOption(printIfaceName);
-
-    QCommandLineOption portOption(QStringList() << "s"
-                                                << "src",
+    QCommandLineOption srcPortOption(QStringList() << "s"
+                                                   << "src",
         QCoreApplication::translate("main", "Port for rx packet. Default \"11111\"."),
         QCoreApplication::translate("main", "port"));
-    parser.addOption(portOption);
-    portOption.setDefaultValue("11111");
+    parser.addOption(srcPortOption);
+    srcPortOption.setDefaultValue("11111");
 
-    QCommandLineOption ipOption(QStringList() << "i"
-                                              << "ip",
-        QCoreApplication::translate("main", "Ip address of multicast group. Default \"239.0.0.1\""),
+    QCommandLineOption dstPortOption(QStringList() << "d"
+                                                   << "dst",
+        QCoreApplication::translate("main", "Port for tx packet. Default \"11112\"."),
+        QCoreApplication::translate("main", "port"));
+    parser.addOption(dstPortOption);
+    dstPortOption.setDefaultValue("11112");
+
+    QCommandLineOption srcAddrOption(QStringList() << "src-addr",
+        QCoreApplication::translate("main", "Ip address for server. Default \"127.0.0.1\""),
         QCoreApplication::translate("main", "ip"));
-    parser.addOption(ipOption);
+    parser.addOption(srcAddrOption);
+    srcAddrOption.setDefaultValue("127.0.0.1");
 
-    QCommandLineOption ifOption(QStringList() << "if"
-                                              << "interface",
-        QCoreApplication::translate("main", "Name of the iface to join. Default is os dependent"),
-        QCoreApplication::translate("main", "if"));
-    parser.addOption(ifOption);
-    ifOption.setDefaultValue("");
+    QCommandLineOption dstAddrOption(QStringList() << "dst-addr",
+        QCoreApplication::translate("main", "Ip address for client. Default \"127.0.0.1\""),
+        QCoreApplication::translate("main", "ip"));
+    parser.addOption(dstAddrOption);
+    dstAddrOption.setDefaultValue("127.0.0.1");
 
     // Process the actual command line arguments given by the user
     parser.process(app);
-
-    if(parser.isSet(printIfaceName))
-    {
-        qCInfo(APP_LOG_CAT, "Available multicast interface name : ");
-        for(const auto& iface: QNetworkInterface::allInterfaces())
-        {
-            if(iface.flags() & QNetworkInterface::CanMulticast)
-                qCInfo(APP_LOG_CAT, "%s", qPrintable(iface.name()));
-        }
-        return 0;
-    }
 
     // ────────── APPLICATION ──────────────────────────────────────
 
@@ -158,15 +138,18 @@ int main(int argc, char* argv[])
     // Create the app and start it
     App echo;
     bool ok;
-    const auto port = parser.value(portOption).toInt(&ok);
+    const auto src = parser.value(srcPortOption).toInt(&ok);
     if(ok)
-        echo.port = port;
-    const auto ip = parser.value(ipOption);
-    if(!ip.isEmpty())
-        echo.ip = ip;
-    const auto iface = parser.value(ifOption);
-    if(!iface.isEmpty())
-        echo.iface = iface;
+        echo.src = src;
+    const auto dst = parser.value(dstPortOption).toInt(&ok);
+    if(ok)
+        echo.dst = dst;
+    const auto srcAddr = parser.value(srcAddrOption);
+    if(!srcAddr.isEmpty())
+        echo.srcAddr = srcAddr;
+    const auto dstAddr = parser.value(dstAddrOption);
+    if(!dstAddr.isEmpty())
+        echo.dstAddr = dstAddr;
     echo.multiThreaded = parser.isSet(multiThreadOption);
 
     echo.start();

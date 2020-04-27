@@ -29,7 +29,7 @@ set(NETUDP_VERSION_MINOR 0)
 set(NETUDP_VERSION_PATCH 1)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
   EXECUTE_PROCESS(
-    COMMAND git describe --always
+    COMMAND git rev-parse --short HEAD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE NETUDP_VERSION_TAG
     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -58,16 +58,10 @@ set(NETUDP_ENABLE_PCH ON CACHE BOOL
 # Install
 set(NETUDP_ENABLE_EXAMPLES OFF CACHE BOOL "Create or not a target for examples")
 
-# Install
-set(NETUDP_ENABLE_INSTALL OFF CACHE BOOL "Create or not a target for install")
-set(NETUDP_INSTALL_PREFIX ${NETUDP_PROJECT} CACHE STRING "Prefix for all NetUdp headers in the install folder")
-
 # CREATE PROJECT
 
 project(${NETUDP_PROJECT} VERSION ${NETUDP_VERSION} LANGUAGES C CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-# LOG OPTIONS
 
 message(STATUS "---------------- NETUDP OPTIONS. ----------------")
 
@@ -80,20 +74,14 @@ message(STATUS "NETUDP_BUILD_SHARED       : " ${NETUDP_BUILD_SHARED})
 message(STATUS "NETUDP_FOLDER_PREFIX      : " ${NETUDP_FOLDER_PREFIX})
 message(STATUS "NETUDP_ENABLE_QML         : " ${NETUDP_ENABLE_QML})
 
-# Install
-message(STATUS "NETUDP_ENABLE_INSTALL     : " ${NETUDP_ENABLE_INSTALL})
-if(NETUDP_ENABLE_INSTALL)
-  message(STATUS "NETUDP_INSTALL_PREFIX     : " ${NETUDP_INSTALL_PREFIX})
-endif(NETUDP_ENABLE_INSTALL)
-
 message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                         QT5 CMAKE                                │
 # └──────────────────────────────────────────────────────────────────┘
 
-find_package(Qt5Core CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
-find_package(Qt5Qml CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
+find_package(Qt5Core    CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
+find_package(Qt5Qml     CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
 find_package(Qt5Network CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
 
 if(NETUDP_ENABLE_QML)
@@ -120,9 +108,6 @@ FetchContent_Declare(
   GIT_REPOSITORY ${RECYCLER_REPOSITORY}
   GIT_TAG        ${RECYCLER_TAG}
   )
-
-set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-set(FETCHCONTENT_QUIET ON)
 
 # Make all dependencies avaiables
 FetchContent_MakeAvailable(Recycler spdlog)
@@ -210,7 +195,6 @@ source_group("Udp" FILES ${NETUDP_API_INCS})
 source_group("Udp\\Utils" FILES ${NETUDP_UTILS_SRCS})
 source_group("Udp" FILES ${NETUDP_API_SRCS})
 
-# NETUDP TARGET
 if(NETUDP_BUILD_SHARED)
 
   add_library(${NETUDP_TARGET} SHARED ${NETUDP_SRCS} ${NETUDP_INCS})
@@ -224,27 +208,23 @@ else()
 endif()
 
 target_compile_features(${NETUDP_TARGET} PUBLIC cxx_std_14)
+target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_INCS_FOLDER}>)
 
-# Set include directory
-target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_INCS_FOLDER}> $<INSTALL_INTERFACE:${NETUDP_INSTALL_PREFIX}>)
-
-# Avoid libnetcode.io on darwin for example.
-set_target_properties(${NETUDP_TARGET} PROPERTIES PREFIX "")
-
-# Link libraries
-target_link_libraries(${NETUDP_TARGET} Recycler spdlog)
+target_link_libraries(${NETUDP_TARGET} PUBLIC
+  Recycler
+  spdlog
+  Qt5::Core
+  Qt5::Qml
+  Qt5::Network
+  )
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)
   set_target_properties(${NETUDP_TARGET} PROPERTIES AUTORCC TRUE)
 endif()
-# NETUDP_ENABLE_QML
-
-qt5_use_modules(${NETUDP_TARGET} Core Qml Network)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES FOLDER ${NETUDP_FOLDER_PREFIX})
 
-# Version
 target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_MAJOR=${NETUDP_VERSION_MAJOR})
 target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_MINOR=${NETUDP_VERSION_MINOR})
 target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_PATCH=${NETUDP_VERSION_PATCH})
@@ -260,25 +240,5 @@ endif()
 # └──────────────────────────────────────────────────────────────────┘
 
 if(NETUDP_ENABLE_EXAMPLES)
-
-  set(NETUDP_EXAMPLE1_TARGET ${NETUDP_TARGET}_EchoClientServer)
-  message(STATUS "Add Example ${NETUDP_EXAMPLE1_TARGET}")
-  add_executable(${NETUDP_EXAMPLE1_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/examples/EchoClientServer.cpp")
-  target_link_libraries(${NETUDP_EXAMPLE1_TARGET} NetUdp)
-  set_target_properties(${NETUDP_EXAMPLE1_TARGET} PROPERTIES FOLDER "${NETUDP_FOLDER_PREFIX}/Examples")
-
-  set(NETUDP_EXAMPLE2_TARGET ${NETUDP_TARGET}_EchoMulticastLoopback)
-  message(STATUS "Add Example ${NETUDP_EXAMPLE2_TARGET}")
-  add_executable(${NETUDP_EXAMPLE2_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/examples/EchoMulticastLoopback.cpp")
-  target_link_libraries(${NETUDP_EXAMPLE2_TARGET} NetUdp)
-  set_target_properties(${NETUDP_EXAMPLE2_TARGET} PROPERTIES FOLDER "${NETUDP_FOLDER_PREFIX}/Examples")
-
-endif(NETUDP_ENABLE_EXAMPLES)
-
-# ┌──────────────────────────────────────────────────────────────────┐
-# │                         INSTALL                                  │
-# └──────────────────────────────────────────────────────────────────┘
-
-if(NETUDP_ENABLE_INSTALL)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/CInstallLists.txt)
-endif(NETUDP_ENABLE_INSTALL)
+  add_subdirectory(examples)
+endif()
