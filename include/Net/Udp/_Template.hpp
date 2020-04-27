@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <NetUdp/Export.hpp>
+#include <Net/Udp/Export.hpp>
 
 // Dependencies Header
 
@@ -20,13 +20,14 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_NAMESPACE_START
+namespace net {
+namespace udp {
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
+}
+}
 
-NETUDP_NAMESPACE_END
-
-#endif // __NETUDP_TEMPLATE_HPP__
+#endif

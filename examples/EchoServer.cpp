@@ -8,7 +8,7 @@
 
 // spdlog
 #ifdef WIN32
-#include <spdlog/sinks/msvc_sink.h>
+#    include <spdlog/sinks/msvc_sink.h>
 #endif
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -17,6 +17,8 @@
 #include <QLoggingCategory>
 #include <QCommandLineParser>
 #include <QTimer>
+#include <QNetworkDatagram>
+#include <QUdpSocket>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -36,7 +38,7 @@ public:
     QString srcAddr = QStringLiteral("127.0.0.1");
     QString dstAddr = QStringLiteral("127.0.0.1");
 
-    net::udp::Server server;
+    net::udp::Socket server;
 
     bool multiThreaded = false;
 
@@ -51,7 +53,6 @@ public:
 
         server.setRxAddress(srcAddr);
         server.setRxPort(src);
-        server.setInputEnabled(true);
         server.setUseWorkerThread(multiThreaded);
 
         QObject::connect(&timer, &QTimer::timeout,
@@ -61,17 +62,17 @@ public:
                 server.sendDatagram(data.c_str(), data.length() + 1, dstAddr, dst);
             });
 
-        QObject::connect(&server, &net::udp::Server::datagramReceived,
+        QObject::connect(&server, &net::udp::Socket::datagramReceived,
             [](const net::udp::SharedDatagram& d)
             { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
 
         qCInfo(APP_LOG_CAT, "Start application");
 
-        QObject::connect(&server, &net::udp::Server::isRunningChanged,
+        QObject::connect(&server, &net::udp::Socket::isRunningChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isRunning : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Server::isBoundedChanged,
+        QObject::connect(&server, &net::udp::Socket::isBoundedChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isBounded : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Server::socketError,
+        QObject::connect(&server, &net::udp::Socket::socketError,
             [](int value, const QString error)
             { qCInfo(SERVER_LOG_CAT, "error : %s", qPrintable(error)); });
 
@@ -157,6 +158,34 @@ int main(int argc, char* argv[])
     echo.multiThreaded = parser.isSet(multiThreadOption);
 
     echo.start();
+
+    // Same example using raw qt
+
+    /*QUdpSocket socket;
+    const bool success = socket.bind(QHostAddress("127.0.0.1"), 11111,
+        QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+    if(!success)
+        return 0;
+    QTimer t;
+    QObject::connect(&t, &QTimer::timeout,
+        [&]
+        {
+            socket.writeDatagram(
+                QNetworkDatagram(QByteArray("Test", 5), QHostAddress("127.0.0.1"), 11112));
+        });
+    QObject::connect(&socket, &QUdpSocket::readyRead,
+        [&]()
+        {
+            while(socket.pendingDatagramSize() >= 0)
+            {
+                QByteArray d = socket.read(1);
+                qDebug("available %lld", socket.bytesAvailable());
+                qDebug("pendingDatagramSize %lld", socket.pendingDatagramSize());
+                qDebug("e %s", qPrintable(socket.errorString()));
+                socket.receiveDatagram();
+            }
+        });
+    t.start(1000);*/
 
     // Start event loop
     return QCoreApplication::exec();

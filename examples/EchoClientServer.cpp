@@ -37,8 +37,8 @@ public:
     QString srcAddr = QStringLiteral("127.0.0.1");
     QString dstAddr = QStringLiteral("127.0.0.1");
 
-    net::udp::Server server;
-    net::udp::Server client;
+    net::udp::Socket server;
+    net::udp::Socket client;
 
     bool multiThreaded = false;
 
@@ -53,13 +53,11 @@ public:
         server.setRxAddress(srcAddr);
         qCInfo(SERVER_LOG_CAT, "Set Rx Port to %d", signed(src));
         server.setRxPort(src);
-        server.setInputEnabled(true);
 
         qCInfo(CLIENT_LOG_CAT, "Set Rx Address to %s", qPrintable(dstAddr));
         client.setRxAddress(dstAddr);
         qCInfo(CLIENT_LOG_CAT, "Set Rx Port to %d", signed(dst));
         client.setRxPort(dst);
-        client.setInputEnabled(true);
 
         server.setUseWorkerThread(multiThreaded);
         client.setUseWorkerThread(multiThreaded);
@@ -71,11 +69,11 @@ public:
                 server.sendDatagram(data.c_str(), data.length() + 1, dstAddr, dst);
             });
 
-        QObject::connect(&server, &net::udp::Server::datagramReceived,
+        QObject::connect(&server, &net::udp::Socket::datagramReceived,
             [](const net::udp::SharedDatagram& d)
             { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
 
-        QObject::connect(&client, &net::udp::Server::datagramReceived,
+        QObject::connect(&client, &net::udp::Socket::datagramReceived,
             [this](const net::udp::SharedDatagram& d)
             {
                 qCInfo(CLIENT_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer()));
@@ -84,18 +82,18 @@ public:
 
         qCInfo(APP_LOG_CAT, "Start application");
 
-        QObject::connect(&server, &net::udp::Server::isRunningChanged,
+        QObject::connect(&server, &net::udp::Socket::isRunningChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isRunning : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Server::isBoundedChanged,
+        QObject::connect(&server, &net::udp::Socket::isBoundedChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isBounded : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Server::socketError,
+        QObject::connect(&server, &net::udp::Socket::socketError,
             [](int value, const QString error)
             { qCInfo(SERVER_LOG_CAT, "error : %s", qPrintable(error)); });
-        QObject::connect(&client, &net::udp::Server::isRunningChanged,
+        QObject::connect(&client, &net::udp::Socket::isRunningChanged,
             [](bool value) { qCInfo(CLIENT_LOG_CAT, "isRunning : %d", signed(value)); });
-        QObject::connect(&client, &net::udp::Server::isBoundedChanged,
+        QObject::connect(&client, &net::udp::Socket::isBoundedChanged,
             [](bool value) { qCInfo(CLIENT_LOG_CAT, "isBounded : %d", signed(value)); });
-        QObject::connect(&client, &net::udp::Server::socketError,
+        QObject::connect(&client, &net::udp::Socket::socketError,
             [](int value, const QString error)
             { qCInfo(CLIENT_LOG_CAT, "error : %s", qPrintable(error)); });
 

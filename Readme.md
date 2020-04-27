@@ -1,22 +1,24 @@
 # NetUdp
 
-NetUdp provide a Udp Server that can send and receive Datagram.
+NetUdp provide a Udp Socket that can send and receive Datagram.
 
 ## Overview
 
-![ClassDiagram](./doc/ClassDiagram.svg)
+<p align="center">
+  <img src="./docs/ClassDiagram.svg"/>
+</p>
 
 ### Introduction
 
-The two main classes that work out of the box are `Server` and `RecycledDatagram`. Simply create a server, start it. Then send and receive datagrams. The server can join multicast group to receice multicast packets.
+The two main classes that work out of the box are `Socket` and `RecycledDatagram`. Simply create a server, start it. Then send and receive datagrams. The server can join multicast group to receice multicast packets.
 
-The `Server` use a `ServerWorker` that can run on separate thread or in main thread.
+The `Socket` use a `SocketWorker` that can run on separate thread or in main thread.
 
 Every datagram allocation is stored in `std::shared_ptr<Datagram>`. This allow to reuse datagram object structure already allocated later without reallocating anything.
 
-* `AbstractServer` can be inherited to represent a `Server` without any functionality.
+* `ISocket` can be inherited to represent a `Socket` without any functionality.
 
-* `Server` and `ServerWorker` can be inherited to implement custom communication between server and worker. For example sending custom objects that can be serialized/deserialized in worker thread.
+* `Socket` and `SocketWorker` can be inherited to implement custom communication between server and worker. For example sending custom objects that can be serialized/deserialized in worker thread.
 
 * `Datagram` can be inherited if a custom data container if required. For example if data is already serialized in a structure. Putting a reference to that structure inside the `Datagram` avoid a copy to `RecycledDatagram`.
 
@@ -24,11 +26,12 @@ Every datagram allocation is stored in `std::shared_ptr<Datagram>`. This allow t
 
 * The library depends on C++ 14 STL.
 * [Recycler](https://github.com/OlivierLDff/Recycler.git) library to reuse allocated datagram.
-* Qt Core and Network for the backend.
+* spdlog to log.
+* Qt Core Qml Network for the backend.
 * Qml dependencies:
   * Qt Qml Quick Control2
   * [Stringify](https://github.com/OlivierLDff/Stringify)
-  * [Qaterial](https://github.com/OlivierLDff/Qaterial) 
+  * [Qaterial](https://github.com/OlivierLDff/Qaterial)
 
 ### Tools
 
@@ -38,9 +41,9 @@ Every datagram allocation is stored in `std::shared_ptr<Datagram>`. This allow t
 
 ### Out of the box usage
 
-A Basic Client/Server can be found in `examples/EchoClientServer.cpp`.
+A Basic Client/Socket can be found in `examples/EchoClientServer.cpp`.
 
-#### Server
+#### Socket
 
 This example demonstrate how to create a server that send datagram to address `127.0.0.1` on port `9999`.
 
@@ -51,7 +54,7 @@ int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
 
-    Net::Udp::Server server;
+    net::udp::Socket server;
     server.start();
     const std::string data = "Dummy Data";
     server.sendDatagram(data.c_str(), data.length()+1, "127.0.0.1", 9999);
@@ -62,7 +65,7 @@ int main(int argc, char* argv[])
 
 > The datagram is emitted from a random port chosen by the operating system. It can be explicitly specified by calling `setTxPort(uint16_t)`.
 >
-> If the server also receive datagram (ie `inputEnabled` is true and call `setRxPort`), then the rx port will use. To change this default behavior call `setSeparateRxTxSockets(true)`.
+> If the socket also receive datagram (ie `inputEnabled` is true and call `setRxPort`), then the rx port will use. To change this default behavior call `setSeparateRxTxSockets(true)`.
 
 #### Client
 
@@ -75,13 +78,13 @@ int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
 
-    Net::Udp::Server client;
+    net::udp::Socket client;
     client.setRxAddress("127.0.0.1");
     client.setRxPort(9999);
     client.start();
 
-        QObject::connect(&client, &Net::Udp::Server::datagramReceived,
-                         [](const Net::Udp::SharedDatagram& d)
+        QObject::connect(&client, &net::udp::Socket::datagramReceived,
+                         [](const net::udp::SharedDatagram& d)
         {
             qInfo("Rx : %s", reinterpret_cast<const char*>(d->buffer()));
         });
@@ -99,7 +102,7 @@ The default restart time is set to 5 seconds but can be changed via `watchdogPer
 
 #### Disable Input
 
-By default, if internal socket is bounded to an interface with a port, the `Worker` will receive incoming datagram. To avoid receiving those datagram inside `Server`, call `setInputEnabled(false)`.
+By default, if internal socket is bounded to an interface with a port, the `Worker` will receive incoming datagram. To avoid receiving those datagram inside `Socket`, call `setInputEnabled(false)`.
 
 #### Multicast group
 
@@ -109,7 +112,7 @@ By default multicast packet are not received is listening to datagram. To enable
 
 #### Statistics
 
-Internally the `Server` track multiple information to have an idea of what is going on.
+Internally the `Socket` track multiple information to have an idea of what is going on.
 
 * `isBounded` indicate if the socket is currently binded to a network interface.
 * `*xBytesPerSeconds` is an average value of all bytes received/sent in the last second. This value is updated every seconds. `* can be replaced by t and r`
@@ -130,40 +133,40 @@ virtual bool sendDatagram(const char* buffer, const size_t length, const QHostAd
 virtual bool sendDatagram(const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0);
 ```
 
-To avoid useless memory copy it's recommended to retrieve a datagram from `Server` cache with `makeDatagram(const size_t length)`. Then use this `Net::Udp::SharedDatagram` to serialize data. And call :
+To avoid useless memory copy it's recommended to retrieve a datagram from `Socket` cache with `makeDatagram(const size_t length)`. Then use this `net::udp::SharedDatagram` to serialize data. And call :
 
 ```cpp
 virtual bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0);
 virtual bool sendDatagram(std::shared_ptr<Datagram> datagram);
 ```
 
-### Customize AbstractServer
+### Customize ISocket
 
-If you are not satisfied by `Server` behavior, or if you want to mock `Server` without any dependency to `QtNetwork`. It's possible to extend `AbstractServer` to use it's basic functionality.
+If you are not satisfied by `Socket` behavior, or if you want to mock `Socket` without any dependency to `QtNetwork`. It's possible to extend `ISocket` to use it's basic functionality.
 
 * Managing list of multicast ip.
 * start/stop behavior that clear counter and `isRunning`/`isBounded`.
 
 You need to override:
 
-* `bool start()` : Start the server. Auto restart to survive from error is expected. Don't forget to call `AbstractServer::start` at beginning.
-* `bool stop()` : Stop the server. Clear all running task, empty cache, buffers, etc... Don't forget to call `AbstractServer::stop` at beginning. To ensure maximum cleaning, always stop every even if stopping any part failed.
-* `joinMulticastGroup(const QString& groupAddress)`: Implementation to join a multicast group. Don't forget to call `AbstractServer::joinMulticastGroup`.
-* `leaveMulticastGroup(const QString& groupAddress)`: Implementation to leave a multicast group. Don't forget to call `AbstractServer::leaveMulticastGroup`.
+* `bool start()` : Start the socket. Auto restart to survive from error is expected. Don't forget to call `ISocket::start` at beginning.
+* `bool stop()` : Stop the socket. Clear all running task, empty cache, buffers, etc... Don't forget to call `ISocket::stop` at beginning. To ensure maximum cleaning, always stop every even if stopping any part failed.
+* `joinMulticastGroup(const QString& groupAddress)`: Implementation to join a multicast group. Don't forget to call `ISocket::joinMulticastGroup`.
+* `leaveMulticastGroup(const QString& groupAddress)`: Implementation to leave a multicast group. Don't forget to call `ISocket::leaveMulticastGroup`.
 
 ```cpp
-#include <Net/Udp/AbstractServer.hpp>
+#include <Net/Udp/ISocket.hpp>
 
-class MyAbstractServer : Net::Udp::AbstractServer
+class MyAbstractSocket : net::udp::ISocket
 {
     Q_OBJECT
 public:
-    MyAbstractServer(QObject* parent = nullptr) : Net::Udp::AbstractServer(parent) {}
+    MyAbstractSocket(QObject* parent = nullptr) : net::udp::ISocket(parent) {}
 
 public Q_SLOTS:
     bool start() override
     {
-        if(!Net::Udp::AbstractServer::start())
+        if(!net::udp::ISocket::start())
             return false;
 
         // Do your business ...
@@ -172,7 +175,7 @@ public Q_SLOTS:
     }
     bool stop() override
     {
-        auto stopped = Net::Udp::AbstractServer::stop()
+        auto stopped = net::udp::ISocket::stop()
 
         // Do your business ...
 
@@ -193,9 +196,9 @@ public Q_SLOTS:
 
 
 
-### Customize Server and Worker
+### Customize Socket and Worker
 
-`Server` and `Worker` mainly work in pair, so if overriding one, it make often sense to override the other.
+`Socket` and `Worker` mainly work in pair, so if overriding one, it make often sense to override the other.
 
 Reasons to override `Worker`:
 
@@ -205,7 +208,7 @@ Reasons to override `Worker`:
 * Use a custom `Datagram` class
 * ...
 
-Reasons to override `Server`
+Reasons to override `Socket`
 
 * Use a custom `Worker` class.
 * Use a custom `Datagram` class.
@@ -217,13 +220,13 @@ Using a custom `Datagram` can reduce memory copy depending on your application.
 
 * To use custom datagram for Rx packet, customize `Worker`.
 * To use custom datagram for Tx packet:
-  * Call `Server::sendDatagram(SharedDatagram, ...)` with it.
-  * Customize `Server` to use it when calling with `Server::sendDatagram(const uint8_t*, ...)`.  *A `memcpy` will happen. So don't use a custom `Datagram` for that purpose.*
+  * Call `Socket::sendDatagram(SharedDatagram, ...)` with it.
+  * Customize `Socket` to use it when calling with `Socket::sendDatagram(const uint8_t*, ...)`.  *A `memcpy` will happen. So don't use a custom `Datagram` for that purpose.*
 
 ```cpp
 #include <Net/Udp/Datagram.hpp>
 
-class MyDatagram : Net::Udp::Datagram
+class MyDatagram : net::udp::Datagram
 {
     uint8_t* myBuffer = nullptr;
     size_t myLength = 0;
@@ -234,29 +237,29 @@ public:
 };
 ```
 
-#### Customize ServerWorker
+#### Customize SocketWorker
 
-When inheriting from `ServerWorker` you can override:
+When inheriting from `SocketWorker` you can override:
 
-* `bool isPacketValid(const uint8_t* buffer, const size_t length) const`: Called each time a datagram is received. Check if a packet is valid depending on your protocol. Default implementation just return true. You can add a CRC check or something like that. Returning false here will increment the `rxInvalidPacketTotal` counter in `Server`.
+* `bool isPacketValid(const uint8_t* buffer, const size_t length) const`: Called each time a datagram is received. Check if a packet is valid depending on your protocol. Default implementation just return true. You can add a CRC check or something like that. Returning false here will increment the `rxInvalidPacketTotal` counter in `Socket`.
 * `void onReceivedDatagram(const SharedDatagram& datagram)`: Called each time a valid datagram arrive. Default implementation emit `receivedDatagram` signal. Override this function to add a custom messaging system, or a custom deserialization.
 * `std::shared_ptr<Datagram> makeDatagram(const size_t length)` : Create custom `Datagram` for rx.
 * If you implement a custom serialization via a custom message system in `Worker`, call `void onSendDatagram(const SharedDatagram& datagram)` to send a datagram to the network.
-* Don't forget that `ServerWorker` inherit from `QObject`, so use `Q_OBJECT` macro to generate custom signals.
+* Don't forget that `SocketWorker` inherit from `QObject`, so use `Q_OBJECT` macro to generate custom signals.
 
 Example:
 
 ```cpp
-#include <Net/Udp/ServerWorker.hpp>
+#include <Net/Udp/SocketWorker.hpp>
 
-class MyServerWorker : Net::Udp::ServerWorker
+class MySocketWorker : net::udp::SocketWorker
 {
     Q_OBJECT
 public:
-    MyServerWorker(QObject* parent = nullptr) : Net::Udp::ServerWorker(parent) {}
+    MySocketWorker(QObject* parent = nullptr) : net::udp::SocketWorker(parent) {}
 
 public Q_SLOTS:
-    bool std::unique_ptr<ServerWorker> createWorker() override
+    bool std::unique_ptr<SocketWorker> createWorker() override
     {
         auto myWorker = std::make_unique<MyWorker>();
 
@@ -268,7 +271,6 @@ public Q_SLOTS:
 
         return std::move(myWorker);
     }
-
     
     // This is called before creating a SharedDatagram and calling onDatagramReceived
     bool isPacketValid(const uint8_t* buffer, const size_t length) const override
@@ -276,13 +278,13 @@ public Q_SLOTS:
         // Add your checks, like header, fixed size, crc, etc...
         return buffer && length;
     }
-    
+
     void onDatagramReceived(const SharedDatagram& datagram) override
     {
         // Do your business ...
 
-        // This super call is optionnal. If not done Server will never trigger onDatagramReceived
-        Net::Udp::ServerWorker::onDatagramReceived(datagram);
+        // This super call is optionnal. If not done Socket will never trigger onDatagramReceived
+        net::udp::SocketWorker::onDatagramReceived(datagram);
     }
 
     std::shared_ptr<Datagram> makeDatagram(const size_t length) override
@@ -293,31 +295,31 @@ public Q_SLOTS:
 }
 ```
 
-> Customizing worker mostly make sense when it's running in a separate thread. Otherwise it won't give any performance boost. Don't forget to call `Server::setUseWorkerThread(true)`.
+> Customizing worker mostly make sense when it's running in a separate thread. Otherwise it won't give any performance boost. Don't forget to call `Socket::setUseWorkerThread(true)`.
 >
 
-#### Customize Server
+#### Customize Socket
 
-When inheriting from `Server` you can override:
+When inheriting from `Socket` you can override:
 
-* `bool std::unique_ptr<ServerWorker> createWorker() const`: Create a custom worker.
+* `bool std::unique_ptr<SocketWorker> createWorker() const`: Create a custom worker.
 * `void onDatagramReceived(const SharedDatagram& datagram)` : Handle datagram in there. Default implementation emit `datagramReceived` signals
-* `std::shared_ptr<Datagram> makeDatagram(const size_t length)` : Create custom `Datagram` that will be used in `Server::sendDatagram(const uint8_t*, ...)`.
-* Don't forget that `Server` inherit from `QObject`, so use `Q_OBJECT` macro to generate custom signals.
+* `std::shared_ptr<Datagram> makeDatagram(const size_t length)` : Create custom `Datagram` that will be used in `Socket::sendDatagram(const uint8_t*, ...)`.
+* Don't forget that `Socket` inherit from `QObject`, so use `Q_OBJECT` macro to generate custom signals.
 
 Example:
 
 ```cpp
-#include <Net/Udp/Server.hpp>
+#include <Net/Udp/Socket.hpp>
 
-class MyServer : Net::Udp::Server
+class MySocket : net::udp::Socket
 {
     Q_OBJECT
 public:
-    MyServer(QObject* parent = nullptr) : Net::Udp::Server(parent) {}
+    MySocket(QObject* parent = nullptr) : net::udp::Socket(parent) {}
 
 public Q_SLOTS:
-    bool std::unique_ptr<ServerWorker> createWorker() override
+    bool std::unique_ptr<SocketWorker> createWorker() override
     {
         auto myWorker = std::make_unique<MyWorker>();
 
@@ -334,8 +336,8 @@ public Q_SLOTS:
     {
         // Do your business ...
 
-        // This super call is optionnal. If not done Server will never trigger datagramReceived signal
-        Net::Udp::Server::onDatagramReceived(datagram);
+        // This super call is optionnal. If not done Socket will never trigger datagramReceived signal
+        net::udp::Socket::onDatagramReceived(datagram);
     }
 
     std::shared_ptr<Datagram> makeDatagram(const size_t length) override
@@ -350,7 +352,7 @@ public Q_SLOTS:
 
 ### EchoClientServer
 
-This example demonstrate an echo between a server and a client. Server send a packet to a client, the client reply the same packet. `Ctrl+C` to quit.
+This example demonstrate an echo between a server and a client. Socket send a packet to a client, the client reply the same packet. `Ctrl+C` to quit.
 
 ```bash
 $> NetUdp_EchoClientServer --help
@@ -379,7 +381,9 @@ $> NetUdp_EchoClientServer
 > ...
 ```
 
-### MulticastLoopbackServer
+This example is also break into 2 examples : `NetUdp_EchoClient` & `NetUdp_EchoServer`.
+
+### MulticastLoopbackSocket
 
 Demonstrate how to join multicast ip group. Send a packet and read it back via loopback.
 
@@ -400,12 +404,12 @@ Options:
 
 This library also provide a tool object that demonstrate every Qmls functionality. This is intended for quick debug, or test functionalities if UI isn't built yet.
 
-![Qml](./doc/Qml.png)
+![Qml](./docs/Qml.png)
 
 In order to use this qml object into another qml file, multiple steps are required.
 
-* Call `Net::Udp::Utils::registerTypes(...)` to register `AbstractServer`, `Server`, `SharedDatagram`, ... to the qml system
-* Call `Net::Udp::Utils::loadResources()` to load every `NetUdp` resources into the `qrc`.
+* Call `net::udp::Utils::registerTypes(...)` to register `Socket`, `SharedDatagram`, ... to the qml system
+* Call `net::udp::Utils::loadResources()` to load every `NetUdp` resources into the `qrc`.
 
 Then simply to something like that:
 
@@ -415,15 +419,15 @@ import NetUdp 1.0 as NetUdp
 
 Rectangle
 {
-    property NetUdp.Server server
-	NetUdpDebug.Server
+    property NetUdp.Socket socket
+	NetUdpDebug.Socket
     {
-        object: server
+        object: socket
     }
 }
 ```
 
-`NetUdp.Debug.Server` is a `Qaterial.DebugObject`. If you want the raw content to display it somewhere else, then use `NetUdp.Debug.ServerContent` that is a `Column`.
+`NetUdp.Debug.Socket` is a `Qaterial.DebugObject`. If you want the raw content to display it somewhere else, then use `NetUdp.Debug.SocketContent` that is a `Column`.
 
 ## Configuring
 

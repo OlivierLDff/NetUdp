@@ -15,10 +15,10 @@ import NetUdp.Debug 1.0 as Debug
 Qaterial.DebugObject
 {
     id: root
-    property NetUdp.AbstractServer object: null
+    property NetUdp.Socket object: null
     title: "" + (root.object ? root.object : "Server null")
 
-    content: Debug.ServerContent
+    content: Debug.SocketContent
     {
         object: root.object
     }

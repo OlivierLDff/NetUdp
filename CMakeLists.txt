@@ -155,11 +155,10 @@ set(NETUDP_UTILS_SRCS
   )
 
 set(NETUDP_API_SRCS
-  ${NETUDP_SRCS_FOLDER}/AbstractServer.cpp
   ${NETUDP_SRCS_FOLDER}/Datagram.cpp
   ${NETUDP_SRCS_FOLDER}/RecycledDatagram.cpp
-  ${NETUDP_SRCS_FOLDER}/Server.cpp
-  ${NETUDP_SRCS_FOLDER}/ServerWorker.cpp
+  ${NETUDP_SRCS_FOLDER}/Socket.cpp
+  ${NETUDP_SRCS_FOLDER}/Worker.cpp
   )
 
 set(NETUDP_SRCS ${NETUDP_UTILS_SRCS}
@@ -178,11 +177,11 @@ set(NETUDP_UTILS_INCS
   )
 
 set(NETUDP_API_INCS
-  ${NETUDP_PRIVATE_INCS_FOLDER}/AbstractServer.hpp
   ${NETUDP_PRIVATE_INCS_FOLDER}/Datagram.hpp
   ${NETUDP_PRIVATE_INCS_FOLDER}/RecycledDatagram.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Server.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/ServerWorker.hpp
+  ${NETUDP_PRIVATE_INCS_FOLDER}/ISocket.hpp
+  ${NETUDP_PRIVATE_INCS_FOLDER}/Socket.hpp
+  ${NETUDP_PRIVATE_INCS_FOLDER}/Worker.hpp
   )
 
 set(NETUDP_INCS ${NETUDP_UTILS_INCS}

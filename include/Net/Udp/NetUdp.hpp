@@ -11,8 +11,7 @@
 #include <Net/Udp/Logger.hpp>
 
 // Library code
-#include <Net/Udp/AbstractServer.hpp>
 #include <Net/Udp/RecycledDatagram.hpp>
-#include <Net/Udp/Server.hpp>
+#include <Net/Udp/Socket.hpp>
 
 #endif

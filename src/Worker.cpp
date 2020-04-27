@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/ServerWorker.hpp>
+#include <Net/Udp/Worker.hpp>
 #include <Net/Udp/Logger.hpp>
 
 // Qt Header
@@ -53,59 +53,59 @@ using namespace net::udp;
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
-ServerWorker::ServerWorker(QObject* parent) : QObject(parent) { LOG_DEV_DEBUG("Constructor"); }
+Worker::Worker(QObject* parent) : QObject(parent) { LOG_DEV_DEBUG("Constructor"); }
 
-ServerWorker::~ServerWorker() { LOG_DEV_DEBUG("Destructor"); }
+Worker::~Worker() { LOG_DEV_DEBUG("Destructor"); }
 
-bool ServerWorker::isBounded() const { return _isBounded; }
+bool Worker::isBounded() const { return _isBounded; }
 
-quint64 ServerWorker::watchdogTimeout() const { return _watchdogTimeout; }
+quint64 Worker::watchdogTimeout() const { return _watchdogTimeout; }
 
-QString ServerWorker::rxAddress() const { return _rxAddress; }
+QString Worker::rxAddress() const { return _rxAddress; }
 
-quint16 ServerWorker::rxPort() const { return _rxPort; }
+quint16 Worker::rxPort() const { return _rxPort; }
 
-quint16 ServerWorker::txPort() const { return _txPort; }
+quint16 Worker::txPort() const { return _txPort; }
 
-QMap<QString, bool> ServerWorker::multicastGroups() const { return _multicastGroups; }
+QMap<QString, bool> Worker::multicastGroups() const { return _multicastGroups; }
 
-QNetworkInterface ServerWorker::multicastInterface() const { return _multicastInterface; }
+QNetworkInterface Worker::multicastInterface() const { return _multicastInterface; }
 
-bool ServerWorker::multicastLoopback() const { return _multicastLoopback; }
+bool Worker::multicastLoopback() const { return _multicastLoopback; }
 
-quint8 ServerWorker::multicastTtl() const { return _multicastTtl; }
+quint8 Worker::multicastTtl() const { return _multicastTtl; }
 
-bool ServerWorker::inputEnabled() const { return _inputEnabled; }
+bool Worker::inputEnabled() const { return _inputEnabled; }
 
-bool ServerWorker::separateRxTxSocketsChanged() const { return _separateRxTxSockets; }
+bool Worker::separateRxTxSocketsChanged() const { return _separateRxTxSockets; }
 
-QUdpSocket* ServerWorker::rxSocket() const
+QUdpSocket* Worker::rxSocket() const
 {
     if(_separateRxTxSockets)
         return _rxSocket.get();
     return _socket.get();
 }
 
-size_t ServerWorker::cacheSize() const { return _cache.size(); }
+size_t Worker::cacheSize() const { return _cache.size(); }
 
-bool ServerWorker::resizeCache(size_t length) { return _cache.resize(length); }
+bool Worker::resizeCache(size_t length) { return _cache.resize(length); }
 
-void ServerWorker::clearCache() { _cache.clear(); }
+void Worker::clearCache() { _cache.clear(); }
 
-void ServerWorker::releaseCache() { _cache.release(); }
+void Worker::releaseCache() { _cache.release(); }
 
-std::shared_ptr<Datagram> ServerWorker::makeDatagram(const size_t length)
+std::shared_ptr<Datagram> Worker::makeDatagram(const size_t length)
 {
     return _cache.make(length);
 }
 
-void ServerWorker::onRestart()
+void Worker::onRestart()
 {
     onStop();
     onStart();
 }
 
-void ServerWorker::onStart()
+void Worker::onStart()
 {
     const bool useTwoSockets = (_separateRxTxSockets || _txPort) && _inputEnabled;
     if(_socket)
@@ -129,7 +129,7 @@ void ServerWorker::onStart()
     }
 
     connect(
-        this, &ServerWorker::queueStartWatchdog, this,
+        this, &Worker::queueStartWatchdog, this,
         [this]()
         {
             if(!_watchdog)
@@ -155,17 +155,17 @@ void ServerWorker::onStart()
         Qt::QueuedConnection);
 
     // ) Connect to socket signals
-    connect(rxSocket(), &QUdpSocket::readyRead, this, &ServerWorker::readPendingDatagrams);
+    connect(rxSocket(), &QUdpSocket::readyRead, this, &Worker::readPendingDatagrams);
     connect(_socket.get(), QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
-        this, &ServerWorker::onSocketError);
+        this, &Worker::onSocketError);
     // _socket is always bounded because binded to QHostAddress(). Only rxSocket can go wrong
-    connect(rxSocket(), &QUdpSocket::stateChanged, this, &ServerWorker::onSocketStateChanged);
+    connect(rxSocket(), &QUdpSocket::stateChanged, this, &Worker::onSocketStateChanged);
 
     if(useTwoSockets)
     {
         connect(_rxSocket.get(),
             QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this,
-            &ServerWorker::onRxSocketError);
+            &Worker::onRxSocketError);
         //connect(_rxSocket.get(), &QUdpSocket::stateChanged, this, &ServerWorker::onSocketStateChanged);
     }
 
@@ -224,7 +224,7 @@ void ServerWorker::onStart()
     }
 }
 
-void ServerWorker::onStop()
+void Worker::onStop()
 {
     if(!_socket)
     {
@@ -245,13 +245,13 @@ void ServerWorker::onStop()
     for(auto& it: _multicastGroups) it = false;
 }
 
-void ServerWorker::setWatchdogTimeout(const quint64 ms)
+void Worker::setWatchdogTimeout(const quint64 ms)
 {
     if(_watchdogTimeout != ms)
         _watchdogTimeout = ms;
 }
 
-void ServerWorker::setAddress(const QString& address)
+void Worker::setAddress(const QString& address)
 {
     if(address != _rxAddress)
     {
@@ -260,7 +260,7 @@ void ServerWorker::setAddress(const QString& address)
     }
 }
 
-void ServerWorker::setRxPort(const quint16 port)
+void Worker::setRxPort(const quint16 port)
 {
     if(port != _rxPort)
     {
@@ -270,7 +270,7 @@ void ServerWorker::setRxPort(const quint16 port)
     }
 }
 
-void ServerWorker::setTxPort(const quint16 port)
+void Worker::setTxPort(const quint16 port)
 {
     if(port != _txPort)
     {
@@ -279,7 +279,7 @@ void ServerWorker::setTxPort(const quint16 port)
     }
 }
 
-void ServerWorker::joinMulticastGroup(const QString& address)
+void Worker::joinMulticastGroup(const QString& address)
 {
     LOG_INFO("Join Multicast group {}", address.toStdString());
 
@@ -301,7 +301,7 @@ void ServerWorker::joinMulticastGroup(const QString& address)
     }
 }
 
-void ServerWorker::leaveMulticastGroup(const QString& address)
+void Worker::leaveMulticastGroup(const QString& address)
 {
     LOG_INFO("Leave Multicast group {}", address.toStdString());
 
@@ -316,7 +316,7 @@ void ServerWorker::leaveMulticastGroup(const QString& address)
     }
 }
 
-void ServerWorker::setMulticastInterfaceName(const QString& name)
+void Worker::setMulticastInterfaceName(const QString& name)
 {
     LOG_INFO("Set Multicast Interface Name : {}", name.toStdString());
 
@@ -328,7 +328,7 @@ void ServerWorker::setMulticastInterfaceName(const QString& name)
     }
 }
 
-void ServerWorker::setMulticastLoopback(const bool loopback)
+void Worker::setMulticastLoopback(const bool loopback)
 {
     LOG_DEV_INFO("Set Multicast Loopback : {}", loopback);
 
@@ -339,7 +339,7 @@ void ServerWorker::setMulticastLoopback(const bool loopback)
     }
 }
 
-void ServerWorker::setInputEnabled(const bool enabled)
+void Worker::setInputEnabled(const bool enabled)
 {
     LOG_DEV_INFO("Set Input Enabled : {}", enabled);
     if(enabled != _inputEnabled)
@@ -349,7 +349,7 @@ void ServerWorker::setInputEnabled(const bool enabled)
     }
 }
 
-void ServerWorker::setSeparateRxTxSockets(const bool separateRxTxSocketsChanged)
+void Worker::setSeparateRxTxSockets(const bool separateRxTxSocketsChanged)
 {
     const bool shouldUseSeparate = separateRxTxSocketsChanged || _txPort;
     if(shouldUseSeparate != _separateRxTxSockets)
@@ -360,7 +360,7 @@ void ServerWorker::setSeparateRxTxSockets(const bool separateRxTxSocketsChanged)
     }
 }
 
-void ServerWorker::setMulticastInterfaceNameToSocket() const
+void Worker::setMulticastInterfaceNameToSocket() const
 {
     if(_socket && _multicastInterface.isValid())
     {
@@ -374,7 +374,7 @@ void ServerWorker::setMulticastInterfaceNameToSocket() const
     }
 }
 
-void ServerWorker::setMulticastLoopbackToSocket() const
+void Worker::setMulticastLoopbackToSocket() const
 {
     if(rxSocket() && _inputEnabled)
     {
@@ -384,11 +384,11 @@ void ServerWorker::setMulticastLoopbackToSocket() const
     }
 }
 
-void ServerWorker::startWatchdog() { Q_EMIT queueStartWatchdog(); }
+void Worker::startWatchdog() { Q_EMIT queueStartWatchdog(); }
 
-void ServerWorker::stopWatchdog() { _watchdog = nullptr; }
+void Worker::stopWatchdog() { _watchdog = nullptr; }
 
-void ServerWorker::setMulticastTtl(const quint8 ttl)
+void Worker::setMulticastTtl(const quint8 ttl)
 {
     if(!_socket)
         return;
@@ -403,7 +403,7 @@ void ServerWorker::setMulticastTtl(const quint8 ttl)
     }
 }
 
-void ServerWorker::onSendDatagram(const SharedDatagram& datagram)
+void Worker::onSendDatagram(const SharedDatagram& datagram)
 {
     if(!isBounded())
     {
@@ -479,18 +479,33 @@ void ServerWorker::onSendDatagram(const SharedDatagram& datagram)
     ++_txPacketsCounter;
 }
 
-bool ServerWorker::isPacketValid(const uint8_t* buffer, const size_t length) const
+bool Worker::isPacketValid(const uint8_t* buffer, const size_t length) const
 {
     return buffer && length;
 }
 
-void ServerWorker::readPendingDatagrams()
+void Worker::readPendingDatagrams()
 {
     if(!rxSocket())
         return;
 
     while(rxSocket() && rxSocket()->isValid() && rxSocket()->hasPendingDatagrams())
     {
+        if(rxSocket()->pendingDatagramSize() == 0)
+        {
+            LOG_DEV_WARN(
+                "Receive datagram with size 0. This may means : \n"
+                "- That host is unreachable (receive an ICMP packet destination unreachable).\n"
+                "- Your OS doesn't support IGMP (if last packet sent was multicast). "
+                "On unix system you can check with netstat -g");
+            ++_rxInvalidPacket;
+            // This might happen, so don't close socket.
+            // This will cause an error  Connection reset by peer, that we need to ignore
+            // If we don't read, then we won't receive data anymore
+            rxSocket()->receiveDatagram(0);
+            return;
+        }
+
         QNetworkDatagram datagram = rxSocket()->receiveDatagram();
 
         if(!datagram.isValid())
@@ -545,32 +560,22 @@ void ServerWorker::readPendingDatagrams()
     }
 }
 
-void ServerWorker::onDatagramReceived(const SharedDatagram& datagram)
+void Worker::onDatagramReceived(const SharedDatagram& datagram)
 {
     Q_EMIT datagramReceived(datagram);
 }
 
-void ServerWorker::onSocketError(QAbstractSocket::SocketError error)
+void Worker::onSocketError(QAbstractSocket::SocketError error)
 {
-    if(_socket)
-    {
-        LOG_ERR("Socket Error ({}) : {}", error, qPrintable(_socket->errorString()));
-        Q_EMIT socketError(error, _socket->errorString());
-        startWatchdog();
-    }
+    onSocketErrorCommon(error, _socket.get());
 }
 
-void ServerWorker::onRxSocketError(QAbstractSocket::SocketError error)
+void Worker::onRxSocketError(QAbstractSocket::SocketError error)
 {
-    if(_rxSocket)
-    {
-        LOG_ERR("Rx Socket Error ({}) : {}", error, qPrintable(_rxSocket->errorString()));
-        Q_EMIT socketError(error, _rxSocket->errorString());
-        startWatchdog();
-    }
+    onSocketErrorCommon(error, _rxSocket.get());
 }
 
-void ServerWorker::onSocketStateChanged(QAbstractSocket::SocketState socketState)
+void Worker::onSocketStateChanged(QAbstractSocket::SocketState socketState)
 {
     LOG_INFO("Socket State Changed to {} ({})", socketStateToString(socketState).toStdString(),
         socketState);
@@ -582,7 +587,24 @@ void ServerWorker::onSocketStateChanged(QAbstractSocket::SocketState socketState
     }
 }
 
-QString ServerWorker::socketStateToString(QAbstractSocket::SocketState socketState)
+void Worker::onSocketErrorCommon(QAbstractSocket::SocketError error, QUdpSocket* socket)
+{
+    if(socket)
+    {
+        if(error == QAbstractSocket::SocketError::ConnectionRefusedError)
+        {
+            LOG_DEV_WARN("Ignoring socket error ({}), because it simply mean we received an ICMP "
+                         "packet Destination unreachable.",
+                qPrintable(socket->errorString()));
+            return;
+        }
+        LOG_ERR("Socket Error ({}) : {}", error, qPrintable(socket->errorString()));
+        Q_EMIT socketError(error, socket->errorString());
+        startWatchdog();
+    }
+}
+
+QString Worker::socketStateToString(QAbstractSocket::SocketState socketState)
 {
     switch(socketState)
     {
@@ -598,7 +620,7 @@ QString ServerWorker::socketStateToString(QAbstractSocket::SocketState socketSta
     return QStringLiteral("Unknown");
 }
 
-void ServerWorker::startBytesCounter()
+void Worker::startBytesCounter()
 {
     Q_ASSERT(_bytesCounterTimer.get() == nullptr);
 
@@ -624,7 +646,7 @@ void ServerWorker::startBytesCounter()
     _bytesCounterTimer->start();
 }
 
-void ServerWorker::stopBytesCounter()
+void Worker::stopBytesCounter()
 {
     Q_EMIT rxBytesCounterChanged(0);
     Q_EMIT txBytesCounterChanged(0);

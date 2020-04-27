@@ -3,8 +3,8 @@
 
     <!-- DEBUG -->
     <file>NetUdp/Debug/qmldir</file>
-    <file>NetUdp/Debug/Server.qml</file>
-    <file>NetUdp/Debug/ServerContent.qml</file>
+    <file>NetUdp/Debug/Socket.qml</file>
+    <file>NetUdp/Debug/SocketContent.qml</file>
 
     </qresource>
 </RCC>

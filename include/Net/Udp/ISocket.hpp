@@ -26,12 +26,12 @@ namespace udp {
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-class NETUDP_API_ IAbstractServer : public QObject
+class NETUDP_API_ ISocket : public QObject
 {
     Q_OBJECT
     // ──────── CONSTRUCTOR ────────
 public:
-    IAbstractServer(QObject* parent = nullptr) : QObject(parent) {}
+    ISocket(QObject* parent = nullptr) : QObject(parent) {}
 
     // ──────── ATTRIBUTE STATE ────────
 protected:
@@ -45,7 +45,7 @@ protected:
     NETUDP_PROPERTY(quint16, rxPort, RxPort);
     NETUDP_PROPERTY(quint16, txPort, TxPort);
     NETUDP_PROPERTY(bool, separateRxTxSockets, SeparateRxTxSockets);
-    NETUDP_PROPERTY(bool, inputEnabled, InputEnabled);
+    NETUDP_PROPERTY_D(bool, inputEnabled, InputEnabled, true);
     NETUDP_PROPERTY(bool, useWorkerThread, UseWorkerThread);
 
     // ──────── ATTRIBUTE MULTICAST ────────
@@ -71,6 +71,8 @@ protected:
     // ──────── C++ API ────────
 public Q_SLOTS:
     virtual bool start() = 0;
+    virtual bool start(quint16 port) = 0;
+    virtual bool start(const QString& address, quint16 port) = 0;
     virtual bool stop() = 0;
     virtual bool restart() = 0;
 
@@ -87,44 +89,6 @@ public Q_SLOTS:
     // ──────── SIGNALS ────────
 Q_SIGNALS:
     void socketError(int error, const QString description);
-};
-
-class NETUDP_API_ AbstractServer : public IAbstractServer
-{
-    Q_OBJECT
-    NETUDP_REGISTER_TO_QML(AbstractServer);
-
-    // ──────── CONSTRUCTOR ────────
-public:
-    AbstractServer(QObject* parent = nullptr);
-
-    // ──────── MULTICAST ────────
-private:
-    std::set<QString> _multicastGroups;
-
-protected:
-    const std::set<QString>& multicastGroupsSet() const;
-
-public:
-    bool setMulticastGroups(const QList<QString>& value) override;
-    QList<QString> multicastGroups() const override;
-    bool setMulticastInterfaceName(const QString& name) override;
-
-    // ──────── C++ API ────────
-public Q_SLOTS:
-    bool start() override;
-    bool stop() override;
-    bool restart() override;
-
-    bool joinMulticastGroup(const QString& groupAddress) override;
-    bool leaveMulticastGroup(const QString& groupAddress) override;
-    bool leaveAllMulticastGroups() override;
-    bool isMulticastGroupPresent(const QString& groupAddress) override;
-
-    void clearRxCounter() override;
-    void clearTxCounter() override;
-    void clearRxInvalidCounter() override;
-    void clearCounters() override;
 };
 
 }

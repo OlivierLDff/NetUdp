@@ -3,8 +3,8 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Server.hpp>
-#include <Net/Udp/ServerWorker.hpp>
+#include <Net/Udp/Socket.hpp>
+#include <Net/Udp/Worker.hpp>
 #include <Net/Udp/Logger.hpp>
 
 // Qt Header
@@ -51,9 +51,9 @@ using namespace net::udp;
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
-Server::Server(QObject* parent) : AbstractServer(parent) { LOG_DEV_DEBUG("Constructor"); }
+Socket::Socket(QObject* parent) : ISocket(parent) { LOG_DEV_DEBUG("Constructor"); }
 
-Server::~Server()
+Socket::~Socket()
 {
     LOG_DEV_DEBUG("Destructor");
     // ) We can't destroy a thread that is running
@@ -66,9 +66,9 @@ Server::~Server()
     }
 }
 
-bool Server::setUseWorkerThread(const bool& enabled)
+bool Socket::setUseWorkerThread(const bool& enabled)
 {
-    if(AbstractServer::setUseWorkerThread(enabled))
+    if(ISocket::setUseWorkerThread(enabled))
     {
         if(isRunning())
             LOG_DEV_INFO(
@@ -84,11 +84,19 @@ bool Server::setUseWorkerThread(const bool& enabled)
     return false;
 }
 
-bool Server::start()
+bool Socket::setMulticastInterfaceName(const QString& name)
+{
+    return (name.isEmpty() || QNetworkInterface::interfaceFromName(name).isValid()) &&
+           ISocket::setMulticastInterfaceName(name);
+}
+
+bool Socket::start()
 {
     LOG_INFO("Start");
-    if(!AbstractServer::start())
+    if(isRunning())
         return false;
+
+    setRunning(true);
 
     Q_ASSERT(_worker.get() == nullptr);
     Q_ASSERT(_workerThread.get() == nullptr);
@@ -116,48 +124,45 @@ bool Server::start()
     _worker->_rxPort = rxPort();
     _worker->_txPort = txPort();
 
-    for(const auto& it: multicastGroupsSet()) _worker->_multicastGroups.insert(it, false);
+    for(const auto& it: _multicastGroups) _worker->_multicastGroups.insert(it, false);
 
     _worker->_separateRxTxSockets = separateRxTxSockets() || txPort();
     _worker->_multicastInterface = QNetworkInterface::interfaceFromName(multicastInterfaceName());
     _worker->_multicastLoopback = multicastLoopback();
     _worker->_inputEnabled = inputEnabled();
 
-    connect(this, &Server::startWorker, _worker.get(), &ServerWorker::onStart);
-    connect(this, &Server::stopWorker, _worker.get(), &ServerWorker::onStop);
-    connect(this, &Server::restartWorker, _worker.get(), &ServerWorker::onRestart);
+    connect(this, &Socket::startWorker, _worker.get(), &Worker::onStart);
+    connect(this, &Socket::stopWorker, _worker.get(), &Worker::onStop);
+    connect(this, &Socket::restartWorker, _worker.get(), &Worker::onRestart);
+
+    connect(this, &Socket::joinMulticastGroupWorker, _worker.get(), &Worker::joinMulticastGroup);
+    connect(this, &Socket::leaveMulticastGroupWorker, _worker.get(), &Worker::leaveMulticastGroup);
+
+    connect(this, &Socket::rxAddressChanged, _worker.get(), &Worker::setAddress);
+    connect(this, &Socket::rxPortChanged, _worker.get(), &Worker::setRxPort);
+    connect(this, &Socket::txPortChanged, _worker.get(), &Worker::setTxPort);
+    connect(
+        this, &Socket::separateRxTxSocketsChanged, _worker.get(), &Worker::setSeparateRxTxSockets);
+    connect(this, &Socket::multicastLoopbackChanged, _worker.get(), &Worker::setMulticastLoopback);
+    connect(this, &Socket::multicastInterfaceNameChanged, _worker.get(),
+        &Worker::setMulticastInterfaceName);
+    connect(this, &Socket::inputEnabledChanged, _worker.get(), &Worker::setInputEnabled);
+    connect(this, &Socket::watchdogPeriodChanged, _worker.get(), &Worker::setWatchdogTimeout);
+
+    connect(this, &Socket::sendDatagramToWorker, _worker.get(), &Worker::onSendDatagram);
+    connect(_worker.get(), &Worker::datagramReceived, this, &Socket::onDatagramReceived);
+
+    connect(_worker.get(), &Worker::isBoundedChanged, this, &Socket::setBounded);
+    connect(_worker.get(), &Worker::socketError, this, &Socket::socketError);
 
     connect(
-        this, &Server::joinMulticastGroupWorker, _worker.get(), &ServerWorker::joinMulticastGroup);
-    connect(this, &Server::leaveMulticastGroupWorker, _worker.get(),
-        &ServerWorker::leaveMulticastGroup);
-
-    connect(this, &Server::rxAddressChanged, _worker.get(), &ServerWorker::setAddress);
-    connect(this, &Server::rxPortChanged, _worker.get(), &ServerWorker::setRxPort);
-    connect(this, &Server::txPortChanged, _worker.get(), &ServerWorker::setTxPort);
-    connect(this, &Server::separateRxTxSocketsChanged, _worker.get(),
-        &ServerWorker::setSeparateRxTxSockets);
-    connect(this, &Server::multicastLoopbackChanged, _worker.get(),
-        &ServerWorker::setMulticastLoopback);
-    connect(this, &Server::multicastInterfaceNameChanged, _worker.get(),
-        &ServerWorker::setMulticastInterfaceName);
-    connect(this, &Server::inputEnabledChanged, _worker.get(), &ServerWorker::setInputEnabled);
-    connect(this, &Server::watchdogPeriodChanged, _worker.get(), &ServerWorker::setWatchdogTimeout);
-
-    connect(this, &Server::sendDatagramToWorker, _worker.get(), &ServerWorker::onSendDatagram);
-    connect(_worker.get(), &ServerWorker::datagramReceived, this, &Server::onDatagramReceived);
-
-    connect(_worker.get(), &ServerWorker::isBoundedChanged, this, &Server::setBounded);
-    connect(_worker.get(), &ServerWorker::socketError, this, &Server::socketError);
-
-    connect(_worker.get(), &ServerWorker::rxBytesCounterChanged, this,
-        &Server::onWorkerRxPerSecondsChanged);
-    connect(_worker.get(), &ServerWorker::txBytesCounterChanged, this,
-        &Server::onWorkerTxPerSecondsChanged);
-    connect(_worker.get(), &ServerWorker::rxPacketsCounterChanged, this,
-        &Server::onWorkerPacketsRxPerSecondsChanged);
-    connect(_worker.get(), &ServerWorker::txPacketsCounterChanged, this,
-        &Server::onWorkerPacketsTxPerSecondsChanged);
+        _worker.get(), &Worker::rxBytesCounterChanged, this, &Socket::onWorkerRxPerSecondsChanged);
+    connect(
+        _worker.get(), &Worker::txBytesCounterChanged, this, &Socket::onWorkerTxPerSecondsChanged);
+    connect(_worker.get(), &Worker::rxPacketsCounterChanged, this,
+        &Socket::onWorkerPacketsRxPerSecondsChanged);
+    connect(_worker.get(), &Worker::txPacketsCounterChanged, this,
+        &Socket::onWorkerPacketsTxPerSecondsChanged);
 
     if(_workerThread)
     {
@@ -171,11 +176,37 @@ bool Server::start()
     return true;
 }
 
-bool Server::stop()
+bool Socket::start(quint16 port)
+{
+    setRxPort(port);
+    return start();
+}
+
+bool Socket::start(const QString& address, quint16 port)
+{
+    setRxAddress(address);
+    return start(port);
+}
+
+bool Socket::restart()
+{
+    stop();
+    return start();
+}
+
+bool Socket::stop()
 {
     LOG_DEV_DEBUG("Stop");
-    if(!AbstractServer::stop())
+    if(!isRunning())
         return false;
+
+    setBounded(false);
+    setRunning(false);
+
+    resetRxBytesPerSeconds();
+    resetTxBytesPerSeconds();
+    resetRxPacketsPerSeconds();
+    resetTxPacketsPerSeconds();
 
     _cache.clear();
 
@@ -207,33 +238,103 @@ bool Server::stop()
     return true;
 }
 
-bool Server::joinMulticastGroup(const QString& groupAddress)
+bool Socket::joinMulticastGroup(const QString& groupAddress)
 {
-    if(AbstractServer::joinMulticastGroup(groupAddress))
-    {
-        LOG_DEV_INFO("Join multicast group %s request", qPrintable(groupAddress));
-        Q_EMIT joinMulticastGroupWorker(groupAddress);
-        return true;
-    }
-    return false;
+    // ) Check that the address isn't already registered
+    if(_multicastGroups.find(groupAddress) != _multicastGroups.end())
+        return false;
+
+    // ) Check that this is a real multicast address
+    if(!QHostAddress(groupAddress).isMulticast())
+        return false;
+
+    // ) Insert in the set and emit signal to say the multicast list changed
+    _multicastGroups.insert(groupAddress);
+    Q_EMIT multicastGroupsChanged(multicastGroups());
+
+    LOG_DEV_INFO("Join multicast group %s request", qPrintable(groupAddress));
+    Q_EMIT joinMulticastGroupWorker(groupAddress);
+    return true;
 }
 
-bool Server::leaveMulticastGroup(const QString& groupAddress)
+bool Socket::leaveMulticastGroup(const QString& groupAddress)
 {
-    if(AbstractServer::leaveMulticastGroup(groupAddress))
-    {
-        LOG_DEV_INFO("Leave multicast group %s request", qPrintable(groupAddress));
-        Q_EMIT leaveMulticastGroupWorker(groupAddress);
-        return true;
-    }
-    return false;
+    const auto it = _multicastGroups.find(groupAddress);
+
+    // ) Is the multicast group present
+    if(it == _multicastGroups.end())
+        return false;
+
+    // ) Remove the multicast address from the list, then emit a signal to say the list changed
+    _multicastGroups.erase(it);
+    Q_EMIT multicastGroupsChanged(multicastGroups());
+
+    LOG_DEV_INFO("Leave multicast group %s request", qPrintable(groupAddress));
+    Q_EMIT leaveMulticastGroupWorker(groupAddress);
+    return true;
 }
 
-std::unique_ptr<ServerWorker> Server::createWorker() { return std::make_unique<ServerWorker>(); }
+bool Socket::leaveAllMulticastGroups()
+{
+    bool allSuccess = true;
+    while(!_multicastGroups.empty())
+    {
+        // Copy is required here because leaveMulticastGroup will erase the iterator
+        const auto group = *_multicastGroups.begin();
+        if(!leaveMulticastGroup(group))
+            allSuccess = false;
+    }
+    return allSuccess;
+}
 
-std::shared_ptr<Datagram> Server::makeDatagram(const size_t length) { return _cache.make(length); }
+bool Socket::isMulticastGroupPresent(const QString& groupAddress)
+{
+    return _multicastGroups.find(groupAddress) != _multicastGroups.end();
+}
 
-bool Server::sendDatagram(const uint8_t* buffer, const size_t length, const QString& address,
+bool Socket::setMulticastGroups(const QList<QString>& value)
+{
+    leaveAllMulticastGroups();
+    for(const auto& it: value) { joinMulticastGroup(it); }
+    return true;
+}
+
+QList<QString> Socket::multicastGroups() const
+{
+    QList<QString> res;
+    for(const auto& it: _multicastGroups) res.append(it);
+    return res;
+}
+
+void Socket::clearRxCounter()
+{
+    resetRxPacketsPerSeconds();
+    resetRxPacketsTotal();
+    resetRxBytesPerSeconds();
+    resetRxBytesTotal();
+}
+
+void Socket::clearTxCounter()
+{
+    resetTxPacketsPerSeconds();
+    resetTxPacketsTotal();
+    resetTxBytesPerSeconds();
+    resetTxBytesTotal();
+}
+
+void Socket::clearRxInvalidCounter() { resetRxInvalidPacketTotal(); }
+
+void Socket::clearCounters()
+{
+    clearRxCounter();
+    clearTxCounter();
+}
+
+std::unique_ptr<Worker> Socket::createWorker() { return std::make_unique<Worker>(); }
+
+std::shared_ptr<Datagram> Socket::makeDatagram(const size_t length) { return _cache.make(length); }
+
+bool Socket::sendDatagram(const uint8_t* buffer, const size_t length, const QString& address,
     const uint16_t port, const uint8_t ttl)
 {
     if(!isRunning() && !isBounded())
@@ -263,13 +364,13 @@ bool Server::sendDatagram(const uint8_t* buffer, const size_t length, const QStr
     return true;
 }
 
-bool Server::sendDatagram(const char* buffer, const size_t length, const QString& address,
+bool Socket::sendDatagram(const char* buffer, const size_t length, const QString& address,
     const uint16_t port, const uint8_t ttl)
 {
     return sendDatagram(reinterpret_cast<const uint8_t*>(buffer), length, address, port, ttl);
 }
 
-bool Server::sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address,
+bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address,
     const uint16_t port, const uint8_t ttl)
 {
     if(!datagram)
@@ -284,7 +385,7 @@ bool Server::sendDatagram(std::shared_ptr<Datagram> datagram, const QString& add
     return sendDatagram(std::move(datagram));
 }
 
-bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
+bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram)
 {
     if(!datagram)
     {
@@ -319,37 +420,37 @@ bool Server::sendDatagram(std::shared_ptr<Datagram> datagram)
     return true;
 }
 
-void Server::onDatagramReceived(const SharedDatagram& datagram)
+void Socket::onDatagramReceived(const SharedDatagram& datagram)
 {
     Q_CHECK_PTR(datagram.get());
     Q_EMIT datagramReceived(datagram);
 }
 
-void Server::onWorkerRxPerSecondsChanged(const quint64 rxBytes)
+void Socket::onWorkerRxPerSecondsChanged(const quint64 rxBytes)
 {
     setRxBytesPerSeconds(rxBytes);
     setRxBytesTotal(rxBytesTotal() + rxBytes);
 }
 
-void Server::onWorkerTxPerSecondsChanged(const quint64 txBytes)
+void Socket::onWorkerTxPerSecondsChanged(const quint64 txBytes)
 {
     setTxBytesPerSeconds(txBytes);
     setTxBytesTotal(txBytesTotal() + txBytes);
 }
 
-void Server::onWorkerPacketsRxPerSecondsChanged(const quint64 rxPackets)
+void Socket::onWorkerPacketsRxPerSecondsChanged(const quint64 rxPackets)
 {
     setRxPacketsPerSeconds(rxPackets);
     setRxPacketsTotal(rxPacketsTotal() + rxPackets);
 }
 
-void Server::onWorkerPacketsTxPerSecondsChanged(const quint64 txPackets)
+void Socket::onWorkerPacketsTxPerSecondsChanged(const quint64 txPackets)
 {
     setTxPacketsPerSeconds(txPackets);
     setTxPacketsTotal(txPacketsTotal() + txPackets);
 }
 
-void Server::onWorkerRxInvalidPacketsCounterChanged(const quint64 rxPackets)
+void Socket::onWorkerRxInvalidPacketsCounterChanged(const quint64 rxPackets)
 {
     setRxInvalidPacketTotal(rxInvalidPacketTotal() + rxPackets);
 }

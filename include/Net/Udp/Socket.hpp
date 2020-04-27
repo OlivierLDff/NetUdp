@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/AbstractServer.hpp>
+#include <Net/Udp/ISocket.hpp>
 #include <Net/Udp/RecycledDatagram.hpp>
 #include <Net/Udp/Export.hpp>
 
@@ -20,41 +20,56 @@
 namespace net {
 namespace udp {
 
-class ServerWorker;
+class Worker;
 
 // ─────────────────────────────────────────────────────────────
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-class NETUDP_API_ Server : public AbstractServer
+class NETUDP_API_ Socket : public ISocket
 {
     Q_OBJECT
-    NETUDP_REGISTER_TO_QML(Server);
+    NETUDP_REGISTER_TO_QML(Socket);
 
     // ──────── CONSTRUCTOR ────────
 public:
-    Server(QObject* parent = nullptr);
-    ~Server();
+    Socket(QObject* parent = nullptr);
+    ~Socket();
 
     // ──────── WORKER ────────
 protected:
-    std::unique_ptr<ServerWorker> _worker;
+    std::unique_ptr<Worker> _worker;
     std::unique_ptr<QThread> _workerThread;
     recycler::Circular<RecycledDatagram> _cache;
+    std::set<QString> _multicastGroups;
 
 public:
     bool setUseWorkerThread(const bool& enabled) override;
+    bool setMulticastInterfaceName(const QString& name) override;
 
     // ──────── C++ API ────────
 public Q_SLOTS:
     bool start() override;
+    bool start(quint16 port) override final;
+    bool start(const QString& address, quint16 port) override final;
+    bool restart() override final;
     bool stop() override;
+
     bool joinMulticastGroup(const QString& groupAddress) override final;
     bool leaveMulticastGroup(const QString& groupAddress) override final;
+    QList<QString> multicastGroups() const override final;
+    bool setMulticastGroups(const QList<QString>& value) override final;
+    bool leaveAllMulticastGroups() override final;
+    bool isMulticastGroupPresent(const QString& groupAddress) override final;
+
+    void clearRxCounter() override final;
+    void clearTxCounter() override final;
+    void clearRxInvalidCounter() override final;
+    void clearCounters() override final;
 
     // ──────── CUSTOM WORKER API ────────
 protected:
-    virtual std::unique_ptr<ServerWorker> createWorker();
+    virtual std::unique_ptr<Worker> createWorker();
 
     // ──────── CUSTOM DATAGRAM API ────────
 public:

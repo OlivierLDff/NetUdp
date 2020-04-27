@@ -2,28 +2,23 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// C Header
-
-// C++ Header
-
-// Qt Header
+// Application Header
+#include <Net/Udp/_Template.hpp>
 
 // Dependencies Header
 
-// Application Header
-#include <NetUdp/_Template.hpp>
+// Qt Header
+
+// C++ Header
+//
+// C Header
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-NETUDP_USING_NAMESPACE;
+using namespace net::udp;
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
-
-Template::Template(QObject* parent)
-{
-
-}

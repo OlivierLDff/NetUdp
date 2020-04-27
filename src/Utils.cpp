@@ -5,8 +5,7 @@
 // Application Header
 #include <Net/Udp/Utils.hpp>
 #include <Net/Udp/RecycledDatagram.hpp>
-#include <Net/Udp/AbstractServer.hpp>
-#include <Net/Udp/Server.hpp>
+#include <Net/Udp/Socket.hpp>
 #include <Net/Udp/Version.hpp>
 #include <Net/Udp/Logger.hpp>
 
@@ -64,17 +63,14 @@ static void NetUdp_registerTypes()
     LOG_DEV_INFO("Register Singleton {}.Version {}.{} to QML", *_uri, _major, _minor);
     net::udp::Version::registerSingleton(*_uri, _major, _minor);
 
-    LOG_DEV_INFO("Register {}.AbstractServer {}.{} to QML", *_uri, _major, _minor);
-    net::udp::AbstractServer::registerToQml(*_uri, _major, _minor);
-
     LOG_DEV_INFO("Register {}.Server {}.{} to QML", *_uri, _major, _minor);
-    net::udp::Server::registerToQml(*_uri, _major, _minor);
+    net::udp::Socket::registerToQml(*_uri, _major, _minor);
 
     qRegisterMetaType<QAbstractSocket::SocketState>();
 
-    LOG_DEV_INFO("Register Net::Udp::SharedDatagram to QML");
-    qRegisterMetaType<net::udp::SharedDatagram>("Net::Udp::SharedDatagram");
-    qRegisterMetaType<net::udp::SharedDatagram>("Udp::SharedDatagram");
+    LOG_DEV_INFO("Register net::udp::SharedDatagram to QML");
+    qRegisterMetaType<net::udp::SharedDatagram>("net::udp::SharedDatagram");
+    qRegisterMetaType<net::udp::SharedDatagram>("udp::SharedDatagram");
     qRegisterMetaType<net::udp::SharedDatagram>("SharedDatagram");
 }
 

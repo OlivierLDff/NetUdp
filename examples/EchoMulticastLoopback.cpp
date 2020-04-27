@@ -36,7 +36,7 @@ public:
     QString ip = QStringLiteral("239.0.0.1");
     QString iface;
 
-    net::udp::Server server;
+    net::udp::Socket server;
 
     bool multiThreaded = false;
 
@@ -59,7 +59,6 @@ public:
 
         server.setUseWorkerThread(multiThreaded);
         server.setMulticastLoopback(true);
-        server.setInputEnabled(true);
 
         QObject::connect(&timer, &QTimer::timeout,
             [this]()
@@ -68,17 +67,17 @@ public:
                 server.sendDatagram(data.c_str(), data.length() + 1, ip, port);
             });
 
-        QObject::connect(&server, &net::udp::Server::datagramReceived,
+        QObject::connect(&server, &net::udp::Socket::datagramReceived,
             [](const net::udp::SharedDatagram& d)
             { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
 
         qCInfo(APP_LOG_CAT, "Start application");
 
-        QObject::connect(&server, &net::udp::Server::isRunningChanged,
+        QObject::connect(&server, &net::udp::Socket::isRunningChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isRunning : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Server::isBoundedChanged,
+        QObject::connect(&server, &net::udp::Socket::isBoundedChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isBounded : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Server::socketError,
+        QObject::connect(&server, &net::udp::Socket::socketError,
             [](int value, const QString error)
             { qCInfo(SERVER_LOG_CAT, "error : %s", qPrintable(error)); });
 

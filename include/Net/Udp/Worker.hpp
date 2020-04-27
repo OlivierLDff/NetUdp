@@ -29,14 +29,14 @@ namespace udp {
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-class NETUDP_API_ ServerWorker : public QObject
+class NETUDP_API_ Worker : public QObject
 {
     Q_OBJECT
 
     // ──────── CONSTRUCTOR ────────
 public:
-    ServerWorker(QObject* parent = nullptr);
-    ~ServerWorker();
+    Worker(QObject* parent = nullptr);
+    ~Worker();
 
     // ──────── ATTRIBUTE ────────
 private:
@@ -128,6 +128,8 @@ protected Q_SLOTS:
     void onSocketError(QAbstractSocket::SocketError error);
     void onRxSocketError(QAbstractSocket::SocketError error);
     void onSocketStateChanged(QAbstractSocket::SocketState socketState);
+private:
+    void onSocketErrorCommon(QAbstractSocket::SocketError error, QUdpSocket* socket);
 
 private:
     static QString socketStateToString(QAbstractSocket::SocketState socketState);
@@ -153,7 +155,7 @@ Q_SIGNALS:
     void rxInvalidPacketsCounterChanged(const quint64 rx);
 
     // ──────── FRIENDS ────────
-    friend class Server;
+    friend class Socket;
 };
 
 }

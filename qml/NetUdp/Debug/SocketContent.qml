@@ -15,7 +15,7 @@ import NetUdp 1.0 as NetUdp
 Column
 {
     id: root
-    property NetUdp.AbstractServer object: null
+    property NetUdp.Socket object: null
     Qaterial.Label
     {
         text: "isRunning : " + (root.object ? root.object.isRunning : "")
