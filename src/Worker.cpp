@@ -155,18 +155,20 @@ void Worker::onStart()
         Qt::QueuedConnection);
 
     // ) Connect to socket signals
-    connect(rxSocket(), &QUdpSocket::readyRead, this, &Worker::readPendingDatagrams);
     connect(_socket.get(), QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
         this, &Worker::onSocketError);
-    // _socket is always bounded because binded to QHostAddress(). Only rxSocket can go wrong
-    connect(rxSocket(), &QUdpSocket::stateChanged, this, &Worker::onSocketStateChanged);
+    if(rxSocket())
+    {
+        connect(rxSocket(), &QUdpSocket::readyRead, this, &Worker::readPendingDatagrams);
+        // _socket is always bounded because binded to QHostAddress(). Only rxSocket can go wrong
+        connect(rxSocket(), &QUdpSocket::stateChanged, this, &Worker::onSocketStateChanged);
+    }
 
     if(useTwoSockets)
     {
         connect(_rxSocket.get(),
             QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this,
             &Worker::onRxSocketError);
-        //connect(_rxSocket.get(), &QUdpSocket::stateChanged, this, &ServerWorker::onSocketStateChanged);
     }
 
     // ) Bind to socket
@@ -197,7 +199,7 @@ void Worker::onStart()
 
         setMulticastInterfaceNameToSocket();
         setMulticastLoopbackToSocket();
-        if(_inputEnabled)
+        if(_inputEnabled && rxSocket())
         {
             for(auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
             {
