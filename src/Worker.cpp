@@ -110,11 +110,11 @@ void Worker::onStart()
     const bool useTwoSockets = (_separateRxTxSockets || _txPort) && _inputEnabled;
     if(_socket)
     {
-        LOG_DEV_ERR("Can't start udp server worker because socket is already valid");
+        LOG_DEV_ERR("Can't start udp socket worker because socket is already valid");
         return;
     }
 
-    LOG_DEV_INFO("Start Udp Server Worker rx : {}:{}, tx port : {}, ", _rxAddress.toStdString(),
+    LOG_DEV_INFO("Start Udp Socket Worker rx : {}:{}, tx port : {}, ", _rxAddress.toStdString(),
         _rxPort, _txPort);
 
     _isBounded = false;
@@ -228,11 +228,11 @@ void Worker::onStop()
 {
     if(!_socket)
     {
-        LOG_DEV_ERR("Can't stop udp server worker because socket isn't valid");
+        LOG_DEV_WARN("Can't stop udp socket worker because socket isn't valid");
         return;
     }
 
-    LOG_INFO("Stop Udp Server Worker");
+    LOG_INFO("Stop Udp Socket Worker");
 
     stopBytesCounter();
     stopWatchdog();
@@ -468,10 +468,12 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
         startWatchdog();
 
         if(bytesWritten <= 0)
-            LOG_ERR("Fail to send datagram, 0 bytes written. Restart Socket.");
+            LOG_ERR("Fail to send datagram, 0 bytes written. Restart Socket. {}",
+                _socket->errorString().toStdString());
         else
-            LOG_ERR("Fail to send datagram, {}/{} bytes written. Restart Socket.",
-                static_cast<long long>(bytesWritten), static_cast<long long>(datagram->length()));
+            LOG_ERR("Fail to send datagram, {}/{} bytes written. Restart Socket. {}",
+                static_cast<long long>(bytesWritten), static_cast<long long>(datagram->length()),
+                _socket->errorString().toStdString());
         return;
     }
 

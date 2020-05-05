@@ -112,8 +112,8 @@ bool Socket::start()
 
     setRunning(true);
 
-    Q_ASSERT(_worker.get() == nullptr);
-    Q_ASSERT(_workerThread.get() == nullptr);
+    Q_ASSERT(!_worker);
+    Q_ASSERT(!_workerThread);
 
     LOG_DEV_DEBUG("Create worker");
     _worker = createWorker();
@@ -121,9 +121,6 @@ bool Socket::start()
     {
         LOG_DEV_DEBUG("Move worker to its own thread");
         _workerThread = std::make_unique<QThread>();
-
-        connect(_workerThread.get(), &QThread::finished, this, [this]() { _worker = nullptr; });
-
         if(objectName().size())
             _workerThread->setObjectName(objectName() + " Worker");
         else
@@ -180,11 +177,11 @@ bool Socket::start()
 
     if(_workerThread)
     {
-        LOG_DEV_DEBUG("Start worker thread");
+        LOG_DEV_INFO("Start worker thread");
         _workerThread->start();
     }
 
-    LOG_DEV_DEBUG("Start worker");
+    LOG_DEV_INFO("Start worker");
     Q_EMIT startWorker();
 
     return true;
@@ -210,7 +207,7 @@ bool Socket::restart()
 
 bool Socket::stop()
 {
-    LOG_DEV_DEBUG("Stop");
+    LOG_DEV_INFO("Stop");
     if(!isRunning())
         return false;
 
@@ -224,25 +221,27 @@ bool Socket::stop()
 
     _cache.clear();
 
-    LOG_DEV_DEBUG("Stop Worker");
+    LOG_DEV_INFO("Stop Worker");
     Q_EMIT stopWorker();
 
-    LOG_DEV_DEBUG("Disconnect worker");
+    LOG_DEV_INFO("Disconnect worker");
 
     disconnect(_worker.get(), nullptr, this, nullptr);
     disconnect(this, nullptr, _worker.get(), nullptr);
 
     if(_workerThread)
     {
-        LOG_DEV_DEBUG("Kill worker thread ...");
+        // Ask to delete later in the event loop
+        _worker.release()->deleteLater();
+        LOG_DEV_INFO("Kill worker thread ...");
         _workerThread->exit();
         _workerThread->wait();
         _workerThread = nullptr;
-        LOG_DEV_DEBUG("... Done");
+        LOG_DEV_INFO("... Done");
     }
     else
     {
-        LOG_DEV_DEBUG("Delete worker later");
+        LOG_DEV_INFO("Delete worker later");
         // Reparent to self in case there are no event loop
         _worker->setParent(this);
         // Ask to delete later in the event loop
