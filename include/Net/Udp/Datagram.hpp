@@ -47,7 +47,7 @@ public:
     QString senderAddress;
     quint16 senderPort = 0;
 
-    quint8 ttl = 8;
+    quint8 ttl = 0;
 };
 
 typedef std::shared_ptr<Datagram> SharedDatagram;

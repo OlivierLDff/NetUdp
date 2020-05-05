@@ -408,12 +408,6 @@ bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram)
         return false;
     }
 
-    if(datagram->ttl == 0)
-    {
-        LOG_ERR("Error: Fail to send datagram because the Ttl is 0");
-        return false;
-    }
-
     Q_EMIT sendDatagramToWorker(std::move(datagram));
 
     return true;
