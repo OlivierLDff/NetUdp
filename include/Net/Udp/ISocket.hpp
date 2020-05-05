@@ -12,9 +12,6 @@
 // Qt
 #include <QObject>
 
-// C++ Header
-#include <set>
-
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
@@ -50,7 +47,7 @@ protected:
 
     // ──────── ATTRIBUTE MULTICAST ────────
 protected:
-    NETUDP_ABSTRACT_PROPERTY(QList<QString>, multicastGroups, MulticastGroups);
+    NETUDP_ABSTRACT_PROPERTY(QStringList, multicastGroups, MulticastGroups);
     NETUDP_PROPERTY(QString, multicastInterfaceName, MulticastInterfaceName);
     NETUDP_PROPERTY(bool, multicastLoopback, MulticastLoopback);
 

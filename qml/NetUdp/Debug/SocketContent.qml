@@ -146,7 +146,7 @@ Column
 
     Qaterial.Label
     {
-        text: "multicastGroups : " + (root.object ? root.object.multicastGroups : "")
+        text: "multicastGroups : " + (root.object ? root.object.multicastGroups.toString() : "")
         width: parent.width
         elide: Text.ElideRight
         textType: Qaterial.Style.TextType.Caption

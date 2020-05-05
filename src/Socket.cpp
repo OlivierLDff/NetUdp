@@ -90,6 +90,20 @@ bool Socket::setMulticastInterfaceName(const QString& name)
            ISocket::setMulticastInterfaceName(name);
 }
 
+bool Socket::setMulticastGroups(const QStringList& value)
+{
+    leaveAllMulticastGroups();
+    for(const auto& it: value) { joinMulticastGroup(it); }
+    return true;
+}
+
+QStringList Socket::multicastGroups() const
+{
+    QStringList res;
+    for(const auto& it: _multicastGroups) res.append(it);
+    return res;
+}
+
 bool Socket::start()
 {
     LOG_INFO("Start");
@@ -290,20 +304,6 @@ bool Socket::leaveAllMulticastGroups()
 bool Socket::isMulticastGroupPresent(const QString& groupAddress)
 {
     return _multicastGroups.find(groupAddress) != _multicastGroups.end();
-}
-
-bool Socket::setMulticastGroups(const QList<QString>& value)
-{
-    leaveAllMulticastGroups();
-    for(const auto& it: value) { joinMulticastGroup(it); }
-    return true;
-}
-
-QList<QString> Socket::multicastGroups() const
-{
-    QList<QString> res;
-    for(const auto& it: _multicastGroups) res.append(it);
-    return res;
 }
 
 void Socket::clearRxCounter()

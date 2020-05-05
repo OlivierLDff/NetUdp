@@ -47,6 +47,9 @@ public:
     bool setUseWorkerThread(const bool& enabled) override;
     bool setMulticastInterfaceName(const QString& name) override;
 
+    QStringList multicastGroups() const override final;
+    bool setMulticastGroups(const QStringList& value) override final;
+
     // ──────── C++ API ────────
 public Q_SLOTS:
     bool start() override;
@@ -57,8 +60,6 @@ public Q_SLOTS:
 
     bool joinMulticastGroup(const QString& groupAddress) override final;
     bool leaveMulticastGroup(const QString& groupAddress) override final;
-    QList<QString> multicastGroups() const override final;
-    bool setMulticastGroups(const QList<QString>& value) override final;
     bool leaveAllMulticastGroups() override final;
     bool isMulticastGroupPresent(const QString& groupAddress) override final;
 
