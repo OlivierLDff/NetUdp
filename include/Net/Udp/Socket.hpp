@@ -13,6 +13,9 @@
 // Dependencies Header
 #include <Recycler/Circular.hpp>
 
+// Stl Headers
+#include <set>
+
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
