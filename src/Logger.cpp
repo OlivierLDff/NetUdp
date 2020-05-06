@@ -18,7 +18,7 @@ static Logger::LogPtr makeLog(Args&&... args)
 }
 
 const char* const Logger::WORKER_NAME = "net.udp.worker";
-const char* const Logger::SERVER_NAME = "net.udp.server";
+const char* const Logger::SERVER_NAME = "net.udp.socket";
 const char* const Logger::UTILS_NAME = "net.udp.utils";
 
 const Logger::LogPtr Logger::WORKER = makeLog(WORKER_NAME);

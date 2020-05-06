@@ -94,10 +94,7 @@ void Worker::clearCache() { _cache.clear(); }
 
 void Worker::releaseCache() { _cache.release(); }
 
-std::shared_ptr<Datagram> Worker::makeDatagram(const size_t length)
-{
-    return _cache.make(length);
-}
+std::shared_ptr<Datagram> Worker::makeDatagram(const size_t length) { return _cache.make(length); }
 
 void Worker::onRestart()
 {
@@ -114,8 +111,21 @@ void Worker::onStart()
         return;
     }
 
-    LOG_DEV_INFO("Start Udp Socket Worker rx : {}:{}, tx port : {}, ", _rxAddress.toStdString(),
-        _rxPort, _txPort);
+    if(_inputEnabled)
+    {
+        if(_rxAddress.isEmpty())
+            LOG_DEV_INFO("Start Udp Socket Worker rx : {}:{}, tx port : {}",
+                _rxAddress.toStdString(), _rxPort, _txPort);
+        else
+            LOG_DEV_INFO("Start Udp Socket Worker rx port : {}, tx port : {}", _rxPort, _txPort);
+    }
+    else
+    {
+        if(_rxAddress.isEmpty())
+            LOG_DEV_INFO("Start Udp Socket Worker rx : {}:{}", _rxAddress.toStdString(), _rxPort);
+        else
+            LOG_DEV_INFO("Start Udp Socket Worker rx port : {}", _rxPort);
+    }
 
     _isBounded = false;
     _watchdog = nullptr;

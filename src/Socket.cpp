@@ -265,7 +265,7 @@ bool Socket::joinMulticastGroup(const QString& groupAddress)
     _multicastGroups.insert(groupAddress);
     Q_EMIT multicastGroupsChanged(multicastGroups());
 
-    LOG_DEV_INFO("Join multicast group %s request", qPrintable(groupAddress));
+    LOG_DEV_INFO("Join multicast group {} request", qPrintable(groupAddress));
     Q_EMIT joinMulticastGroupWorker(groupAddress);
     return true;
 }
@@ -282,7 +282,7 @@ bool Socket::leaveMulticastGroup(const QString& groupAddress)
     _multicastGroups.erase(it);
     Q_EMIT multicastGroupsChanged(multicastGroups());
 
-    LOG_DEV_INFO("Leave multicast group %s request", qPrintable(groupAddress));
+    LOG_DEV_INFO("Leave multicast group {} request", qPrintable(groupAddress));
     Q_EMIT leaveMulticastGroupWorker(groupAddress);
     return true;
 }
