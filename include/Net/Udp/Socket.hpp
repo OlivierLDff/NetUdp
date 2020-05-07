@@ -45,13 +45,17 @@ protected:
     std::unique_ptr<QThread> _workerThread;
     recycler::Circular<RecycledDatagram> _cache;
     std::set<QString> _multicastGroups;
+    std::set<QString> _multicastInterfaces;
 
 public:
     bool setUseWorkerThread(const bool& enabled) override;
     bool setMulticastInterfaceName(const QString& name) override;
 
-    QStringList multicastGroups() const override final;
-    bool setMulticastGroups(const QStringList& value) override final;
+    QStringList multicastGroups() const override;
+    bool setMulticastGroups(const QStringList& value) override;
+
+    QStringList multicastListeningInterfaces() const override;
+    bool setMulticastListeningInterfaces(const QStringList& value) override;
 
     // ──────── C++ API ────────
 public Q_SLOTS:
@@ -65,6 +69,11 @@ public Q_SLOTS:
     bool leaveMulticastGroup(const QString& groupAddress) override final;
     bool leaveAllMulticastGroups() override final;
     bool isMulticastGroupPresent(const QString& groupAddress) override final;
+
+    bool joinMulticastInterface(const QString& name) override final;
+    bool leaveMulticastInterface(const QString& name) override final;
+    bool leaveAllMulticastInterfaces() override final;
+    bool isMulticastInterfacePresent(const QString& name) override final;
 
     void clearRxCounter() override final;
     void clearTxCounter() override final;
@@ -110,6 +119,8 @@ Q_SIGNALS:
     void restartWorker();
     void joinMulticastGroupWorker(const QString address);
     void leaveMulticastGroupWorker(const QString address);
+    void joinMulticastInterfaceWorker(const QString address);
+    void leaveMulticastInterfaceWorker(const QString address);
     void sendDatagramToWorker(SharedDatagram datagram);
 };
 

@@ -49,7 +49,12 @@ private:
     QString _rxAddress;
     quint16 _rxPort = 0;
     quint16 _txPort = 0;
-    QMap<QString, bool> _multicastGroups;
+    std::set<QString> _multicastGroups;
+    std::set<QString> _incomingMulticastInterfaces;
+    std::set<QString> _allMulticastInterfaces;
+    std::set<QString> _failedToJoinIfaces;
+    bool _multicastListenAllInterfaces = false;
+
     QNetworkInterface _multicastInterface;
     bool _multicastLoopback = false;
     quint8 _multicastTtl = 0;
@@ -62,7 +67,6 @@ public:
     QString rxAddress() const;
     quint16 rxPort() const;
     quint16 txPort() const;
-    QMap<QString, bool> multicastGroups() const;
     QNetworkInterface multicastInterface() const;
     bool multicastLoopback() const;
     quint8 multicastTtl() const;
@@ -83,6 +87,10 @@ public Q_SLOTS:
     void onStart();
     void onStop();
 
+public:
+    void initialize(quint64 watchdog, QString rxAddress, quint16 rxPort, quint16 txPort,
+        bool separateRxTxSocket, const std::set<QString>& multicastGroup, const std::set<QString>& multicastInterfaces, bool listenMulticastAllInterfaces, bool inputEnabled, bool multicastLoopback);
+
 Q_SIGNALS:
     void isBoundedChanged(const bool isBounded);
     void socketError(int error, const QString description);
@@ -94,17 +102,31 @@ public Q_SLOTS:
     void setTxPort(const quint16 port);
     void joinMulticastGroup(const QString& address);
     void leaveMulticastGroup(const QString& address);
+    void joinMulticastInterface(const QString& name);
+    void leaveMulticastInterface(const QString& name);
+    void setMulticastListenOnAllInterfaces(const bool& allInterfaces);
     void setMulticastInterfaceName(const QString& name);
     void setMulticastLoopback(const bool loopback);
     void setInputEnabled(const bool enabled);
     void setSeparateRxTxSockets(const bool separateRxTxSocketsChanged);
 
 private:
+    void populateAllMulticastInterfaces();
+    void socketJoinMulticastGroup(const QHostAddress& address);
+    void socketLeaveMulticastGroup(const QHostAddress& address);
+    bool socketJoinMulticastGroup(const QHostAddress& hostAddress, const std::set<QString>& interfaces);
+    bool socketLeaveMulticastGroup(const QHostAddress& hostAddress, const std::set<QString>& interfaces);
+    void joinAllMulticastGroups();
+    void leaveAllMulticastGroups();
     void setMulticastInterfaceNameToSocket() const;
     void setMulticastLoopbackToSocket() const;
     void startWatchdog();
     void stopWatchdog();
     void setMulticastTtl(const quint8 ttl);
+
+    void updateMulticastListenToAllInterface();
+    void checkMulticastInterfaceInError();
+    void tryToConnectToErrorMulticastInterfaces();
 Q_SIGNALS:
     void queueStartWatchdog();
 
@@ -153,9 +175,6 @@ Q_SIGNALS:
     void rxPacketsCounterChanged(const quint64 rx);
     void txPacketsCounterChanged(const quint64 tx);
     void rxInvalidPacketsCounterChanged(const quint64 rx);
-
-    // ──────── FRIENDS ────────
-    friend class Socket;
 };
 
 }

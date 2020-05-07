@@ -53,6 +53,13 @@ using namespace net::udp;
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
+static bool isIfaceValid(const QNetworkInterface& iface)
+{
+    return iface.isValid() && (iface.flags() & QNetworkInterface::CanMulticast) &&
+           (iface.flags() & QNetworkInterface::IsUp) &&
+           (iface.flags() & QNetworkInterface::IsRunning);
+}
+
 Worker::Worker(QObject* parent) : QObject(parent) { LOG_DEV_DEBUG("Constructor"); }
 
 Worker::~Worker() { LOG_DEV_DEBUG("Destructor"); }
@@ -66,8 +73,6 @@ QString Worker::rxAddress() const { return _rxAddress; }
 quint16 Worker::rxPort() const { return _rxPort; }
 
 quint16 Worker::txPort() const { return _txPort; }
-
-QMap<QString, bool> Worker::multicastGroups() const { return _multicastGroups; }
 
 QNetworkInterface Worker::multicastInterface() const { return _multicastInterface; }
 
@@ -104,7 +109,6 @@ void Worker::onRestart()
 
 void Worker::onStart()
 {
-    const bool useTwoSockets = (_separateRxTxSockets || _txPort) && _inputEnabled;
     if(_socket)
     {
         LOG_DEV_ERR("Can't start udp socket worker because socket is already valid");
@@ -129,9 +133,11 @@ void Worker::onStart()
 
     _isBounded = false;
     _watchdog = nullptr;
+    _failedToJoinIfaces.clear();
 
-    // ) Create the socket
+    // Create the socket (and a second one for rx if required)
     _socket = std::make_unique<QUdpSocket>(this);
+    const bool useTwoSockets = (_separateRxTxSockets || _txPort) && _inputEnabled;
     if(useTwoSockets)
     {
         LOG_DEV_INFO("Create separate rx socket");
@@ -164,9 +170,10 @@ void Worker::onStart()
         },
         Qt::QueuedConnection);
 
-    // ) Connect to socket signals
+    // Connect to socket signals
     connect(_socket.get(), QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
         this, &Worker::onSocketError);
+
     if(rxSocket())
     {
         connect(rxSocket(), &QUdpSocket::readyRead, this, &Worker::readPendingDatagrams);
@@ -181,7 +188,7 @@ void Worker::onStart()
             &Worker::onRxSocketError);
     }
 
-    // ) Bind to socket
+    // Bind to socket
     // When only in output mode, calling _socket->bind() doesn't allow to set multicast ttl.
     // But calling _socket->bind(QHostAddress()) allow to set the ttl.
     // From what i understand, _socket->bind() will call _socket->bind(QHostAddress::Any) internally.
@@ -202,6 +209,11 @@ void Worker::onStart()
             QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
     }();
 
+    // Populate _allMulticastInterfaces
+    populateAllMulticastInterfaces();
+
+    // Finish the start of the socket
+    // Or start watchdog on failure
     if(bindSuccess)
     {
         LOG_INFO("Success bind to {}: {}", qPrintable(_socket->localAddress().toString()),
@@ -211,17 +223,8 @@ void Worker::onStart()
         setMulticastLoopbackToSocket();
         if(_inputEnabled && rxSocket())
         {
-            for(auto it = _multicastGroups.begin(); it != _multicastGroups.end(); ++it)
-            {
-                it.value() = _multicastInterface.isValid() ?
-                                 rxSocket()->joinMulticastGroup(
-                                     QHostAddress(it.key()), _multicastInterface) :
-                                 rxSocket()->joinMulticastGroup(QHostAddress(it.key()));
-                if(it.value())
-                    LOG_INFO("Success join multicast group {}", qPrintable(it.key()));
-                else
-                    LOG_ERR("Fail to join multicast group {}", qPrintable(it.key()));
-            }
+            for(const auto& multicastGroup: _multicastGroups)
+                socketJoinMulticastGroup(QHostAddress(multicastGroup));
         }
 
         startBytesCounter();
@@ -254,7 +257,25 @@ void Worker::onStop()
     _rxSocket = nullptr;
     _multicastTtl = 0;
 
-    for(auto& it: _multicastGroups) it = false;
+    _allMulticastInterfaces.clear();
+    _failedToJoinIfaces.clear();
+}
+
+void Worker::initialize(quint64 watchdog, QString rxAddress, quint16 rxPort, quint16 txPort,
+    bool separateRxTxSocket, const std::set<QString>& multicastGroup,
+    const std::set<QString>& multicastInterfaces, bool listenMulticastAllInterfaces,
+    bool inputEnabled, bool multicastLoopback)
+{
+    _watchdogTimeout = watchdog;
+    _rxAddress = rxAddress;
+    _rxPort = rxPort;
+    _txPort = txPort;
+    _separateRxTxSockets = separateRxTxSocket;
+    _multicastGroups = multicastGroup;
+    _multicastInterface = multicastInterface();
+    _multicastListenAllInterfaces = listenMulticastAllInterfaces;
+    _inputEnabled = inputEnabled;
+    _multicastLoopback = multicastLoopback;
 }
 
 void Worker::setWatchdogTimeout(const quint64 ms)
@@ -295,37 +316,135 @@ void Worker::joinMulticastGroup(const QString& address)
 {
     LOG_INFO("Join Multicast group {}", address.toStdString());
 
+    const auto it = _multicastGroups.insert(address);
+
     if(!_inputEnabled)
         return;
 
-    const auto hostAddress = QHostAddress(address);
-    if(!address.isEmpty() && hostAddress.isMulticast())
-    {
-        if(!_multicastGroups.contains(address))
-        {
-            const bool successJoin =
-                rxSocket() &&
-                (_multicastInterface.isValid() ?
-                        rxSocket()->joinMulticastGroup(hostAddress, _multicastInterface) :
-                        rxSocket()->joinMulticastGroup(hostAddress));
-            _multicastGroups.insert(address, successJoin);
-        }
-    }
+    if(!rxSocket())
+        return;
+
+    // Group is already joined
+    if(!it.second)
+        return;
+
+    socketJoinMulticastGroup(QHostAddress(address));
 }
 
 void Worker::leaveMulticastGroup(const QString& address)
 {
     LOG_INFO("Leave Multicast group {}", address.toStdString());
 
-    if(_multicastGroups.contains(address))
+    const auto it = _multicastGroups.find(address);
+
+    // Group isn't present
+    if(it == _multicastGroups.end())
+        return;
+
+    // Make sure there is a valid socket
+    if(!rxSocket())
+        return;
+
+    socketLeaveMulticastGroup(QHostAddress(address));
+
+    _multicastGroups.erase(it);
+}
+
+void Worker::joinMulticastInterface(const QString& name)
+{
+    const auto it = _incomingMulticastInterfaces.insert(name);
+    const auto iface = QNetworkInterface::interfaceFromName(name);
+
+    // Join the interface if config is input,
+    // _multicastListenAllInterfaces is off
+    // network interface is a valid one
+    if(it.second && rxSocket() && _inputEnabled && !_multicastListenAllInterfaces)
     {
-        const bool successLeave =
-            rxSocket() &&
-            (_multicastInterface.isValid() ?
-                    rxSocket()->leaveMulticastGroup(QHostAddress(address), _multicastInterface) :
-                    rxSocket()->leaveMulticastGroup(QHostAddress(address)));
-        _multicastGroups.remove(address);
+        if(iface.isValid())
+        {
+            // Make sure default iface is leaved
+            if(_incomingMulticastInterfaces.size() == 1)
+            {
+                for(const auto& multicastGroup: _multicastGroups)
+                {
+                    LOG_INFO("Leave multicast group {} from default iface because multicast "
+                             "interface get populated with a new iface {}",
+                        multicastGroup.toStdString(), name.toStdString());
+                    rxSocket()->leaveMulticastGroup(QHostAddress(multicastGroup));
+                }
+            }
+
+            bool allSuccess = true;
+
+            for(const auto& group: _multicastGroups)
+            {
+                LOG_INFO(
+                    "Join multicast group {} on iface {}", group.toStdString(), name.toStdString());
+                if(!rxSocket()->joinMulticastGroup(QHostAddress(group), iface))
+                {
+                    LOG_INFO("Fail to join multicast group {} on iface {}", group.toStdString(),
+                        name.toStdString());
+                    allSuccess = false;
+                }
+            }
+
+            if(!allSuccess)
+                _failedToJoinIfaces.insert(name);
+        }
+        else
+        {
+            LOG_DEV_WARN("Fail to join multicast any group on iface {}. Will retry later.",
+                name.toStdString());
+            // Keep track for later join
+            _failedToJoinIfaces.insert(name);
+        }
     }
+}
+
+void Worker::leaveMulticastInterface(const QString& name)
+{
+    const auto erased = _incomingMulticastInterfaces.erase(name);
+    _failedToJoinIfaces.erase(name);
+    const auto iface = QNetworkInterface::interfaceFromName(name);
+
+    if(iface.isValid() && erased && rxSocket() && _inputEnabled && !_multicastListenAllInterfaces)
+    {
+        for(const auto& group: _multicastGroups)
+        {
+            rxSocket()->leaveMulticastGroup(QHostAddress(group), iface);
+
+            if(_incomingMulticastInterfaces.empty())
+            {
+                LOG_INFO("Join multicast group {} on default os interface because multicast "
+                         "interface is empty",
+                    group.toStdString());
+                if(!rxSocket()->joinMulticastGroup(QHostAddress(group)))
+                    LOG_WARN(
+                        "Fail to join multicast group {} on default iface", group.toStdString());
+            }
+        }
+    }
+}
+
+void Worker::setMulticastListenOnAllInterfaces(const bool& allInterfaces)
+{
+    if(_multicastListenAllInterfaces == allInterfaces)
+        return;
+
+    // Leave all multicast interfaces in current mode
+    leaveAllMulticastGroups();
+
+    // Update config
+    _multicastListenAllInterfaces = allInterfaces;
+
+    // Make sure to have the latest config possible
+    if(_multicastListenAllInterfaces)
+        populateAllMulticastInterfaces();
+
+    _failedToJoinIfaces.clear();
+
+    // And join with new config
+    joinAllMulticastGroups();
 }
 
 void Worker::setMulticastInterfaceName(const QString& name)
@@ -372,6 +491,158 @@ void Worker::setSeparateRxTxSockets(const bool separateRxTxSocketsChanged)
     }
 }
 
+void Worker::populateAllMulticastInterfaces()
+{
+    const auto ifaces = QNetworkInterface::allInterfaces();
+    _allMulticastInterfaces.clear();
+    for(const auto& iface: ifaces)
+    {
+        LOG_INFO("Iface {} flags {}", iface.name().toStdString(), iface.flags());
+        if(isIfaceValid(iface))
+        {
+            LOG_INFO("Add {} to the all multicast interfaces", iface.name().toStdString());
+            _allMulticastInterfaces.insert(iface.name());
+        }
+    }
+}
+
+void Worker::socketJoinMulticastGroup(const QHostAddress& address)
+{
+    // should be verified by Socket
+    Q_ASSERT(address.isMulticast());
+    Q_ASSERT(rxSocket());
+    Q_ASSERT(_inputEnabled);
+
+    if(_multicastListenAllInterfaces && !_allMulticastInterfaces.empty())
+    {
+        socketJoinMulticastGroup(address, _allMulticastInterfaces);
+    }
+    else if(_multicastListenAllInterfaces || _incomingMulticastInterfaces.empty())
+    {
+        if(_multicastListenAllInterfaces)
+            LOG_WARN(
+                "Join multicast group {} on default iface because failed to find valid interface.",
+                address.toString().toStdString());
+
+        LOG_INFO("Join multicast group {} on default interface", address.toString().toStdString());
+        if(!rxSocket()->joinMulticastGroup(address))
+            LOG_ERR("Fail to join multicast group {}", address.toString().toStdString());
+    }
+    else
+    {
+        socketJoinMulticastGroup(address, _incomingMulticastInterfaces);
+    }
+}
+
+void Worker::socketLeaveMulticastGroup(const QHostAddress& address)
+{
+    Q_ASSERT(rxSocket());
+
+    if(_multicastListenAllInterfaces && !_allMulticastInterfaces.empty())
+    {
+        socketLeaveMulticastGroup(address, _allMulticastInterfaces);
+    }
+    else if(_multicastListenAllInterfaces || _incomingMulticastInterfaces.empty())
+    {
+        if(_multicastListenAllInterfaces)
+            LOG_WARN(
+                "Leave multicast group {} on default iface because failed to find valid interface.",
+                address.toString().toStdString());
+
+        LOG_INFO("Leave multicast group {} on default interface", address.toString().toStdString());
+        if(!rxSocket()->leaveMulticastGroup(address))
+            LOG_ERR("Fail to leave multicast group {}", address.toString().toStdString());
+    }
+    else
+    {
+        socketLeaveMulticastGroup(address, _incomingMulticastInterfaces);
+    }
+}
+
+bool Worker::socketJoinMulticastGroup(
+    const QHostAddress& hostAddress, const std::set<QString>& interfaces)
+{
+    bool success = false;
+    for(const auto& iface: interfaces)
+    {
+        const auto netIface = QNetworkInterface::interfaceFromName(iface);
+        if(!netIface.isValid())
+        {
+            // Keep track for later rejoin
+            _failedToJoinIfaces.insert(iface);
+        }
+        else if(isIfaceValid(netIface))
+        {
+            LOG_INFO("Join multicast group {} on iface {}", hostAddress.toString().toStdString(),
+                iface.toStdString());
+            if(rxSocket()->joinMulticastGroup(hostAddress, netIface))
+                success = true;
+            else
+            {
+                _failedToJoinIfaces.insert(iface);
+                if(_multicastListenAllInterfaces)
+                    LOG_WARN("Fail to join multicast group {} on iface {}",
+                        hostAddress.toString().toStdString(), iface.toStdString());
+                else
+                    LOG_ERR("Fail to join multicast group {} on iface {}",
+                        hostAddress.toString().toStdString(), iface.toStdString());
+            }
+        }
+        else
+        {
+            LOG_WARN("Fail to join mutlicast group {} on iface {} because it doesn't support "
+                     "multicast",
+                hostAddress.toString().toStdString(), iface.toStdString());
+        }
+    }
+    return success;
+}
+
+bool Worker::socketLeaveMulticastGroup(
+    const QHostAddress& hostAddress, const std::set<QString>& interfaces)
+{
+    bool success = false;
+    for(const auto& iface: interfaces)
+    {
+        const auto netIface = QNetworkInterface::interfaceFromName(iface);
+        if(isIfaceValid(netIface))
+        {
+            LOG_INFO("Leave multicast group {} on interface {}",
+                hostAddress.toString().toStdString(), iface.toStdString());
+            if(rxSocket()->leaveMulticastGroup(hostAddress, netIface))
+                success = true;
+            else
+            {
+                if(_multicastListenAllInterfaces)
+                    LOG_WARN("Fail to leave multicast group {} on iface {}",
+                        hostAddress.toString().toStdString(), iface.toStdString());
+                else
+                    LOG_ERR("Fail to leave multicast group {} on iface {}",
+                        hostAddress.toString().toStdString(), iface.toStdString());
+            }
+        }
+        else
+        {
+            LOG_WARN("Fail to leave mutlicast group {} on iface {} because it doesn't support "
+                     "multicast",
+                hostAddress.toString().toStdString(), iface.toStdString());
+        }
+    }
+    return success;
+}
+
+void Worker::joinAllMulticastGroups()
+{
+    for(const auto& multicastGroup: _multicastGroups)
+        socketJoinMulticastGroup(QHostAddress(multicastGroup));
+}
+
+void Worker::leaveAllMulticastGroups()
+{
+    for(const auto& multicastGroup: _multicastGroups)
+        socketLeaveMulticastGroup(QHostAddress(multicastGroup));
+}
+
 void Worker::setMulticastInterfaceNameToSocket() const
 {
     if(_socket && _multicastInterface.isValid())
@@ -412,6 +683,126 @@ void Worker::setMulticastTtl(const quint8 ttl)
     {
         _socket->setSocketOption(QAbstractSocket::MulticastTtlOption, int(ttl));
         _multicastTtl = ttl;
+    }
+}
+
+void Worker::updateMulticastListenToAllInterface()
+{
+    const auto canUpdate = rxSocket() && _inputEnabled && _multicastListenAllInterfaces;
+    if(!canUpdate)
+        return;
+
+    // Fetch all ifaces that can multicast
+    std::set<QString> currentIfaces;
+    const auto ifaces = QNetworkInterface::allInterfaces();
+    for(const auto& iface: ifaces)
+    {
+        if(isIfaceValid(iface))
+            currentIfaces.insert(iface.name());
+    }
+
+    // Leave all multicast group for iface that do longer exists
+    for(const auto& iface: _allMulticastInterfaces)
+    {
+        if(currentIfaces.find(iface) == currentIfaces.end())
+        {
+            const auto netIface = QNetworkInterface::interfaceFromName(iface);
+            if(!netIface.isValid())
+            {
+                LOG_INFO("Interface {} disconnection detected", iface.toStdString());
+                continue;
+            }
+            for(const auto& group: _multicastGroups)
+            {
+                LOG_INFO("Leave multicast group {} on lost interface {}", group.toStdString(),
+                    iface.toStdString());
+                rxSocket()->leaveMulticastGroup(QHostAddress(group), netIface);
+            }
+        }
+    }
+
+    // Join new ifaces
+    for(const auto& iface: currentIfaces)
+    {
+        if(_allMulticastInterfaces.find(iface) == _allMulticastInterfaces.end())
+        {
+            const auto netIface = QNetworkInterface::interfaceFromName(iface);
+            if(!netIface.isValid())
+            {
+                LOG_WARN(
+                    "Interface {} connection detected, but it isn't valid", iface.toStdString());
+                continue;
+            }
+            LOG_INFO("Interface {} connection detected", iface.toStdString());
+            for(const auto& group: _multicastGroups)
+            {
+                LOG_INFO("Join multicast group {} on newly detected interface {}",
+                    group.toStdString(), iface.toStdString());
+                if(!rxSocket()->joinMulticastGroup(QHostAddress(group), netIface))
+                {
+                    LOG_WARN("Fail to join group {} on newly connected interface {}",
+                        group.toStdString(), iface.toStdString());
+                    _failedToJoinIfaces.insert(iface);
+                }
+            }
+        }
+    }
+
+    // Update all multicast interfaces for newt join/leave call
+    _allMulticastInterfaces = currentIfaces;
+}
+
+void Worker::checkMulticastInterfaceInError()
+{
+    const bool canUpdate = rxSocket() && _inputEnabled && !_incomingMulticastInterfaces.empty();
+    if(!canUpdate)
+        return;
+
+    for(const auto& iface: _incomingMulticastInterfaces)
+    {
+        if(!isIfaceValid(QNetworkInterface::interfaceFromName(iface)))
+        {
+            const auto it = _failedToJoinIfaces.insert(iface);
+            if(it.second)
+                LOG_INFO("Detect iface disconnection {}", iface.toStdString());
+        }
+    }
+}
+
+void Worker::tryToConnectToErrorMulticastInterfaces()
+{
+    const auto canUpdate = rxSocket() && _inputEnabled && !_failedToJoinIfaces.empty();
+
+    if(!canUpdate)
+        return;
+
+    const auto temp = _failedToJoinIfaces;
+    for(const auto& iface: temp)
+    {
+        const auto netIface = QNetworkInterface::interfaceFromName(iface);
+        if(!isIfaceValid(netIface))
+            continue;
+
+        bool successReconnection = true;
+
+        for(const auto& group: _multicastGroups)
+        {
+            if(rxSocket()->joinMulticastGroup(QHostAddress(group), netIface))
+            {
+                LOG_DEV_INFO("Join Multicast Group {} on iface {} during retry",
+                    group.toStdString(), iface.toStdString());
+            }
+            else
+            {
+                LOG_DEV_WARN("Fail to join multicast group {} on errored interface {} during retry",
+                    group.toStdString(), iface.toStdString());
+
+                // Let's retry later
+                successReconnection = false;
+            }
+        }
+        if(successReconnection)
+            _failedToJoinIfaces.erase(iface);
     }
 }
 
@@ -656,6 +1047,10 @@ void Worker::startBytesCounter()
             _rxPacketsCounter = 0;
             _txPacketsCounter = 0;
             _rxInvalidPacket = 0;
+
+            updateMulticastListenToAllInterface();
+            checkMulticastInterfaceInError();
+            tryToConnectToErrorMulticastInterfaces();
         });
     _bytesCounterTimer->start();
 }

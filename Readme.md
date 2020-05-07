@@ -106,9 +106,13 @@ By default, if internal socket is bounded to an interface with a port, the `Work
 
 #### Multicast group
 
-It's really to join or leave multicast ip. Simply call `joinMulticastGroup(QString)` or `leaveMulticastGroup(QString)`/`leaveAllMulticastGroups`. All joined multicast group can be retrieve with `multicastGroups`.
+To join multicast group call `joinMulticastGroup(QString)` or `leaveMulticastGroup(QString)`/`leaveAllMulticastGroups`. All joined multicast group can be retrieve with `multicastGroups`.
 
-By default multicast packet are not received is listening to datagram. To enable this behavior call `setMulticastLoopback(true)`.
+Because multicast relies on IGMP protocol, it is always associated with an interface. By default all interfaces are listened. This is controlled by `multicastListenOnAllInterfaces`. By setting this property to false, you can control which interface should be listen. Use `joinMulticastInterface`, `leaveMulticastInterface`, `leaveAllMulticastInterfaces` and `isMulticastInterfacePresent`.
+
+If no interface is provided and `multicastListenOnAllInterfaces` is `false`, then the interface used to listen packet is chose by the operating system.
+
+When sending multicast packet, you might also need to control what is the outgoing interface using `multicastInterfaceName`. If not set, then the operating system choose the outgoing interface.
 
 #### Statistics
 

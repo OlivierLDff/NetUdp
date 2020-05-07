@@ -90,18 +90,28 @@ bool Socket::setMulticastInterfaceName(const QString& name)
            ISocket::setMulticastInterfaceName(name);
 }
 
+QStringList Socket::multicastGroups() const
+{
+    return QList<QString>(_multicastGroups.begin(), _multicastGroups.end());
+}
+
 bool Socket::setMulticastGroups(const QStringList& value)
 {
     leaveAllMulticastGroups();
-    for(const auto& it: value) { joinMulticastGroup(it); }
+    for(const auto& group: value) { joinMulticastGroup(group); }
     return true;
 }
 
-QStringList Socket::multicastGroups() const
+QStringList Socket::multicastListeningInterfaces() const
 {
-    QStringList res;
-    for(const auto& it: _multicastGroups) res.append(it);
-    return res;
+    return QList<QString>(_multicastInterfaces.begin(), _multicastInterfaces.end());
+}
+
+bool Socket::setMulticastListeningInterfaces(const QStringList& value)
+{
+    leaveAllMulticastInterfaces();
+    for(const auto& iface: value) { joinMulticastInterface(iface); }
+    return true;
 }
 
 bool Socket::start()
@@ -130,17 +140,9 @@ bool Socket::start()
 
     LOG_DEV_DEBUG("Connect to worker {}", static_cast<void*>(_worker.get()));
 
-    _worker->_watchdogTimeout = watchdogPeriod();
-    _worker->_rxAddress = rxAddress();
-    _worker->_rxPort = rxPort();
-    _worker->_txPort = txPort();
-
-    for(const auto& it: _multicastGroups) _worker->_multicastGroups.insert(it, false);
-
-    _worker->_separateRxTxSockets = separateRxTxSockets() || txPort();
-    _worker->_multicastInterface = QNetworkInterface::interfaceFromName(multicastInterfaceName());
-    _worker->_multicastLoopback = multicastLoopback();
-    _worker->_inputEnabled = inputEnabled();
+    _worker->initialize(watchdogPeriod(), rxAddress(), rxPort(), txPort(), separateRxTxSockets(),
+        _multicastGroups, _multicastInterfaces, multicastListenOnAllInterfaces(), inputEnabled(),
+        multicastLoopback());
 
     connect(this, &Socket::startWorker, _worker.get(), &Worker::onStart);
     connect(this, &Socket::stopWorker, _worker.get(), &Worker::onStop);
@@ -148,6 +150,13 @@ bool Socket::start()
 
     connect(this, &Socket::joinMulticastGroupWorker, _worker.get(), &Worker::joinMulticastGroup);
     connect(this, &Socket::leaveMulticastGroupWorker, _worker.get(), &Worker::leaveMulticastGroup);
+
+    connect(this, &Socket::joinMulticastInterfaceWorker, _worker.get(),
+        &Worker::joinMulticastInterface);
+    connect(this, &Socket::leaveMulticastInterfaceWorker, _worker.get(),
+        &Worker::leaveMulticastInterface);
+    connect(this, &Socket::multicastListenOnAllInterfacesChanged, _worker.get(),
+        &Worker::setMulticastListenOnAllInterfaces);
 
     connect(this, &Socket::rxAddressChanged, _worker.get(), &Worker::setAddress);
     connect(this, &Socket::rxPortChanged, _worker.get(), &Worker::setRxPort);
@@ -303,6 +312,56 @@ bool Socket::leaveAllMulticastGroups()
 bool Socket::isMulticastGroupPresent(const QString& groupAddress)
 {
     return _multicastGroups.find(groupAddress) != _multicastGroups.end();
+}
+
+bool Socket::joinMulticastInterface(const QString& name)
+{
+    // ) Check that the address isn't already registered
+    if(_multicastInterfaces.find(name) != _multicastInterfaces.end())
+        return false;
+
+    // ) Insert in the set and emit signal to say the multicast list changed
+    _multicastInterfaces.insert(name);
+    Q_EMIT multicastListeningInterfacesChanged(multicastListeningInterfaces());
+
+    LOG_DEV_INFO("Join interface for multicast {}", qPrintable(name));
+    Q_EMIT joinMulticastInterfaceWorker(name);
+    return true;
+}
+
+bool Socket::leaveMulticastInterface(const QString& name)
+{
+    const auto it = _multicastInterfaces.find(name);
+
+    // ) Is the multicast interface present
+    if(it == _multicastInterfaces.end())
+        return false;
+
+    // ) Remove the multicast address from the list, then emit a signal to say the list changed
+    _multicastInterfaces.erase(it);
+    Q_EMIT multicastListeningInterfacesChanged(multicastListeningInterfaces());
+
+    LOG_DEV_INFO("Leave interface for multicast {}", qPrintable(name));
+    Q_EMIT leaveMulticastInterfaceWorker(name);
+    return true;
+}
+
+bool Socket::leaveAllMulticastInterfaces()
+{
+    bool allSuccess = true;
+    while(!_multicastInterfaces.empty())
+    {
+        // Copy is required here because leaveMulticastInterface will erase the iterator
+        const auto interface = *_multicastInterfaces.begin();
+        if(!leaveMulticastInterface(interface))
+            allSuccess = false;
+    }
+    return allSuccess;
+}
+
+bool Socket::isMulticastInterfacePresent(const QString& name)
+{
+    return _multicastInterfaces.find(name) != _multicastInterfaces.end();
 }
 
 void Socket::clearRxCounter()

@@ -210,6 +210,54 @@ Column
             })
         }
     }
+    Qaterial.Label
+    {
+        text: "multicastInterfaces : " + (root.object ? root.object.multicastListeningInterfaces.toString() : "")
+        width: parent.width
+        elide: Text.ElideRight
+        textType: Qaterial.Style.TextType.Caption
+    }
+    Row
+    {
+        Qaterial.FlatButton
+        {
+            topInset: 0
+            bottomInset: 0
+            textType: Qaterial.Style.TextType.Caption
+            backgroundImplicitHeight: 20
+            text: "Add Multicast interface"
+            onClicked: if(root.object) Qaterial.DialogManager.openTextField({
+                acceptedCallback: function(result, acceptableInput)
+                {
+                    if(!root.object.joinMulticastInterface(result))
+                        Qaterial.SnackbarManager.show({text : "Fail to join " + result})
+                },
+                title: qsTr("Enter interface to join"),
+                textTitle: qsTr("Interface"),
+                selectAllText: true,
+                standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
+            })
+        }
+        Qaterial.FlatButton
+        {
+            topInset: 0
+            bottomInset: 0
+            textType: Qaterial.Style.TextType.Caption
+            backgroundImplicitHeight: 20
+            text: "Remove Multicast interface"
+            onClicked: if(root.object) Qaterial.DialogManager.openTextField({
+                acceptedCallback: function(result, acceptableInput)
+                {
+                    if(!root.object.leaveMulticastInterface(result))
+                        Qaterial.SnackbarManager.show({text : "Fail to remove " + result})
+                },
+                title: qsTr("Enter interface to remove"),
+                textTitle: qsTr("Interface"),
+                selectAllText: true,
+                standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
+            })
+        }
+    }
     Qaterial.FlatButton
     {
         topInset: 0
@@ -217,19 +265,31 @@ Column
         textType: Qaterial.Style.TextType.Caption
         highlighted: false
         backgroundImplicitHeight: 20
-        text: "multicastInterfaceName : " + (root.object ? root.object.multicastInterfaceName : "")
+        text: "output multicast interface : " + (root.object ? root.object.multicastInterfaceName : "")
         onClicked: if(root.object) Qaterial.DialogManager.openTextField({
             acceptedCallback: function(result, acceptableInput)
             {
                 root.object.multicastInterfaceName = result
             },
             text: root.object.multicastInterfaceName,
-            title: qsTr("Enter Output multicastInterfaceName"),
-            textTitle: qsTr("Output multicastInterfaceName"),
+            title: qsTr("Enter Output Multicast Interface Name"),
+            textTitle: qsTr("Output Interface"),
             selectAllText: true,
             standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
         })
     }
+
+    Qaterial.SwitchButton
+    {
+        text: "multicastListenOnAllInterfaces"
+        implicitHeight: 32
+        checked: root.object && root.object.multicastListenOnAllInterfaces
+        elide: Text.ElideRight
+        implicitWidth: parent.width
+        textType: Qaterial.Style.TextType.Caption
+        onClicked: if(root.object) root.object.multicastListenOnAllInterfaces = checked
+    }
+
     Row
     {
         width: parent.width
@@ -239,7 +299,7 @@ Column
             implicitHeight: 32
             checked: root.object && root.object.multicastLoopback
             elide: Text.ElideRight
-            implicitWidth: parent.width/4
+            implicitWidth: parent.width/2
             textType: Qaterial.Style.TextType.Caption
             onClicked: if(root.object) root.object.multicastLoopback = checked
         }
@@ -250,18 +310,23 @@ Column
             implicitHeight: 32
             checked: root.object && root.object.inputEnabled
             elide: Text.ElideRight
-            implicitWidth: parent.width/4
+            implicitWidth: parent.width/2
             textType: Qaterial.Style.TextType.Caption
             onClicked: if(root.object) root.object.inputEnabled = checked
         }
 
+    } // Row
+
+    Row
+    {
+        width: parent.width
         Qaterial.SwitchButton
         {
             text: "2 sockets"
             implicitHeight: 32
             checked: root.object && root.object.separateRxTxSockets
             elide: Text.ElideRight
-            implicitWidth: parent.width/4
+            implicitWidth: parent.width/2
             textType: Qaterial.Style.TextType.Caption
             onClicked: if(root.object) root.object.separateRxTxSockets = checked
         }
@@ -272,7 +337,7 @@ Column
             implicitHeight: 32
             checked: root.object && root.object.useWorkerThread
             elide: Text.ElideRight
-            implicitWidth: parent.width/4
+            implicitWidth: parent.width/2
             textType: Qaterial.Style.TextType.Caption
             onClicked: if(root.object) root.object.useWorkerThread = checked
         }
