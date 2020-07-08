@@ -33,4 +33,11 @@
 #include <QNetworkDatagram>
 #include <QUdpSocket>
 
+#ifdef major
+#undef major
+#endif
+#ifdef minor
+#undef minor
+#endif
+
 #endif

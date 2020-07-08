@@ -10,14 +10,6 @@
 
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-# DEPENDENCIES
-
-set(RECYCLER_REPOSITORY "https://github.com/OlivierLDff/Recycler.git" CACHE STRING "Repository of Recycler")
-set(RECYCLER_TAG "master" CACHE STRING "Git Tag of Recycler")
-
-set(SPDLOG_REPOSITORY "https://github.com/gabime/spdlog" CACHE STRING "Repository of spdlog")
-set(SPDLOG_TAG "v1.x" CACHE STRING "Git tag/branch of spdlog")
-
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                       PROJECT SETTINGS                           │
 # └──────────────────────────────────────────────────────────────────┘
@@ -77,40 +69,21 @@ message(STATUS "NETUDP_ENABLE_QML         : " ${NETUDP_ENABLE_QML})
 message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
 
 # ┌──────────────────────────────────────────────────────────────────┐
-# │                         QT5 CMAKE                                │
-# └──────────────────────────────────────────────────────────────────┘
-
-find_package(Qt5Core    CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
-find_package(Qt5Qml     CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
-find_package(Qt5Network CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
-
-if(NETUDP_ENABLE_QML)
-  find_package(Qt5QuickCompiler CONFIG REQUIRED NO_CMAKE_SYSTEM_PATH)
-endif()
-# NETUDP_ENABLE_QML
-
-# ┌──────────────────────────────────────────────────────────────────┐
 # │                       DEPENDENCIES                               │
 # └──────────────────────────────────────────────────────────────────┘
 
-include(FetchContent)
+find_package(Qt5 REQUIRED COMPONENTS
+  Core
+  Qml
+  Network
+)
 
-# spdlog
-FetchContent_Declare(
-  spdlog
-  GIT_REPOSITORY ${SPDLOG_REPOSITORY}
-  GIT_TAG        ${SPDLOG_TAG}
-  )
+if(NETUDP_ENABLE_QML)
+  find_package(Qt5 REQUIRED COMPONENTS QuickCompiler)
+endif()
 
-# Recycler
-FetchContent_Declare(
-  Recycler
-  GIT_REPOSITORY ${RECYCLER_REPOSITORY}
-  GIT_TAG        ${RECYCLER_TAG}
-  )
-
-# Make all dependencies avaiables
-FetchContent_MakeAvailable(Recycler spdlog)
+include(cmake/FetchSpdlog.cmake)
+include(cmake/FetchRecyler.cmake)
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                          NETUDP                                  │
