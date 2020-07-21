@@ -14,9 +14,13 @@
 
 // Qt Headers
 #include <QObject>
+#include <QString>
 #include <QNetworkInterface>
 #include <QUdpSocket>
 #include <QTimer>
+
+#include <set>
+#include <memory>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
