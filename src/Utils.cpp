@@ -96,9 +96,9 @@ Q_COREAPP_STARTUP_FUNCTION(NetUdp_loadResources)
 
 using namespace net::udp;
 
-void Utils::registerTypes(const char* uri, const quint8 major, const quint8 minor)
+void net::udp::registerQmlTypes(const char* uri, const quint8 major, const quint8 minor)
 {
     ::NetUdp_registerTypes(uri, major, minor);
 }
 
-void Utils::loadResources() { ::NetUdp_loadResources(); }
+void net::udp::loadQmlResources() { ::NetUdp_loadResources(); }
