@@ -33,12 +33,11 @@ jobs:
       - name: Configure NetUdp
         run: |
           mkdir -p build
-          cmake -DNETUDP_ENABLE_EXAMPLES=ON -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" -B build -S .
+          cmake -DNETUDP_ENABLE_EXAMPLES=ON -DNETUDP_ENABLE_TESTS=ON -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" -B build -S .
         shell: bash
 
       - name: Build NetUdp
-        run: |
-          cmake --build build --target "NetUdp" --config "${{ matrix.build_type }}" -j
+        run: cmake --build build --target "NetUdp" --config "${{ matrix.build_type }}" -j
 
       - name: Build Examples
         run: |
@@ -46,3 +45,20 @@ jobs:
           cmake --build build --target "NetUdp_EchoServer" --config "${{ matrix.build_type }}" -j
           cmake --build build --target "NetUdp_EchoClientServer" --config "${{ matrix.build_type }}" -j
           cmake --build build --target "NetUdp_EchoMulticastLoopback" --config "${{ matrix.build_type }}"
+
+      - name: Build NetUdp Unit Tests
+        run: cmake --build build --target "NetUdp_Tests" --config "${{ matrix.build_type }}" -j
+
+      - name: Build NetUdp QtQuick Unit Tests
+        run: cmake --build build --target "NetUdp_QuickTests" --config "${{ matrix.build_type }}" -j
+
+      - name: Run NetUdp Unit tests
+        run: cd build && ctest --build-config "${{ matrix.build_type }}" --progress --verbose --parallel 12
+        if: "!contains(matrix.os, 'ubuntu')"
+
+      - name: Run NetUdp Unit tests
+        run: |
+          sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-xinerama0 libxcb-keysyms1 libxcb1 libxcb-render-util0
+          cd build
+          xvfb-run ctest --build-config "${{ matrix.build_type }}" --progress --verbose --parallel 12
+        if: contains(matrix.os, 'ubuntu')

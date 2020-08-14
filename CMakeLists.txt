@@ -17,8 +17,8 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 # OPTIONS
 
 set(NETUDP_VERSION_MAJOR 1)
-set(NETUDP_VERSION_MINOR 0)
-set(NETUDP_VERSION_PATCH 1)
+set(NETUDP_VERSION_MINOR 1)
+set(NETUDP_VERSION_PATCH 0)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
   EXECUTE_PROCESS(
     COMMAND git rev-parse --short HEAD
@@ -47,8 +47,9 @@ set(NETUDP_ENABLE_PCH ON CACHE BOOL
  Only work if CMake support 'target_precompile_headers'. \"
  This can speed up compilation time.")
 
-# Install
-set(NETUDP_ENABLE_EXAMPLES OFF CACHE BOOL "Create or not a target for examples")
+# Extra
+set(NETUDP_ENABLE_EXAMPLES OFF CACHE BOOL "Create NetUdp examples")
+set(NETUDP_ENABLE_TESTS OFF CACHE BOOL "Create test target for NetUdp")
 
 # CREATE PROJECT
 
@@ -125,6 +126,7 @@ set(NETUDP_UTILS_SRCS
   ${NETUDP_SRCS_FOLDER}/Utils.cpp
   ${NETUDP_SRCS_FOLDER}/Logger.cpp
   ${NETUDP_SRCS_FOLDER}/Version.cpp
+  ${NETUDP_SRCS_FOLDER}/InterfacesProvider.cpp
   )
 
 set(NETUDP_API_SRCS
@@ -147,12 +149,12 @@ set(NETUDP_UTILS_INCS
   ${NETUDP_PRIVATE_INCS_FOLDER}/Logger.hpp
   ${NETUDP_PRIVATE_INCS_FOLDER}/Utils.hpp
   ${NETUDP_PRIVATE_INCS_FOLDER}/Version.hpp
+  ${NETUDP_PRIVATE_INCS_FOLDER}/InterfacesProvider.hpp
   )
 
 set(NETUDP_API_INCS
   ${NETUDP_PRIVATE_INCS_FOLDER}/Datagram.hpp
   ${NETUDP_PRIVATE_INCS_FOLDER}/RecycledDatagram.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/ISocket.hpp
   ${NETUDP_PRIVATE_INCS_FOLDER}/Socket.hpp
   ${NETUDP_PRIVATE_INCS_FOLDER}/Worker.hpp
   )
@@ -179,7 +181,7 @@ else()
 
 endif()
 
-target_compile_features(${NETUDP_TARGET} PUBLIC cxx_std_14)
+target_compile_features(${NETUDP_TARGET} PUBLIC cxx_std_17)
 target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_INCS_FOLDER}>)
 
 target_link_libraries(${NETUDP_TARGET} PUBLIC
@@ -213,4 +215,14 @@ endif()
 
 if(NETUDP_ENABLE_EXAMPLES)
   add_subdirectory(examples)
+endif()
+
+
+# ┌──────────────────────────────────────────────────────────────────┐
+# │                         TESTS                                    │
+# └──────────────────────────────────────────────────────────────────┘
+
+if(NETUDP_ENABLE_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
 endif()

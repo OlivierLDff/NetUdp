@@ -48,7 +48,7 @@ A Basic Client/Socket can be found in `examples/EchoClientServer.cpp`.
 This example demonstrate how to create a server that send datagram to address `127.0.0.1` on port `9999`.
 
 ```cpp
-#include <NetUdp.hpp>
+#include <Net/Udp/NetUdp.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 This example demonstrate how to receive a packet on address `127.0.0.1` on port `9999`.
 
 ```c++
-#include <NetUdp.hpp>
+#include <Net/Udp/NetUdp.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -198,8 +198,6 @@ public Q_SLOTS:
 }
 ```
 
-
-
 ### Customize Socket and Worker
 
 `Socket` and `Worker` mainly work in pair, so if overriding one, it make often sense to override the other.
@@ -275,7 +273,7 @@ public Q_SLOTS:
 
         return std::move(myWorker);
     }
-    
+
     // This is called before creating a SharedDatagram and calling onDatagramReceived
     bool isPacketValid(const uint8_t* buffer, const size_t length) const override
     {
@@ -456,7 +454,7 @@ cmake --build . --config "Release"
 
 ### Execute Examples
 
-## Integrating
+## Add to CMake build
 
 Adding NetUdp library in your library is really simple if you use CMake 3.14.
 
@@ -477,7 +475,18 @@ FetchContent_MakeAvailable(NetUdp)
 target_link_libraries(MyTarget NetUdp)
 ```
 
-Then you just need to `#include <NetUdp.hpp>`.
+Then you just need to `#include <Net/Udp/NetUdp.hpp>`.
+
+## Changelog
+
+### v1.1
+
+* Introduce `multicastOutgoingInterfaces` instead of `multicastInterfaceName`. If `multicastOutgoingInterfaces` is empty packets are going to be send on every interfaces.
+* Remove `multicastListenOnAllInterfaces` and make it the default when `multicastListeningInterfaces` is empty.
+
+### v1.0
+
+* Initial work
 
 ## Authors
 

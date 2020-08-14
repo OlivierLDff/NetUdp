@@ -54,7 +54,7 @@ public:
         if(!iface.isEmpty())
         {
             qCInfo(SERVER_LOG_CAT, "Set Multicast Interface Name to %s", qPrintable(iface));
-            server.setMulticastInterfaceName(iface);
+            server.setMulticastOutgoingInterfaces({iface});
         }
 
         server.setUseWorkerThread(multiThreaded);
@@ -67,7 +67,7 @@ public:
                 server.sendDatagram(data.c_str(), data.length() + 1, ip, port);
             });
 
-        QObject::connect(&server, &net::udp::Socket::datagramReceived,
+        QObject::connect(&server, &net::udp::Socket::sharedDatagramReceived,
             [](const net::udp::SharedDatagram& d)
             { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
 

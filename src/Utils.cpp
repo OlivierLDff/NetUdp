@@ -8,6 +8,7 @@
 #include <Net/Udp/Socket.hpp>
 #include <Net/Udp/Version.hpp>
 #include <Net/Udp/Logger.hpp>
+#include <Net/Udp/InterfacesProvider.hpp>
 
 // Qt Header
 #include <QCoreApplication>
@@ -65,6 +66,9 @@ static void NetUdp_registerTypes()
 
     LOG_DEV_INFO("Register {}.Server {}.{} to QML", *_uri, _major, _minor);
     net::udp::Socket::registerToQml(*_uri, _major, _minor);
+
+    LOG_DEV_INFO("Register Singleton {}.InterfacesProvider {}.{} to QML", *_uri, _major, _minor);
+    net::udp::InterfacesProviderSingleton::registerSingleton(*_uri, _major, _minor);
 
     qRegisterMetaType<QAbstractSocket::SocketState>();
 

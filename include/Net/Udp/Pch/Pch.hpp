@@ -29,10 +29,10 @@
 
 // Qt Network Headers
 #include <QHostAddress>
-#include <QNetworkInterface>
 #include <QNetworkDatagram>
 #include <QUdpSocket>
 
+// Compatibility with gcc <= 7
 #ifdef major
 #undef major
 #endif

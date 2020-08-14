@@ -53,7 +53,7 @@ public:
 
         client.setUseWorkerThread(multiThreaded);
 
-        QObject::connect(&client, &net::udp::Socket::datagramReceived,
+        QObject::connect(&client, &net::udp::Socket::sharedDatagramReceived,
             [this](const net::udp::SharedDatagram& d)
             {
                 qCInfo(CLIENT_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer()));

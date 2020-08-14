@@ -258,36 +258,53 @@ Column
             })
         }
     }
-    Qaterial.FlatButton
+    Qaterial.Label
     {
-        topInset: 0
-        bottomInset: 0
-        textType: Qaterial.Style.TextType.Caption
-        highlighted: false
-        backgroundImplicitHeight: 20
-        text: "output multicast interface : " + (root.object ? root.object.multicastInterfaceName : "")
-        onClicked: if(root.object) Qaterial.DialogManager.openTextField({
-            acceptedCallback: function(result, acceptableInput)
-            {
-                root.object.multicastInterfaceName = result
-            },
-            text: root.object.multicastInterfaceName,
-            title: qsTr("Enter Output Multicast Interface Name"),
-            textTitle: qsTr("Output Interface"),
-            selectAllText: true,
-            standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
-        })
-    }
-
-    Qaterial.SwitchButton
-    {
-        text: "multicastListenOnAllInterfaces"
-        implicitHeight: 32
-        checked: root.object && root.object.multicastListenOnAllInterfaces
+        text: "multicastOutgoingInterfaces : " + (root.object ? root.object.multicastOutgoingInterfaces.toString() : "")
+        width: parent.width
         elide: Text.ElideRight
-        implicitWidth: parent.width
         textType: Qaterial.Style.TextType.Caption
-        onClicked: if(root.object) root.object.multicastListenOnAllInterfaces = checked
+    }
+    Row
+    {
+        Qaterial.FlatButton
+        {
+            topInset: 0
+            bottomInset: 0
+            textType: Qaterial.Style.TextType.Caption
+            backgroundImplicitHeight: 20
+            text: "Add Multicast Output interface"
+            onClicked: if(root.object) Qaterial.DialogManager.openTextField({
+                acceptedCallback: function(result, acceptableInput)
+                {
+                  let arr = root.object.multicastOutgoingInterfaces
+                  arr.push(result)
+                  root.object.multicastOutgoingInterfaces = result
+                },
+                title: qsTr("Enter interface to output on"),
+                textTitle: qsTr("Interface"),
+                selectAllText: true,
+                standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
+            })
+        }
+        Qaterial.FlatButton
+        {
+            topInset: 0
+            bottomInset: 0
+            textType: Qaterial.Style.TextType.Caption
+            backgroundImplicitHeight: 20
+            text: "Remove Multicast Output interface"
+            onClicked: if(root.object) Qaterial.DialogManager.openTextField({
+                acceptedCallback: function(result, acceptableInput)
+                {
+                    root.object.multicastOutgoingInterfaces = root.object.multicastOutgoingInterfaces.filter(e => e !== result);
+                },
+                title: qsTr("Enter interface to remove"),
+                textTitle: qsTr("Interface"),
+                selectAllText: true,
+                standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
+            })
+        }
     }
 
     Row

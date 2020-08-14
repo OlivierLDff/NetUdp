@@ -69,11 +69,11 @@ public:
                 server.sendDatagram(data.c_str(), data.length() + 1, dstAddr, dst);
             });
 
-        QObject::connect(&server, &net::udp::Socket::datagramReceived,
+        QObject::connect(&server, &net::udp::Socket::sharedDatagramReceived,
             [](const net::udp::SharedDatagram& d)
             { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
 
-        QObject::connect(&client, &net::udp::Socket::datagramReceived,
+        QObject::connect(&client, &net::udp::Socket::sharedDatagramReceived,
             [this](const net::udp::SharedDatagram& d)
             {
                 qCInfo(CLIENT_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer()));
