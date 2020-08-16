@@ -57,7 +57,7 @@ TestCase
       spyRxSocketBounded.wait()
 
     // Wait for multicast group to be joined
-    wait(1000)
+    wait(100)
   }
 
   function test_sendDatagramAsString()

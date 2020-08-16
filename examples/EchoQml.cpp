@@ -1,6 +1,7 @@
 ﻿// ──── INCLUDE ────
 
 #include <Net/Udp/NetUdp.hpp>
+#include <Qaterial/Qaterial.hpp>
 
 // spdlog
 #ifdef WIN32
@@ -36,6 +37,9 @@ int main(int argc, char* argv[])
 
     net::udp::loadQmlResources();
     net::udp::registerQmlTypes();
+
+    qaterial::loadQmlResources();
+    qaterial::registerQmlTypes();
 
     Q_INIT_RESOURCE(EchoQml);
 

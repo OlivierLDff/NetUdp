@@ -2,7 +2,11 @@
 
 NetUdp provide a Udp Socket that can send and receive Datagram.
 
-## Overview
+* Support Unicast/Multicast/Broadcast Datagram.
+* C++ and Qml API.
+* Watcher that restart internal socket if something went wrong with the operating system.
+
+## 🚀 Overview
 
 <p align="center">
   <img src="./docs/ClassDiagram.svg"/>
@@ -12,13 +16,13 @@ NetUdp provide a Udp Socket that can send and receive Datagram.
 
 The two main classes that work out of the box are `Socket` and `RecycledDatagram`. Simply create a server, start it. Then send and receive datagrams. The server can join multicast group to receice multicast packets.
 
-The `Socket` use a `SocketWorker` that can run on separate thread or in main thread.
+The `Socket` use a `Worker` that can run on separate thread or in main thread.
 
 Every datagram allocation is stored in `std::shared_ptr<Datagram>`. This allow to reuse datagram object structure already allocated later without reallocating anything.
 
 * `ISocket` can be inherited to represent a `Socket` without any functionality.
 
-* `Socket` and `SocketWorker` can be inherited to implement custom communication between server and worker. For example sending custom objects that can be serialized/deserialized in worker thread.
+* `Socket` and `Worker` can be inherited to implement custom communication between server and worker. For example sending custom objects that can be serialized/deserialized in worker thread.
 
 * `Datagram` can be inherited if a custom data container if required. For example if data is already serialized in a structure. Putting a reference to that structure inside the `Datagram` avoid a copy to `RecycledDatagram`.
 
@@ -28,22 +32,20 @@ Every datagram allocation is stored in `std::shared_ptr<Datagram>`. This allow t
 * [Recycler](https://github.com/OlivierLDff/Recycler.git) library to reuse allocated datagram.
 * spdlog to log.
 * Qt Core Qml Network for the backend.
-* Qml dependencies:
-  * Qt Qml Quick Control2
-  * [Stringify](https://github.com/OlivierLDff/Stringify)
-  * [Qaterial](https://github.com/OlivierLDff/Qaterial)
+* Qt dependencies:
+  * Core, Network, Qml
 
-### Tools
+### 🔨 Tools
 
 * [CMake](https://cmake.org/) v3.14 or greater.
-* C++14 compliant compiler or greater.
+* C++17 compliant compiler or greater.
 * Internet connection to download dependencies from *Github* during configuration.
 
-### Out of the box usage
+## C++ Usage
 
 A Basic Client/Socket can be found in `examples/EchoClientServer.cpp`.
 
-#### Socket
+### 🌍 Server
 
 This example demonstrate how to create a server that send datagram to address `127.0.0.1` on port `9999`.
 
@@ -67,7 +69,7 @@ int main(int argc, char* argv[])
 >
 > If the socket also receive datagram (ie `inputEnabled` is true and call `setRxPort`), then the rx port will use. To change this default behavior call `setSeparateRxTxSockets(true)`.
 
-#### Client
+### Client
 
 This example demonstrate how to receive a packet on address `127.0.0.1` on port `9999`.
 
@@ -79,42 +81,43 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
 
     net::udp::Socket client;
-    client.setRxAddress("127.0.0.1");
-    client.setRxPort(9999);
-    client.start();
+    client.start("127.0.0.1", 9999);
 
-        QObject::connect(&client, &net::udp::Socket::datagramReceived,
-                         [](const net::udp::SharedDatagram& d)
-        {
-            qInfo("Rx : %s", reinterpret_cast<const char*>(d->buffer()));
-        });
-
+    QObject::connect(&client, &net::udp::Socket::sharedDatagramReceived,
+                     [](const net::udp::SharedDatagram& d)
+    {
+        qInfo("Rx : %s", reinterpret_cast<const char*>(d->buffer()));
+    });
 
     return QCoreApplication::exec();
 }
 ```
 
-#### Errors handling
+### 😞 Errors handling
 
 Errors can be observed via `socketError(int error, QString description)` signals. If the socket fail to bind, or if anything happened, the worker will start a watchdog timer to restart the socket.
 
 The default restart time is set to 5 seconds but can be changed via `watchdogPeriod` property. The property is expressed in milliseconds.
 
-#### Disable Input
+### Disable Input
 
 By default, if internal socket is bounded to an interface with a port, the `Worker` will receive incoming datagram. To avoid receiving those datagram inside `Socket`, call `setInputEnabled(false)`.
 
-#### Multicast group
+### 👪 Multicast group
 
-To join multicast group call `joinMulticastGroup(QString)` or `leaveMulticastGroup(QString)`/`leaveAllMulticastGroups`. All joined multicast group can be retrieve with `multicastGroups`.
+#### Multicast Reception
 
-Because multicast relies on IGMP protocol, it is always associated with an interface. By default all interfaces are listened. This is controlled by `multicastListenOnAllInterfaces`. By setting this property to false, you can control which interface should be listen. Use `joinMulticastInterface`, `leaveMulticastInterface`, `leaveAllMulticastInterfaces` and `isMulticastInterfacePresent`.
+* `multicastGroups` is the list of multicast addresses that are listened.
+  To join multicast group call `joinMulticastGroup(QString)`, `leaveMulticastGroup(QString)`, `leaveAllMulticastGroups`.
+* `multicastListeningInterfaces`: Set the interfaces on which the socket is listening to `multicastGroups`. By default all interfaces are listened.
+  Use `joinMulticastInterface`, `leaveMulticastInterface`, `leaveAllMulticastInterfaces` and `isMulticastInterfacePresent`.
+* `multicastLoopback` Control if multicast datagram are looping in the system. On windows it should be set on receiver side. On Unix systems, it should be set on sender side.
 
-If no interface is provided and `multicastListenOnAllInterfaces` is `false`, then the interface used to listen packet is chose by the operating system.
+#### Multicast Transmission
 
-When sending multicast packet, you might also need to control what is the outgoing interface using `multicastInterfaceName`. If not set, then the operating system choose the outgoing interface.
+* `multicastOutgoingInterfaces`: Outgoing interfaces for multicast packet. If not specified, then packet is going to all interfaces by default to provide a plug and play experience.
 
-#### Statistics
+### Statistics
 
 Internally the `Socket` track multiple information to have an idea of what is going on.
 
@@ -126,7 +129,7 @@ Internally the `Socket` track multiple information to have an idea of what is go
 
 Those property can be cleared with `clearRxCounter`/`clearTxCounter`/`clearCounters`.
 
-#### How to avoid memory copy
+### 📋 How to avoid memory copy
 
 When calling any of the following function, a `memcpy` will happen to a `RecycledDatagram`.
 
@@ -239,7 +242,7 @@ public:
 };
 ```
 
-#### Customize SocketWorker
+#### Customize Worker
 
 When inheriting from `SocketWorker` you can override:
 
@@ -252,9 +255,9 @@ When inheriting from `SocketWorker` you can override:
 Example:
 
 ```cpp
-#include <Net/Udp/SocketWorker.hpp>
+#include <Net/Udp/Worker.hpp>
 
-class MySocketWorker : net::udp::SocketWorker
+class MySocketWorker : net::udp::Worker
 {
     Q_OBJECT
 public:
@@ -321,7 +324,7 @@ public:
     MySocket(QObject* parent = nullptr) : net::udp::Socket(parent) {}
 
 public Q_SLOTS:
-    bool std::unique_ptr<SocketWorker> createWorker() override
+    bool std::unique_ptr<Worker> createWorker() override
     {
         auto myWorker = std::make_unique<MyWorker>();
 
@@ -402,7 +405,115 @@ Options:
 
 ```
 
-## Qml Debug
+## Qml Usage
+
+* `net::udp::registerQmlTypes();` should be called in the main to register qml types.
+
+### Unicast Datagram
+
+This example show how to send a unicast datagram as a string to `127.0.0.1:9999`. Don't forget to start the socket before sending any messages.
+
+```js
+import QtQuick 2.0
+import QtQuick.Controls 2.0
+
+import NetUdp 1.0 as NetUdp
+
+Button
+{
+  text: "send unicast"
+  onClicked: () => socket.sendDatagram({
+    address: "127.0.0.1",
+    port: 9999,
+    data: "My Data"
+    // Equivalent to 'data: [77,121,32,68,97,116,97]'
+  })
+
+  NetUdp.Socket
+  {
+    id: socket
+    Component.onCompleted: () => start()
+  }
+}
+```
+
+This example show how to receive the datagram. Don't forget to start listening to an address and a port. The datagram is always received as a string. It can easily be decoded to manipulate a byte array.
+
+```js
+import NetUdp 1.0 as NetUdp
+
+NetUdp.Socket
+{
+  onDatagramReceived: function(datagram)
+  {
+    console.log(`datagram : ${JSON.stringify(datagram)}`)
+    console.log(`datagram.data (string) : "${datagram.data}"`)
+    let byteArray = []
+    for(let i = 0; i < datagram.data.length; ++i)
+      byteArray.push(datagram.data.charCodeAt(i))
+    console.log(`datagram.data (bytes): [${byteArray}]`)
+      
+    console.log(`datagram.destinationAddress : ${datagram.destinationAddress}`)
+    console.log(`datagram.destinationPort : ${datagram.destinationPort}`)
+    console.log(`datagram.senderAddress : ${datagram.senderAddress}`)
+    console.log(`datagram.senderPort : ${datagram.senderPort}`)
+    console.log(`datagram.ttl : ${datagram.ttl}`)
+  }
+
+  Component.onCompleted: () => start("127.0.0.1", 9999)
+}
+```
+
+### Multicast Datagram
+
+Send multicast datagram work almost the same as unicast. Only difference is that you control on which interface the data is going.
+
+```js
+import NetUdp 1.0 as NetUdp
+
+NetUdp.Socket
+{
+  id: socket
+  // A Packet will be send to each interface
+  // The socket monitor for interface connection/disconnection
+  multicastOutgoingInterfaces: [ "lo", "eth0" ]
+  // Required in unix world if you want loopback on the same system
+  multicastLoopback: true
+    
+  Component.onCompleted: () => start()
+}
+```
+
+Then send data like in unicast:
+
+```js
+socket.sendDatagram({
+  address: "239.1.2.3",
+  port: 9999,
+  data: "My Data"
+})
+```
+
+To receive it, subscribe the to the multicast group and choose on which interfaces.
+
+```js
+import NetUdp 1.0 as NetUdp
+
+NetUdp.Socket
+{
+  multicastGroups: [ "239.1.3.4" ]
+  multicastListeningInterfaces: [ "lo", "eth0" ]
+    
+  // Required in the windows world if you want loopback on the same system
+  multicastLoopback: true
+
+  onDatagramReceived: (datagram) => console.log(`datagram : ${JSON.stringify(datagram)}`)
+
+  // Listen port 9999
+  Component.onCompleted: () => start(12999934)
+}
+```
+### Debug
 
 This library also provide a tool object that demonstrate every Qmls functionality. This is intended for quick debug, or test functionalities if UI isn't built yet.
 
@@ -410,8 +521,8 @@ This library also provide a tool object that demonstrate every Qmls functionalit
 
 In order to use this qml object into another qml file, multiple steps are required.
 
-* Call `net::udp::Utils::registerTypes(...)` to register `Socket`, `SharedDatagram`, ... to the qml system
-* Call `net::udp::Utils::loadResources()` to load every `NetUdp` resources into the `qrc`.
+* Call `net::udp::registerQmlTypes(...)` to register `Socket`, `SharedDatagram`, ... to the qml system
+* Call `net::udp::loadQmlResources()` to load every `NetUdp` resources into the `qrc`.
 
 Then simply to something like that:
 
@@ -444,15 +555,13 @@ cmake ..
 
 The `CMakeLists.txt` will download every dependencies for you.
 
-## Building
+## 🔨 Building
 
 Simply use integrated cmake command:
 
 ```bash
 cmake --build . --config "Release"
 ```
-
-### Execute Examples
 
 ## Add to CMake build
 
@@ -475,7 +584,7 @@ FetchContent_MakeAvailable(NetUdp)
 target_link_libraries(MyTarget NetUdp)
 ```
 
-Then you just need to `#include <Net/Udp/NetUdp.hpp>`.
+Then you just need to `#include <Net/Udp/NetUdp.hpp>`. You should also call in your main : `net::udp::registerQmlTypes();`.
 
 ## Changelog
 
@@ -483,6 +592,8 @@ Then you just need to `#include <Net/Udp/NetUdp.hpp>`.
 
 * Introduce `multicastOutgoingInterfaces` instead of `multicastInterfaceName`. If `multicastOutgoingInterfaces` is empty packets are going to be send on every interfaces.
 * Remove `multicastListenOnAllInterfaces` and make it the default when `multicastListeningInterfaces` is empty.
+* QML API.
+* Unit Tests.
 
 ### v1.0
 
