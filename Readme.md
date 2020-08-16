@@ -35,7 +35,7 @@ Every datagram allocation is stored in `std::shared_ptr<Datagram>`. This allow t
 * Qt dependencies:
   * Core, Network, Qml
 
-### 🔨 Tools
+### Tools
 
 * [CMake](https://cmake.org/) v3.14 or greater.
 * C++17 compliant compiler or greater.
