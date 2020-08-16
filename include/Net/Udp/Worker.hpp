@@ -16,8 +16,10 @@
 // Qt Headers
 #include <QObject>
 #include <QString>
-#include <QUdpSocket>
-#include <QTimer>
+
+class QUdpSocket;
+class QTimer;
+class QElapsedTimer;
 
 #include <set>
 #include <map>

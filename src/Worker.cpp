@@ -8,6 +8,7 @@
 #include <Net/Udp/InterfacesProvider.hpp>
 
 // Qt Core
+#include <QUdpSocket>
 #include <QTimer>
 #include <QElapsedTimer>
 
