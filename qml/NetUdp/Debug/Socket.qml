@@ -8,7 +8,6 @@ import QtQuick 2.12
 
 // Backend
 import Qaterial 1.0 as Qaterial
-import Stringify.Validator 1.0 as StringifyValidator
 import NetUdp 1.0 as NetUdp
 import NetUdp.Debug 1.0 as Debug
 

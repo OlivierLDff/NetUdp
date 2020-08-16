@@ -33,6 +33,4 @@ std::uint8_t* RecycledDatagram::buffer() { return _buffer; }
 
 const std::uint8_t* RecycledDatagram::buffer() const { return _buffer; }
 
-std::size_t RecycledDatagram::length() const {
-    return _buffer.length();
-}
+std::size_t RecycledDatagram::length() const { return _buffer.length(); }

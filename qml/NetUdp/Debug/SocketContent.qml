@@ -3,19 +3,36 @@
  * Contact: olivier.ldff@gmail.com
  */
 
-// Qt
 import QtQuick 2.12
 
-// Backend
 import Qaterial 1.0 as Qaterial
-import Stringify.Validator 1.0 as Validator
-import Stringify.Formatter 1.0 as Formatter
 import NetUdp 1.0 as NetUdp
 
 Column
 {
     id: root
     property NetUdp.Socket object: null
+
+    RegExpValidator
+    {
+        id: _ipRegEx
+        regExp: /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+    }
+
+    IntValidator
+    {
+        id: _ttlValidator
+        bottom: 1
+        top: 255
+    }
+
+    IntValidator
+    {
+        id: _portValidator
+        bottom: 0
+        top: 65535
+    }
+
     Qaterial.Label
     {
         text: "isRunning : " + (root.object ? root.object.isRunning : "")
@@ -38,8 +55,8 @@ Column
         Connections
         {
             target: root.object
-            onSocketError: _errorLabel.text = description
-            onIsBoundedChanged: if(isBounded) _errorLabel.text = ""
+            function onSocketError() { _errorLabel.text = description }
+            function onIsBoundedChanged() { if(isBounded) _errorLabel.text = "" }
         }
         color: "red"
         width: parent.width
@@ -89,7 +106,7 @@ Column
             title: qsTr("Enter Bind Ip Address"),
             textTitle: qsTr("Ip"),
             helperText: "Should be 0.0.0.0 for multicast input",
-            validator: Validator.Ipv4,
+            validator: _ipRegEx,
             inputMethodHints: Qt.ImhFormattedNumbersOnly,
             selectAllText: true,
             standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
@@ -114,7 +131,7 @@ Column
             textTitle: qsTr("Listening port"),
             helperText: "Between 0 and 65535",
             inputMethodHints: Qt.ImhFormattedNumbersOnly,
-            validator: Validator.SocketPort,
+            validator: _portValidator,
             selectAllText: true,
             standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
         })
@@ -138,7 +155,7 @@ Column
             textTitle: qsTr("Listening port"),
             helperText: "Between 0 and 65535",
             inputMethodHints: Qt.ImhFormattedNumbersOnly,
-            validator: Validator.SocketPort,
+            validator: _portValidator,
             selectAllText: true,
             standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
         })
@@ -175,7 +192,7 @@ Column
                 },
                 title: qsTr("Enter New ip address to join"),
                 textTitle: qsTr("Ip"),
-                validator: Validator.Ipv4,
+                validator: _ipRegEx,
                 inputMethodHints: Qt.ImhFormattedNumbersOnly,
                 selectAllText: true,
                 standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
@@ -203,7 +220,7 @@ Column
                 },
                 title: qsTr("Enter ip address to leave"),
                 textTitle: qsTr("Ip"),
-                validator: Validator.Ipv4,
+                validator: _ipRegEx,
                 inputMethodHints: Qt.ImhFormattedNumbersOnly,
                 selectAllText: true,
                 standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
@@ -225,7 +242,7 @@ Column
             bottomInset: 0
             textType: Qaterial.Style.TextType.Caption
             backgroundImplicitHeight: 20
-            text: "Add Multicast interface"
+            text: "Add Multicast Listening interface"
             onClicked: if(root.object) Qaterial.DialogManager.openTextField({
                 acceptedCallback: function(result, acceptableInput)
                 {
@@ -244,7 +261,7 @@ Column
             bottomInset: 0
             textType: Qaterial.Style.TextType.Caption
             backgroundImplicitHeight: 20
-            text: "Remove Multicast interface"
+            text: "Remove Multicast Listening interface"
             onClicked: if(root.object) Qaterial.DialogManager.openTextField({
                 acceptedCallback: function(result, acceptableInput)
                 {
@@ -258,36 +275,53 @@ Column
             })
         }
     }
-    Qaterial.FlatButton
+    Qaterial.Label
     {
-        topInset: 0
-        bottomInset: 0
-        textType: Qaterial.Style.TextType.Caption
-        highlighted: false
-        backgroundImplicitHeight: 20
-        text: "output multicast interface : " + (root.object ? root.object.multicastInterfaceName : "")
-        onClicked: if(root.object) Qaterial.DialogManager.openTextField({
-            acceptedCallback: function(result, acceptableInput)
-            {
-                root.object.multicastInterfaceName = result
-            },
-            text: root.object.multicastInterfaceName,
-            title: qsTr("Enter Output Multicast Interface Name"),
-            textTitle: qsTr("Output Interface"),
-            selectAllText: true,
-            standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
-        })
-    }
-
-    Qaterial.SwitchButton
-    {
-        text: "multicastListenOnAllInterfaces"
-        implicitHeight: 32
-        checked: root.object && root.object.multicastListenOnAllInterfaces
+        text: "multicastOutgoingInterfaces : " + (root.object ? root.object.multicastOutgoingInterfaces.toString() : "")
+        width: parent.width
         elide: Text.ElideRight
-        implicitWidth: parent.width
         textType: Qaterial.Style.TextType.Caption
-        onClicked: if(root.object) root.object.multicastListenOnAllInterfaces = checked
+    }
+    Row
+    {
+        Qaterial.FlatButton
+        {
+            topInset: 0
+            bottomInset: 0
+            textType: Qaterial.Style.TextType.Caption
+            backgroundImplicitHeight: 20
+            text: "Add Multicast Output interface"
+            onClicked: if(root.object) Qaterial.DialogManager.openTextField({
+                acceptedCallback: function(result, acceptableInput)
+                {
+                  let arr = root.object.multicastOutgoingInterfaces
+                  arr.push(result)
+                  root.object.multicastOutgoingInterfaces = arr
+                },
+                title: qsTr("Enter interface to output on"),
+                textTitle: qsTr("Interface"),
+                selectAllText: true,
+                standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
+            })
+        }
+        Qaterial.FlatButton
+        {
+            topInset: 0
+            bottomInset: 0
+            textType: Qaterial.Style.TextType.Caption
+            backgroundImplicitHeight: 20
+            text: "Remove Multicast Output interface"
+            onClicked: if(root.object) Qaterial.DialogManager.openTextField({
+                acceptedCallback: function(result, acceptableInput)
+                {
+                    root.object.multicastOutgoingInterfaces = root.object.multicastOutgoingInterfaces.filter(e => e !== result);
+                },
+                title: qsTr("Enter interface to remove"),
+                textTitle: qsTr("Interface"),
+                selectAllText: true,
+                standardButtons: Qaterial.Dialog.Cancel | Qaterial.Dialog.Yes
+            })
+        }
     }
 
     Row
@@ -350,25 +384,25 @@ Column
         {
             Qaterial.Label
             {
-                text: "rxBytesPerSeconds : " + (root.object ? Formatter.Data.formatBytes(root.object.rxBytesPerSeconds) : "")
+                text: "rxBytesPerSeconds : " + (root.object ? Qaterial.Data.formatBytes(root.object.rxBytesPerSeconds) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "txBytesPerSeconds : " + (root.object ? Formatter.Data.formatBytes(root.object.txBytesPerSeconds) : "")
+                text: "txBytesPerSeconds : " + (root.object ? Qaterial.Data.formatBytes(root.object.txBytesPerSeconds) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "rxBytesTotal : " + (root.object ? Formatter.Data.formatBytes(root.object.rxBytesTotal) : "")
+                text: "rxBytesTotal : " + (root.object ? Qaterial.Data.formatBytes(root.object.rxBytesTotal) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "txBytesTotal : " + (root.object ? Formatter.Data.formatBytes(root.object.txBytesTotal) : "")
+                text: "txBytesTotal : " + (root.object ? Qaterial.Data.formatBytes(root.object.txBytesTotal) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
         }

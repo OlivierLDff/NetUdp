@@ -55,4 +55,6 @@ typedef std::shared_ptr<Datagram> SharedDatagram;
 }
 }
 
+Q_DECLARE_METATYPE(net::udp::SharedDatagram);
+
 #endif

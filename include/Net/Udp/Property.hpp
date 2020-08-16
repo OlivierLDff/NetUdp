@@ -140,14 +140,23 @@ Q_SIGNALS:                                                                      
 #define NETUDP_ATTRIBUTE(type, attribute, Attribute)                                               \
     NETUDP_ATTRIBUTE_D(type, attribute, Attribute, {})
 
-#define NETUDP_REGISTER_TO_QML(Type)                                                               \
-public:                                                                                            \
-    static void registerToQml(                                                                     \
-        const char* uri, const int majorVersion, const int minorVersion, const char* name = #Type) \
-    {                                                                                              \
-        qmlRegisterType<Type>(uri, majorVersion, minorVersion, name);                              \
-    }                                                                                              \
-                                                                                                   \
+#define NETUDP_REGISTER_TO_QML(Type)                                                                                   \
+public:                                                                                                                \
+    static void registerToQml(                                                                                         \
+        const char* uri, const int majorVersion, const int minorVersion, const char* name = #Type)                     \
+    {                                                                                                                  \
+        qmlRegisterType<Type>(uri, majorVersion, minorVersion, name);                                                  \
+    }                                                                                                                  \
+                                                                                                                       \
+private:
+#define NETUDP_REGISTER_UNCREATABLE_TO_QML(Type)                                                                                   \
+public:                                                                                                                \
+    static void registerToQml(                                                                                         \
+        const char* uri, const int majorVersion, const int minorVersion, const char* name = #Type)                     \
+    {                                                                                                                  \
+        qmlRegisterUncreatableType<Type>(uri, majorVersion, minorVersion, name, "");                                                  \
+    }                                                                                                                  \
+                                                                                                                       \
 private:
 
 #define NETUDP_SINGLETON_IMPL(Class, name, Name)                                                   \
@@ -166,7 +175,7 @@ public:                                                                         
         return ret;                                                                                \
     }                                                                                              \
     static void registerSingleton(                                                                 \
-        const char* uri, const int majorVersion, const int minorVersion, const char* n = #Class)   \
+        const char* uri, const int majorVersion, const int minorVersion, const char* n = #Name)   \
     {                                                                                              \
         qmlRegisterSingletonType<Class>(uri, majorVersion, minorVersion, n, &Class::set##Name);    \
     }

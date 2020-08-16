@@ -22,9 +22,22 @@ add_executable(${NETUDP_EXAMPLE4_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/EchoMultic
 target_link_libraries(${NETUDP_EXAMPLE4_TARGET} NetUdp)
 set_target_properties(${NETUDP_EXAMPLE4_TARGET} PROPERTIES FOLDER "${NETUDP_FOLDER_PREFIX}/Examples")
 
+find_package(Qt5 REQUIRED COMPONENTS
+  Quick
+  QuickControls2
+)
+include(${PROJECT_SOURCE_DIR}/cmake/FetchQaterial.cmake)
+
+set(NETUDP_EXAMPLE5_TARGET ${NETUDP_TARGET}_EchoQml)
+message(STATUS "Add Example : ${NETUDP_EXAMPLE5_TARGET}")
+add_executable(${NETUDP_EXAMPLE5_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/EchoQml.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/EchoQml.qrc")
+target_link_libraries(${NETUDP_EXAMPLE5_TARGET} NetUdp Qaterial Qt5::Quick Qt5::QuickControls2)
+set_target_properties(${NETUDP_EXAMPLE5_TARGET} PROPERTIES FOLDER "${NETUDP_FOLDER_PREFIX}/Examples" AUTORCC ON)
+
 if(NETUDP_ENABLE_PCH AND COMMAND target_precompile_headers)
-  target_precompile_headers(${NETUDP_EXAMPLE1_TARGET} PRIVATE ../include/Net/Udp/Pch/Pch.hpp)
-  target_precompile_headers(${NETUDP_EXAMPLE2_TARGET} PRIVATE ../include/Net/Udp/Pch/Pch.hpp)
-  target_precompile_headers(${NETUDP_EXAMPLE3_TARGET} PRIVATE ../include/Net/Udp/Pch/Pch.hpp)
-  target_precompile_headers(${NETUDP_EXAMPLE4_TARGET} PRIVATE ../include/Net/Udp/Pch/Pch.hpp)
+  target_precompile_headers(${NETUDP_EXAMPLE1_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include/Net/Udp/Pch/Pch.hpp)
+  target_precompile_headers(${NETUDP_EXAMPLE2_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include/Net/Udp/Pch/Pch.hpp)
+  target_precompile_headers(${NETUDP_EXAMPLE3_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include/Net/Udp/Pch/Pch.hpp)
+  target_precompile_headers(${NETUDP_EXAMPLE4_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include/Net/Udp/Pch/Pch.hpp)
+  target_precompile_headers(${NETUDP_EXAMPLE5_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include/Net/Udp/Pch/Pch.hpp)
 endif()

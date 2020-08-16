@@ -2,13 +2,16 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// Application Header
+// Application Headers
 #include <Net/Udp/Socket.hpp>
 #include <Net/Udp/Worker.hpp>
 #include <Net/Udp/Logger.hpp>
 
-// Qt Header
+// Qt Headers
 #include <QThread>
+
+// Stl Headers
+#include <limits>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -56,13 +59,37 @@ Socket::Socket(QObject* parent) : ISocket(parent) { LOG_DEV_DEBUG("Constructor")
 Socket::~Socket()
 {
     LOG_DEV_DEBUG("Destructor");
-    // ) We can't destroy a thread that is running
+
+    killWorker();
+}
+
+void Socket::killWorker()
+{
+    if(!_worker)
+        return;
+
+    LOG_DEV_INFO("Stop Worker [{}]", static_cast<void*>(_worker.get()));
+    Q_EMIT stopWorker();
+
+    LOG_DEV_INFO("Disconnect Worker [{}]", static_cast<void*>(_worker.get()));
+    Q_ASSERT(_worker.get());
+    disconnect(_worker.get(), nullptr, this, nullptr);
+    disconnect(this, nullptr, _worker.get(), nullptr);
+
     if(_workerThread)
     {
-        LOG_DEV_INFO("Kill worker thread in destructor ...");
+        // Ask to delete later in the event loop
+        LOG_DEV_INFO("Kill worker thread ...");
         _workerThread->exit();
         _workerThread->wait();
-        LOG_DEV_INFO("Done");
+        _workerThread.release()->deleteLater();
+        _worker.release()->deleteLater();
+        LOG_DEV_INFO("... Done");
+    }
+    else if(_worker)
+    {
+        LOG_DEV_INFO("Delete worker [{}] later", static_cast<void*>(_worker.get()));
+        _worker.release()->deleteLater();
     }
 }
 
@@ -71,11 +98,13 @@ bool Socket::setUseWorkerThread(const bool& enabled)
     if(ISocket::setUseWorkerThread(enabled))
     {
         if(isRunning())
-            LOG_DEV_INFO(
-                "Use worker thread change to {}, restart server to reflect change on worker.",
-                enabled);
+        {
+            LOG_DEV_INFO("Use worker thread change to {}, restart server to reflect change on worker.", enabled);
+        }
         else
+        {
             LOG_DEV_INFO("Use worker thread change to {}.", enabled);
+        }
 
         if(isRunning())
             restart();
@@ -84,15 +113,9 @@ bool Socket::setUseWorkerThread(const bool& enabled)
     return false;
 }
 
-bool Socket::setMulticastInterfaceName(const QString& name)
-{
-    return (name.isEmpty() || QNetworkInterface::interfaceFromName(name).isValid()) &&
-           ISocket::setMulticastInterfaceName(name);
-}
-
 QStringList Socket::multicastGroups() const
 {
-    return QList<QString>(_multicastGroups.begin(), _multicastGroups.end());
+    return QList<QString>(_multicastListeningGroups.begin(), _multicastListeningGroups.end());
 }
 
 bool Socket::setMulticastGroups(const QStringList& value)
@@ -104,44 +127,73 @@ bool Socket::setMulticastGroups(const QStringList& value)
 
 QStringList Socket::multicastListeningInterfaces() const
 {
-    return QList<QString>(_multicastInterfaces.begin(), _multicastInterfaces.end());
+    return QList<QString>(_multicastListeningInterfaces.begin(), _multicastListeningInterfaces.end());
 }
 
-bool Socket::setMulticastListeningInterfaces(const QStringList& value)
+bool Socket::setMulticastListeningInterfaces(const QStringList& values)
 {
-    leaveAllMulticastInterfaces();
-    for(const auto& iface: value) { joinMulticastInterface(iface); }
-    return true;
+    bool changedHappened = false;
+
+    // Join the new interfaces
+    for(const auto& interfaceName: values)
+    {
+        if(_multicastListeningInterfaces.find(interfaceName) == _multicastListeningInterfaces.end())
+        {
+            changedHappened = true;
+            joinMulticastInterface(interfaceName);
+        }
+    }
+
+    // Leave interfaces not present anymore
+    std::vector<QString> interfacesToLeave;
+    for(const auto& interfaceName: _multicastListeningInterfaces)
+    {
+        if(!values.contains(interfaceName))
+        {
+            changedHappened = true;
+            interfacesToLeave.push_back(interfaceName);
+        }
+    }
+    for(const auto& interfaceName: interfacesToLeave) { leaveMulticastInterface(interfaceName); }
+
+    return changedHappened;
 }
 
 bool Socket::start()
 {
     LOG_INFO("Start");
     if(isRunning())
+    {
+        LOG_DEV_WARN("Can't start socket that is already running. Please call 'stop' before.");
         return false;
+    }
 
     setRunning(true);
 
-    Q_ASSERT(!_worker);
-    Q_ASSERT(!_workerThread);
+    Q_ASSERT(_worker.get() == nullptr);
+    Q_ASSERT(_workerThread.get() == nullptr);
 
     LOG_DEV_DEBUG("Create worker");
+
     _worker = createWorker();
+
     if(useWorkerThread())
     {
-        LOG_DEV_DEBUG("Move worker to its own thread");
         _workerThread = std::make_unique<QThread>();
+
         if(objectName().size())
             _workerThread->setObjectName(objectName() + " Worker");
         else
-            _workerThread->setObjectName("Server Worker");
+        {
+            _workerThread->setObjectName("Socket Worker");
+        }
         _worker->moveToThread(_workerThread.get());
     }
 
     LOG_DEV_DEBUG("Connect to worker {}", static_cast<void*>(_worker.get()));
 
     _worker->initialize(watchdogPeriod(), rxAddress(), rxPort(), txPort(), separateRxTxSockets(),
-        _multicastGroups, _multicastInterfaces, multicastListenOnAllInterfaces(), inputEnabled(),
+        _multicastListeningGroups, _multicastListeningInterfaces, _multicastOutgoingInterfaces, inputEnabled(),
         multicastLoopback());
 
     connect(this, &Socket::startWorker, _worker.get(), &Worker::onStart);
@@ -151,38 +203,31 @@ bool Socket::start()
     connect(this, &Socket::joinMulticastGroupWorker, _worker.get(), &Worker::joinMulticastGroup);
     connect(this, &Socket::leaveMulticastGroupWorker, _worker.get(), &Worker::leaveMulticastGroup);
 
-    connect(this, &Socket::joinMulticastInterfaceWorker, _worker.get(),
-        &Worker::joinMulticastInterface);
-    connect(this, &Socket::leaveMulticastInterfaceWorker, _worker.get(),
-        &Worker::leaveMulticastInterface);
-    connect(this, &Socket::multicastListenOnAllInterfacesChanged, _worker.get(),
-        &Worker::setMulticastListenOnAllInterfaces);
+    connect(this, &Socket::joinMulticastInterfaceWorker, _worker.get(), &Worker::joinMulticastInterface);
+    connect(this, &Socket::leaveMulticastInterfaceWorker, _worker.get(), &Worker::leaveMulticastInterface);
 
     connect(this, &Socket::rxAddressChanged, _worker.get(), &Worker::setAddress);
     connect(this, &Socket::rxPortChanged, _worker.get(), &Worker::setRxPort);
     connect(this, &Socket::txPortChanged, _worker.get(), &Worker::setTxPort);
-    connect(
-        this, &Socket::separateRxTxSocketsChanged, _worker.get(), &Worker::setSeparateRxTxSockets);
+    connect(this, &Socket::separateRxTxSocketsChanged, _worker.get(), &Worker::setSeparateRxTxSockets);
     connect(this, &Socket::multicastLoopbackChanged, _worker.get(), &Worker::setMulticastLoopback);
-    connect(this, &Socket::multicastInterfaceNameChanged, _worker.get(),
-        &Worker::setMulticastInterfaceName);
+    connect(this, &Socket::multicastOutgoingInterfacesChanged, _worker.get(), &Worker::setMulticastOutgoingInterfaces);
     connect(this, &Socket::inputEnabledChanged, _worker.get(), &Worker::setInputEnabled);
     connect(this, &Socket::watchdogPeriodChanged, _worker.get(), &Worker::setWatchdogTimeout);
 
-    connect(this, &Socket::sendDatagramToWorker, _worker.get(), &Worker::onSendDatagram);
-    connect(_worker.get(), &Worker::datagramReceived, this, &Socket::onDatagramReceived);
+    connect(this, &Socket::sendDatagramToWorker, _worker.get(), &Worker::onSendDatagram, Qt::QueuedConnection);
+    connect(_worker.get(), &Worker::datagramReceived, this, &Socket::onDatagramReceived, Qt::QueuedConnection);
 
     connect(_worker.get(), &Worker::isBoundedChanged, this, &Socket::setBounded);
     connect(_worker.get(), &Worker::socketError, this, &Socket::socketError);
 
-    connect(
-        _worker.get(), &Worker::rxBytesCounterChanged, this, &Socket::onWorkerRxPerSecondsChanged);
-    connect(
-        _worker.get(), &Worker::txBytesCounterChanged, this, &Socket::onWorkerTxPerSecondsChanged);
-    connect(_worker.get(), &Worker::rxPacketsCounterChanged, this,
-        &Socket::onWorkerPacketsRxPerSecondsChanged);
-    connect(_worker.get(), &Worker::txPacketsCounterChanged, this,
-        &Socket::onWorkerPacketsTxPerSecondsChanged);
+    connect(_worker.get(), &Worker::rxBytesCounterChanged, this, &Socket::onWorkerRxPerSecondsChanged);
+    connect(_worker.get(), &Worker::txBytesCounterChanged, this, &Socket::onWorkerTxPerSecondsChanged);
+    connect(_worker.get(), &Worker::rxPacketsCounterChanged, this, &Socket::onWorkerPacketsRxPerSecondsChanged);
+    connect(_worker.get(), &Worker::txPacketsCounterChanged, this, &Socket::onWorkerPacketsTxPerSecondsChanged);
+
+    connect(_worker.get(), &Worker::multicastGroupJoined, this, &Socket::multicastGroupJoined);
+    connect(_worker.get(), &Worker::multicastGroupLeaved, this, &Socket::multicastGroupLeaved);
 
     if(_workerThread)
     {
@@ -230,32 +275,7 @@ bool Socket::stop()
 
     _cache.clear();
 
-    LOG_DEV_INFO("Stop Worker");
-    Q_EMIT stopWorker();
-
-    LOG_DEV_INFO("Disconnect worker");
-
-    disconnect(_worker.get(), nullptr, this, nullptr);
-    disconnect(this, nullptr, _worker.get(), nullptr);
-
-    if(_workerThread)
-    {
-        // Ask to delete later in the event loop
-        _worker.release()->deleteLater();
-        LOG_DEV_INFO("Kill worker thread ...");
-        _workerThread->exit();
-        _workerThread->wait();
-        _workerThread = nullptr;
-        LOG_DEV_INFO("... Done");
-    }
-    else
-    {
-        LOG_DEV_INFO("Delete worker later");
-        // Reparent to self in case there are no event loop
-        _worker->setParent(this);
-        // Ask to delete later in the event loop
-        _worker.release()->deleteLater();
-    }
+    killWorker();
 
     return true;
 }
@@ -263,7 +283,7 @@ bool Socket::stop()
 bool Socket::joinMulticastGroup(const QString& groupAddress)
 {
     // ) Check that the address isn't already registered
-    if(_multicastGroups.find(groupAddress) != _multicastGroups.end())
+    if(_multicastListeningGroups.find(groupAddress) != _multicastListeningGroups.end())
         return false;
 
     // ) Check that this is a real multicast address
@@ -271,7 +291,7 @@ bool Socket::joinMulticastGroup(const QString& groupAddress)
         return false;
 
     // ) Insert in the set and emit signal to say the multicast list changed
-    _multicastGroups.insert(groupAddress);
+    _multicastListeningGroups.insert(groupAddress);
     Q_EMIT multicastGroupsChanged(multicastGroups());
 
     LOG_DEV_INFO("Join multicast group {} request", qPrintable(groupAddress));
@@ -281,14 +301,14 @@ bool Socket::joinMulticastGroup(const QString& groupAddress)
 
 bool Socket::leaveMulticastGroup(const QString& groupAddress)
 {
-    const auto it = _multicastGroups.find(groupAddress);
+    const auto it = _multicastListeningGroups.find(groupAddress);
 
     // ) Is the multicast group present
-    if(it == _multicastGroups.end())
+    if(it == _multicastListeningGroups.end())
         return false;
 
     // ) Remove the multicast address from the list, then emit a signal to say the list changed
-    _multicastGroups.erase(it);
+    _multicastListeningGroups.erase(it);
     Q_EMIT multicastGroupsChanged(multicastGroups());
 
     LOG_DEV_INFO("Leave multicast group {} request", qPrintable(groupAddress));
@@ -299,10 +319,10 @@ bool Socket::leaveMulticastGroup(const QString& groupAddress)
 bool Socket::leaveAllMulticastGroups()
 {
     bool allSuccess = true;
-    while(!_multicastGroups.empty())
+    while(!_multicastListeningGroups.empty())
     {
         // Copy is required here because leaveMulticastGroup will erase the iterator
-        const auto group = *_multicastGroups.begin();
+        const auto group = *_multicastListeningGroups.begin();
         if(!leaveMulticastGroup(group))
             allSuccess = false;
     }
@@ -311,17 +331,17 @@ bool Socket::leaveAllMulticastGroups()
 
 bool Socket::isMulticastGroupPresent(const QString& groupAddress)
 {
-    return _multicastGroups.find(groupAddress) != _multicastGroups.end();
+    return _multicastListeningGroups.find(groupAddress) != _multicastListeningGroups.end();
 }
 
 bool Socket::joinMulticastInterface(const QString& name)
 {
     // ) Check that the address isn't already registered
-    if(_multicastInterfaces.find(name) != _multicastInterfaces.end())
+    if(_multicastListeningInterfaces.find(name) != _multicastListeningInterfaces.end())
         return false;
 
     // ) Insert in the set and emit signal to say the multicast list changed
-    _multicastInterfaces.insert(name);
+    _multicastListeningInterfaces.insert(name);
     Q_EMIT multicastListeningInterfacesChanged(multicastListeningInterfaces());
 
     LOG_DEV_INFO("Join interface for multicast {}", qPrintable(name));
@@ -331,14 +351,14 @@ bool Socket::joinMulticastInterface(const QString& name)
 
 bool Socket::leaveMulticastInterface(const QString& name)
 {
-    const auto it = _multicastInterfaces.find(name);
+    const auto it = _multicastListeningInterfaces.find(name);
 
     // ) Is the multicast interface present
-    if(it == _multicastInterfaces.end())
+    if(it == _multicastListeningInterfaces.end())
         return false;
 
     // ) Remove the multicast address from the list, then emit a signal to say the list changed
-    _multicastInterfaces.erase(it);
+    _multicastListeningInterfaces.erase(it);
     Q_EMIT multicastListeningInterfacesChanged(multicastListeningInterfaces());
 
     LOG_DEV_INFO("Leave interface for multicast {}", qPrintable(name));
@@ -349,10 +369,10 @@ bool Socket::leaveMulticastInterface(const QString& name)
 bool Socket::leaveAllMulticastInterfaces()
 {
     bool allSuccess = true;
-    while(!_multicastInterfaces.empty())
+    while(!_multicastListeningInterfaces.empty())
     {
         // Copy is required here because leaveMulticastInterface will erase the iterator
-        const auto interface = *_multicastInterfaces.begin();
+        const auto interface = *_multicastListeningInterfaces.begin();
         if(!leaveMulticastInterface(interface))
             allSuccess = false;
     }
@@ -361,7 +381,7 @@ bool Socket::leaveAllMulticastInterfaces()
 
 bool Socket::isMulticastInterfacePresent(const QString& name)
 {
-    return _multicastInterfaces.find(name) != _multicastInterfaces.end();
+    return _multicastListeningInterfaces.find(name) != _multicastListeningInterfaces.end();
 }
 
 void Socket::clearRxCounter()
@@ -392,8 +412,8 @@ std::unique_ptr<Worker> Socket::createWorker() { return std::make_unique<Worker>
 
 std::shared_ptr<Datagram> Socket::makeDatagram(const size_t length) { return _cache.make(length); }
 
-bool Socket::sendDatagram(const uint8_t* buffer, const size_t length, const QString& address,
-    const uint16_t port, const uint8_t ttl)
+bool Socket::sendDatagram(
+    const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl)
 {
     if(!isRunning() && !isBounded())
     {
@@ -422,14 +442,14 @@ bool Socket::sendDatagram(const uint8_t* buffer, const size_t length, const QStr
     return true;
 }
 
-bool Socket::sendDatagram(const char* buffer, const size_t length, const QString& address,
-    const uint16_t port, const uint8_t ttl)
+bool Socket::sendDatagram(
+    const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl)
 {
     return sendDatagram(reinterpret_cast<const uint8_t*>(buffer), length, address, port, ttl);
 }
 
-bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address,
-    const uint16_t port, const uint8_t ttl)
+bool Socket::sendDatagram(
+    std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl)
 {
     if(!datagram)
     {
@@ -472,10 +492,124 @@ bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram)
     return true;
 }
 
+bool Socket::sendDatagram(QJSValue datagram)
+{
+    static const auto addressKey = "address";
+    static const auto portKey = "port";
+    static const auto ttlKey = "ttl";
+    static const auto dataKey = "data";
+
+    QString address;
+    quint16 port = 0;
+    quint8 ttl = 0;
+    SharedDatagram sharedDatagram;
+
+    if(const auto property = datagram.property(addressKey); property.isString())
+    {
+        address = property.toString();
+    }
+    else
+    {
+        LOG_WARN("Can't send datagram because no 'address' specified");
+        return false;
+    }
+
+    if(const auto property = datagram.property(portKey); property.isNumber())
+    {
+        const auto rawPort = property.toUInt();
+        if(rawPort > std::numeric_limits<quint16>::max())
+        {
+            LOG_WARN("Can't send datagram because 'port' is out of bound ({})", rawPort);
+            return false;
+        }
+        port = quint16(property.toUInt());
+    }
+    else
+    {
+        LOG_WARN("Can't send datagram because no 'port' specified");
+        return false;
+    }
+
+    if(const auto property = datagram.property(ttlKey); property.isNumber())
+    {
+        const auto rawTtl = property.toUInt();
+        if(rawTtl > std::numeric_limits<quint8>::max())
+        {
+            LOG_WARN("'ttl' will be default to os because the value ({}) is out of bound", rawTtl);
+            ttl = 0;
+        }
+        else
+        {
+            ttl = quint8(property.toUInt());
+        }
+    }
+
+    if(const auto property = datagram.property(dataKey); !property.isUndefined())
+    {
+        if(property.isString())
+        {
+            const auto dataAsString = property.toString();
+            const auto dataAsBytes = dataAsString.toLatin1();
+            sharedDatagram = makeDatagram(dataAsBytes.length());
+            memcpy(sharedDatagram->buffer(), dataAsBytes.constData(), dataAsBytes.length());
+        }
+        else if(property.isArray())
+        {
+            const int length = property.property("length").toInt();
+            sharedDatagram = makeDatagram(length);
+            for(int i = 0; i < length; ++i) { sharedDatagram->buffer()[i] = property.property(i).toUInt(); }
+        }
+        else
+        {
+            LOG_WARN("Can't send datagram because no 'data' is unknown type");
+            return false;
+        }
+    }
+    else
+    {
+        LOG_WARN("Can't send datagram because no 'data' specified");
+        return false;
+    }
+    Q_ASSERT(sharedDatagram);
+
+    sharedDatagram->destinationAddress = address;
+    sharedDatagram->destinationPort = port;
+    sharedDatagram->ttl = ttl;
+
+    return sendDatagram(sharedDatagram);
+}
+
 void Socket::onDatagramReceived(const SharedDatagram& datagram)
 {
     Q_CHECK_PTR(datagram.get());
-    Q_EMIT datagramReceived(datagram);
+    Q_EMIT sharedDatagramReceived(datagram);
+
+    // This function violates the object-oriented principle of modularity.
+    // However, if the socket isn't used in qml we can avoid doing a deep copy of the shared datagram
+    static const QMetaMethod datagramReceivedSignal = QMetaMethod::fromSignal(&ISocket::datagramReceived);
+    if(isSignalConnected(datagramReceivedSignal))
+    {
+        Q_ASSERT(datagram->length() < std::size_t(std::numeric_limits<int>::max()));
+        const QJSValue jsData(
+            QString::fromLatin1(reinterpret_cast<const char*>(datagram->buffer()), int(datagram->length())));
+        const QJSValue jsDestinationAddress(datagram->destinationAddress);
+        const QJSValue jsDestinationPort(datagram->destinationPort);
+        const QJSValue jsSenderAddress(datagram->senderAddress);
+        const QJSValue jsSenderPort(datagram->senderPort);
+        const QJSValue jsTtl(datagram->ttl);
+
+        QJSEngine* engine = qjsEngine(this);
+        QJSValue jsDatagram = engine->newObject();
+
+        jsDatagram.setProperty("data", jsData);
+        jsDatagram.setProperty("destinationAddress", jsDestinationAddress);
+        jsDatagram.setProperty("destinationPort", jsDestinationPort);
+        jsDatagram.setProperty("senderAddress", jsSenderAddress);
+        jsDatagram.setProperty("senderPort", jsSenderPort);
+        jsDatagram.setProperty("ttl", jsTtl);
+
+        Q_EMIT datagramReceived(jsDatagram);
+    }
 }
 
 void Socket::onWorkerRxPerSecondsChanged(const quint64 rxBytes)
