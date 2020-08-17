@@ -14,7 +14,8 @@
 
 // ──── DECLARATION ────
 
-using namespace net::udp;
+namespace net {
+namespace udp {
 
 class QRealNetworkIface : public IInterface
 {
@@ -93,6 +94,11 @@ public:
 };
 
 InterfacesProvider::ProviderPtr InterfacesProvider::_provider = std::make_unique<QRealNetworkIFaceProvider>();
+
+}
+}
+
+using namespace net::udp;
 
 // ──── FUNCTIONS ────
 
