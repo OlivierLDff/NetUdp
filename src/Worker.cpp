@@ -573,6 +573,7 @@ void Worker::tryJoinAllAvailableInterfaces()
     const auto& allInterfaces = InterfacesProvider::allInterfaces();
     for(const auto& interface: allInterfaces)
     {
+        Q_ASSERT(interface);
         const auto [it, success] = _allMulticastInterfaces.insert(interface->name());
         if(!success)
             continue;
