@@ -793,8 +793,9 @@ void Worker::startListeningMulticastInterfaceWatcher()
                         {
                             for(const auto& group: interfaceJoinedIt->second)
                             { socketLeaveMulticastGroup(group, interfaceName); }
+
+                            _joinedMulticastGroups.erase(interfaceJoinedIt);
                         }
-                        _joinedMulticastGroups.erase(interfaceJoinedIt);
                         _failedJoiningMulticastGroup.erase(interfaceName);
                         _allMulticastInterfaces.erase(interfaceName);
                     }
