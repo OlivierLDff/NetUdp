@@ -1015,7 +1015,7 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
 
         if(!isInterfaceValid)
         {
-            LOG_DEV_WARN(
+            LOG_DEV_DEBUG(
                 "Can't create multicast socket for interface {} because it's not valid: isValid: {}, isUp: {}, "
                 "isRunning: {}, canMulticast: {}, isLoopback: {}, multicastLoopback: {}",
                 interface.name().toStdString(), interface.isValid(), interface.isUp(), interface.isRunning(),
@@ -1025,7 +1025,7 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
 
         if(_multicastTxSockets.find(interfaceName) != _multicastTxSockets.end())
         {
-            LOG_DEV_WARN("Multicast tx socket is already instantiated for interface {}. This might hide a bug in "
+            LOG_DEV_ERR("Multicast tx socket is already instantiated for interface {}. This might hide a bug in "
                          "the interface retrieving system",
                 interfaceName.toStdString());
             return false;
@@ -1047,7 +1047,7 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
 
         const auto onError = [interfaceName, socket, this](QAbstractSocket::SocketError error)
         {
-            LOG_DEV_WARN("Multicast tx error {}", socket->errorString().toStdString());
+            LOG_DEV_WARN("{}: Multicast tx error: {}", interfaceName.toStdString(), socket->errorString().toStdString());
             socket->deleteLater();
             _multicastTxSockets.erase(interfaceName);
             _failedToInstantiateMulticastTxSockets.insert(interfaceName);
