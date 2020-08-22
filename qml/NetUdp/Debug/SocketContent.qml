@@ -384,25 +384,25 @@ Column
         {
             Qaterial.Label
             {
-                text: "rxBytesPerSeconds : " + (root.object ? Qaterial.Data.formatBytes(root.object.rxBytesPerSeconds) : "")
+                text: "rxBytesPerSeconds : " + (root.object ? Qaterial.DataFormat.formatBytes(root.object.rxBytesPerSeconds) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "txBytesPerSeconds : " + (root.object ? Qaterial.Data.formatBytes(root.object.txBytesPerSeconds) : "")
+                text: "txBytesPerSeconds : " + (root.object ? Qaterial.DataFormat.formatBytes(root.object.txBytesPerSeconds) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "rxBytesTotal : " + (root.object ? Qaterial.Data.formatBytes(root.object.rxBytesTotal) : "")
+                text: "rxBytesTotal : " + (root.object ? Qaterial.DataFormat.formatBytes(root.object.rxBytesTotal) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
 
             Qaterial.Label
             {
-                text: "txBytesTotal : " + (root.object ? Qaterial.Data.formatBytes(root.object.txBytesTotal) : "")
+                text: "txBytesTotal : " + (root.object ? Qaterial.DataFormat.formatBytes(root.object.txBytesTotal) : "")
                 textType: Qaterial.Style.TextType.Caption
             }
         }
