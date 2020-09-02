@@ -131,7 +131,7 @@ void Worker::onStart()
     }
 
     _isBounded = false;
-    _watchdog = nullptr;
+    Q_ASSERT(_watchdog == nullptr);
 
     _failedJoiningMulticastGroup.clear();
     _joinedMulticastGroups.clear();
@@ -158,15 +158,21 @@ void Worker::onStart()
             {
                 onStop();
 
+                Q_ASSERT(!_watchdog);
+
                 // ) Create a watchdog timer
-                if(_watchdog)
-                    _watchdog->deleteLater();
                 _watchdog = new QTimer(this);
                 _watchdog->setTimerType(Qt::TimerType::VeryCoarseTimer);
-
+;
                 // ) Connect timeout
                 connect(
-                    _watchdog, &QTimer::timeout, this, [this]() { onRestart(); }, Qt::ConnectionType::QueuedConnection);
+                    _watchdog, &QTimer::timeout, this,
+                    [this]()
+                    {
+                        LOG_DEV_INFO("Watchdog timeout, try to restart socket");
+                        onRestart();
+                    },
+                    Qt::ConnectionType::QueuedConnection);
 
                 LOG_INFO("Start watchdog to restart socket in {} millis", watchdogTimeout());
                 // Start the watchdog
@@ -255,16 +261,23 @@ void Worker::onStart()
     else
     {
         LOG_ERR("Fail to bind to {} : {}", qPrintable(_rxAddress.isEmpty() ? "Any" : _rxAddress), _rxPort);
-        _socket = nullptr;
-        _rxSocket = nullptr;
+        //_socket = nullptr;
+        //_rxSocket = nullptr;
         startWatchdog();
     }
 }
 
 void Worker::onStop()
 {
+    // Important watchdog can be valid while socket is not !!
+    stopWatchdog();
+
     if(!_socket)
     {
+        Q_ASSERT(rxSocket() == nullptr);
+        Q_ASSERT(_multicastTxSockets.empty());
+        Q_ASSERT(_watchdog == nullptr);
+        Q_ASSERT(!_isBounded);
         LOG_DEV_WARN("Can't stop udp socket worker because socket isn't valid");
         return;
     }
@@ -274,20 +287,28 @@ void Worker::onStop()
     stopListeningMulticastInterfaceWatcher();
     stopOutputMulticastInterfaceWatcher();
     stopBytesCounter();
-    stopWatchdog();
     disconnect(this, nullptr, this, nullptr);
 
     if(_socket)
+    {
+        disconnect(_socket, nullptr, this, nullptr);
         _socket->deleteLater();
+    }
     _socket = nullptr;
+    _isBounded = false;
+    Q_EMIT isBoundedChanged(_isBounded);
     if(_rxSocket)
+    {
+        disconnect(_rxSocket, nullptr, this, nullptr);
         _rxSocket->deleteLater();
+    }
     _rxSocket = nullptr;
     _multicastTtl = 0;
 
     // Delete every multicast outgoing socket
     for(const auto [iface, socket]: _multicastTxSockets) socket->deleteLater();
     _multicastTxSockets.clear();
+    _txMulticastPacketElapsedTime = nullptr;
 
     _failedJoiningMulticastGroup.clear();
     _joinedMulticastGroups.clear();
@@ -699,7 +720,16 @@ void Worker::setMulticastLoopbackToSocket() const
 
 void Worker::startWatchdog() { Q_EMIT queueStartWatchdog(); }
 
-void Worker::stopWatchdog() { _watchdog = nullptr; }
+void Worker::stopWatchdog()
+{
+    if(_watchdog)
+    {
+        disconnect(_watchdog, nullptr, this, nullptr);
+        _watchdog->stop();
+        _watchdog->deleteLater();
+        _watchdog = nullptr;
+    }
+}
 
 void Worker::setMulticastTtl(const quint8 ttl)
 {
@@ -888,6 +918,7 @@ void Worker::stopListeningMulticastInterfaceWatcher()
 {
     if(_listeningMulticastInterfaceWatcher)
     {
+        disconnect(_listeningMulticastInterfaceWatcher, nullptr, this, nullptr);
         _listeningMulticastInterfaceWatcher->deleteLater();
         _listeningMulticastInterfaceWatcher = nullptr;
     }
@@ -1000,6 +1031,7 @@ void Worker::stopOutputMulticastInterfaceWatcher()
 {
     if(_outputMulticastInterfaceWatcher)
     {
+        disconnect(_outputMulticastInterfaceWatcher, nullptr, this, nullptr);
         _outputMulticastInterfaceWatcher->deleteLater();
         _outputMulticastInterfaceWatcher = nullptr;
     }
@@ -1026,7 +1058,7 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
         if(_multicastTxSockets.find(interfaceName) != _multicastTxSockets.end())
         {
             LOG_DEV_ERR("Multicast tx socket is already instantiated for interface {}. This might hide a bug in "
-                         "the interface retrieving system",
+                        "the interface retrieving system",
                 interfaceName.toStdString());
             return false;
         }
@@ -1047,7 +1079,8 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
 
         const auto onError = [interfaceName, socket, this](QAbstractSocket::SocketError error)
         {
-            LOG_DEV_WARN("{}: Multicast tx error: {}", interfaceName.toStdString(), socket->errorString().toStdString());
+            LOG_DEV_WARN(
+                "{}: Multicast tx error: {}", interfaceName.toStdString(), socket->errorString().toStdString());
             socket->deleteLater();
             _multicastTxSockets.erase(interfaceName);
             _failedToInstantiateMulticastTxSockets.insert(interfaceName);
@@ -1323,9 +1356,10 @@ void Worker::onRxSocketError(QAbstractSocket::SocketError error) { onSocketError
 
 void Worker::onSocketStateChanged(QAbstractSocket::SocketState socketState)
 {
-    LOG_INFO("Socket State Changed to {} ({})", socketStateToString(socketState).toStdString(), socketState);
+    LOG_DEV_INFO("Socket State Changed to {} ({})", socketStateToString(socketState).toStdString(), socketState);
 
-    if((socketState == QAbstractSocket::SocketState::BoundState) != _isBounded)
+    if((socketState == QAbstractSocket::SocketState::BoundState && !_isBounded) ||
+        (socketState != QAbstractSocket::SocketState::BoundState && _isBounded))
     {
         _isBounded = socketState == QAbstractSocket::SocketState::BoundState;
         Q_EMIT isBoundedChanged(_isBounded);
