@@ -29,6 +29,8 @@ void RecycledDatagram::reset(const std::size_t length)
     Datagram::reset(length);
 }
 
+void RecycledDatagram::resize(std::size_t length) { _buffer.resize(length); }
+
 std::uint8_t* RecycledDatagram::buffer() { return _buffer; }
 
 const std::uint8_t* RecycledDatagram::buffer() const { return _buffer; }

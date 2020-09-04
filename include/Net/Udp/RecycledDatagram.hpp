@@ -29,6 +29,7 @@ public:
     RecycledDatagram(const std::size_t length);
     void reset() override final;
     void reset(const std::size_t length) override final;
+    void resize(std::size_t length) override;
 
 private:
     recycler::Buffer<std::uint8_t> _buffer;

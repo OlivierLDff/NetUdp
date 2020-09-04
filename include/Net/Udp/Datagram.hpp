@@ -31,7 +31,13 @@ class NETUDP_API_ Datagram
 public:
     virtual ~Datagram() = default;
     virtual void reset();
+
+    // Reset the datagram and clear the content.
+    // Also force the buffer to be initialized with size length
     virtual void reset(std::size_t length);
+
+    // Resize the datagram without destroying the data
+    virtual void resize(std::size_t length);
 
     // ────── API ────────
 public:
