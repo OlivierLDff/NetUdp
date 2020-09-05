@@ -533,7 +533,7 @@ import NetUdp 1.0 as NetUdp
 Rectangle
 {
     property NetUdp.Socket socket
-	NetUdpDebug.Socket
+    NetUdpDebug.Socket
     {
         object: socket
     }
@@ -581,18 +581,22 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(NetUdp)
 # ...
 
-target_link_libraries(MyTarget NetUdp)
+target_link_libraries(MyTarget PRIVATE NetUdp)
 ```
 
 Then you just need to `#include <Net/Udp/NetUdp.hpp>`. You should also call in your main : `net::udp::registerQmlTypes();`.
 
 ## Changelog
 
+### v1.2
+
+* Allow to resize datagram with `resize` method.
+
 ### v1.1
 
 * Introduce `multicastOutgoingInterfaces` instead of `multicastInterfaceName`. If `multicastOutgoingInterfaces` is empty packets are going to be send on every interfaces.
 * Remove `multicastListenOnAllInterfaces` and make it the default when `multicastListeningInterfaces` is empty.
-* QML API.
+* QML API/Examples.
 * Unit Tests.
 
 ### v1.0
