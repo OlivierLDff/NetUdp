@@ -656,6 +656,12 @@ bool Worker::socketJoinMulticastGroup(const QString& address, const QString& int
     Q_ASSERT(rxSocket());
     Q_ASSERT(_inputEnabled);
 
+    if(!rxSocket())
+    {
+        LOG_ERR("Can't join multicast group when socket isn't started");
+        return false;
+    }
+
     // Try to join the multicast group
     if(!networkInterfaceValid || !rxSocket()->joinMulticastGroup(hostAddress, networkInterface))
     {
