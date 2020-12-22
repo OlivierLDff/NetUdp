@@ -33,23 +33,21 @@ Column
         top: 65535
     }
 
-    Qaterial.Label
+    Qaterial.LabelCaption
     {
         text: "isRunning : " + (root.object ? root.object.isRunning : "")
         width: parent.width
         elide: Text.ElideRight
-        textType: Qaterial.Style.TextType.Caption
         color: root.object && root.object.isRunning ? Qaterial.Style.green : Qaterial.Style.red
     }
-    Qaterial.Label
+    Qaterial.LabelCaption
     {
         text: "isBounded : " + (root.object ? root.object.isBounded : "")
         width: parent.width
         elide: Text.ElideRight
-        textType: Qaterial.Style.TextType.Caption
         color: root.object && root.object.isBounded ? Qaterial.Style.green : Qaterial.Style.red
     }
-    Qaterial.Label
+    Qaterial.LabelCaption
     {
         id: _errorLabel
         Connections
@@ -61,13 +59,12 @@ Column
         color: "red"
         width: parent.width
         elide: Text.ElideRight
-        textType: Qaterial.Style.TextType.Caption
     }
     Qaterial.FlatButton
     {
         topInset: 0
         bottomInset: 0
-        textType: Qaterial.Style.TextType.Caption
+        font: Qaterial.Style.textTheme.caption
         highlighted: false
         backgroundImplicitHeight: 20
         text: "watchdogPeriod : " + (root.object ? root.object.watchdogPeriod : "")
@@ -90,7 +87,7 @@ Column
     {
         topInset: 0
         bottomInset: 0
-        textType: Qaterial.Style.TextType.Caption
+        font: Qaterial.Style.textTheme.caption
         highlighted: false
         backgroundImplicitHeight: 20
         text: "rxAddress : " + (root.object ? root.object.rxAddress : "")
@@ -117,7 +114,7 @@ Column
     {
         topInset: 0
         bottomInset: 0
-        textType: Qaterial.Style.TextType.Caption
+        font: Qaterial.Style.textTheme.caption
         highlighted: false
         backgroundImplicitHeight: 20
         text: "rxPort : " + (root.object ? root.object.rxPort : "")
@@ -141,7 +138,7 @@ Column
     {
         topInset: 0
         bottomInset: 0
-        textType: Qaterial.Style.TextType.Caption
+        font: Qaterial.Style.textTheme.caption
         highlighted: false
         backgroundImplicitHeight: 20
         text: "txPort : " + (root.object ? root.object.txPort : "")
@@ -161,12 +158,11 @@ Column
         })
     }
 
-    Qaterial.Label
+    Qaterial.LabelCaption
     {
         text: "multicastGroups : " + (root.object ? root.object.multicastGroups.toString() : "")
         width: parent.width
         elide: Text.ElideRight
-        textType: Qaterial.Style.TextType.Caption
     }
     Row
     {
@@ -174,7 +170,7 @@ Column
         {
             topInset: 0
             bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             backgroundImplicitHeight: 20
             text: "Add Multicast address"
             onClicked: if(root.object) Qaterial.DialogManager.openTextField({
@@ -202,7 +198,7 @@ Column
         {
             topInset: 0
             bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             backgroundImplicitHeight: 20
             text: "Remove Multicast address"
             onClicked: if(root.object) Qaterial.DialogManager.openTextField({
@@ -232,7 +228,7 @@ Column
         text: "multicastInterfaces : " + (root.object ? root.object.multicastListeningInterfaces.toString() : "")
         width: parent.width
         elide: Text.ElideRight
-        textType: Qaterial.Style.TextType.Caption
+        font: Qaterial.Style.textTheme.caption
     }
     Row
     {
@@ -240,7 +236,7 @@ Column
         {
             topInset: 0
             bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             backgroundImplicitHeight: 20
             text: "Add Multicast Listening interface"
             onClicked: if(root.object) Qaterial.DialogManager.openTextField({
@@ -259,7 +255,7 @@ Column
         {
             topInset: 0
             bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             backgroundImplicitHeight: 20
             text: "Remove Multicast Listening interface"
             onClicked: if(root.object) Qaterial.DialogManager.openTextField({
@@ -280,7 +276,7 @@ Column
         text: "multicastOutgoingInterfaces : " + (root.object ? root.object.multicastOutgoingInterfaces.toString() : "")
         width: parent.width
         elide: Text.ElideRight
-        textType: Qaterial.Style.TextType.Caption
+        font: Qaterial.Style.textTheme.caption
     }
     Row
     {
@@ -288,7 +284,7 @@ Column
         {
             topInset: 0
             bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             backgroundImplicitHeight: 20
             text: "Add Multicast Output interface"
             onClicked: if(root.object) Qaterial.DialogManager.openTextField({
@@ -308,7 +304,7 @@ Column
         {
             topInset: 0
             bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             backgroundImplicitHeight: 20
             text: "Remove Multicast Output interface"
             onClicked: if(root.object) Qaterial.DialogManager.openTextField({
@@ -332,9 +328,8 @@ Column
             text: "loopback"
             implicitHeight: 32
             checked: root.object && root.object.multicastLoopback
-            elide: Text.ElideRight
             implicitWidth: parent.width/2
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             onClicked: if(root.object) root.object.multicastLoopback = checked
         }
 
@@ -343,9 +338,8 @@ Column
             text: "input"
             implicitHeight: 32
             checked: root.object && root.object.inputEnabled
-            elide: Text.ElideRight
             implicitWidth: parent.width/2
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             onClicked: if(root.object) root.object.inputEnabled = checked
         }
 
@@ -359,9 +353,8 @@ Column
             text: "2 sockets"
             implicitHeight: 32
             checked: root.object && root.object.separateRxTxSockets
-            elide: Text.ElideRight
             implicitWidth: parent.width/2
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             onClicked: if(root.object) root.object.separateRxTxSockets = checked
         }
 
@@ -370,9 +363,8 @@ Column
             text: "worker thread"
             implicitHeight: 32
             checked: root.object && root.object.useWorkerThread
-            elide: Text.ElideRight
             implicitWidth: parent.width/2
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             onClicked: if(root.object) root.object.useWorkerThread = checked
         }
     } // Row
@@ -385,25 +377,25 @@ Column
             Qaterial.Label
             {
                 text: "rxBytesPerSeconds : " + (root.object ? Qaterial.DataFormat.formatBytes(root.object.rxBytesPerSeconds) : "")
-                textType: Qaterial.Style.TextType.Caption
+                font: Qaterial.Style.textTheme.caption
             }
 
             Qaterial.Label
             {
                 text: "txBytesPerSeconds : " + (root.object ? Qaterial.DataFormat.formatBytes(root.object.txBytesPerSeconds) : "")
-                textType: Qaterial.Style.TextType.Caption
+                font: Qaterial.Style.textTheme.caption
             }
 
             Qaterial.Label
             {
                 text: "rxBytesTotal : " + (root.object ? Qaterial.DataFormat.formatBytes(root.object.rxBytesTotal) : "")
-                textType: Qaterial.Style.TextType.Caption
+                font: Qaterial.Style.textTheme.caption
             }
 
             Qaterial.Label
             {
                 text: "txBytesTotal : " + (root.object ? Qaterial.DataFormat.formatBytes(root.object.txBytesTotal) : "")
-                textType: Qaterial.Style.TextType.Caption
+                font: Qaterial.Style.textTheme.caption
             }
         }
 
@@ -412,25 +404,25 @@ Column
             Qaterial.Label
             {
                 text: "rxPacketsPerSeconds : " + (root.object ? root.object.rxPacketsPerSeconds : "")
-                textType: Qaterial.Style.TextType.Caption
+                font: Qaterial.Style.textTheme.caption
             }
 
             Qaterial.Label
             {
                 text: "txPacketsPerSeconds : " + (root.object ? root.object.txPacketsPerSeconds : "")
-                textType: Qaterial.Style.TextType.Caption
+                font: Qaterial.Style.textTheme.caption
             }
 
             Qaterial.Label
             {
                 text: "rxPacketsTotal : " + (root.object ? root.object.rxPacketsTotal : "")
-                textType: Qaterial.Style.TextType.Caption
+                font: Qaterial.Style.textTheme.caption
             }
 
             Qaterial.Label
             {
                 text: "txPacketsTotal : " + (root.object ? root.object.txPacketsTotal : "")
-                textType: Qaterial.Style.TextType.Caption
+                font: Qaterial.Style.textTheme.caption
             }
         }
     }
@@ -441,7 +433,7 @@ Column
         {
             topInset: 0
             bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             backgroundImplicitHeight: 20
             text: root.object && root.object.isRunning ? "Stop" : "Start"
             onClicked:
@@ -459,7 +451,7 @@ Column
         {
             topInset: 0
             bottomInset: 0
-            textType: Qaterial.Style.TextType.Caption
+            font: Qaterial.Style.textTheme.caption
             backgroundImplicitHeight: 20
             text: root.object && "Restart"
             enabled: root.object && root.object.isRunning
