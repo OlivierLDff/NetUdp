@@ -54,7 +54,7 @@ Column
         {
             target: root.object
             function onSocketError() { _errorLabel.text = description }
-            function onIsBoundedChanged() { if(isBounded) _errorLabel.text = "" }
+            function onIsBoundedChanged() { if(root.object.isBounded) _errorLabel.text = "" }
         }
         color: "red"
         width: parent.width
