@@ -195,6 +195,7 @@ target_link_libraries(${NETUDP_TARGET} PUBLIC
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)
   set_target_properties(${NETUDP_TARGET} PROPERTIES AUTORCC TRUE)
+  target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_ENABLE_QML)
 endif()
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES FOLDER ${NETUDP_FOLDER_PREFIX})

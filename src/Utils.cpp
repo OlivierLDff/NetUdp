@@ -89,8 +89,10 @@ static void NetUdp_registerTypes(const char* uri, const quint8 major, const quin
 
 void NetUdp_loadResources()
 {
+#ifdef NETUDP_ENABLE_QML
     LOG_DEV_INFO("Load NetUdp.qrc v{}", qPrintable(net::udp::Version::version().readable()));
     Q_INIT_RESOURCE(NetUdp);
+#endif
 }
 
 #ifndef NETUDP_STATIC
