@@ -452,7 +452,7 @@ NetUdp.Socket
     for(let i = 0; i < datagram.data.length; ++i)
       byteArray.push(datagram.data.charCodeAt(i))
     console.log(`datagram.data (bytes): [${byteArray}]`)
-      
+
     console.log(`datagram.destinationAddress : ${datagram.destinationAddress}`)
     console.log(`datagram.destinationPort : ${datagram.destinationPort}`)
     console.log(`datagram.senderAddress : ${datagram.senderAddress}`)
@@ -479,7 +479,7 @@ NetUdp.Socket
   multicastOutgoingInterfaces: [ "lo", "eth0" ]
   // Required in unix world if you want loopback on the same system
   multicastLoopback: true
-    
+
   Component.onCompleted: () => start()
 }
 ```
@@ -503,7 +503,7 @@ NetUdp.Socket
 {
   multicastGroups: [ "239.1.3.4" ]
   multicastListeningInterfaces: [ "lo", "eth0" ]
-    
+
   // Required in the windows world if you want loopback on the same system
   multicastLoopback: true
 
@@ -591,6 +591,9 @@ Then you just need to `#include <Net/Udp/NetUdp.hpp>`. You should also call in y
 ### v1.2
 
 * Allow to resize datagram with `resize` method.
+* Update NetUdp.Debug to comply with Qaterial v1.4
+* 🐛 SocketWorker: Fix potential nullptr access
+* 🐛 Fix compilation with -DNETUDP_ENABLE_QML=OFF
 
 ### v1.1
 
