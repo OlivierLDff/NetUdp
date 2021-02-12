@@ -9,7 +9,8 @@
 #include <Net/Udp/Export.hpp>
 
 // Qt Header
-#include <QString>
+#include <QtCore/QString>
+#include <QtCore/QMetaType>
 
 // C++ Header
 #include <memory>

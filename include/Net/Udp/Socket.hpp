@@ -14,12 +14,12 @@
 #include <Recycler/Circular.hpp>
 
 // Qt Core
-#include <QObject>
-#include <QString>
-#include <QStringList>
+#include <QtCore/QObject>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
 
 // Qt Qml
-#include <QJSValue>
+#include <QtQml/QJSValue>
 
 // Stl Headers
 #include <set>

@@ -10,7 +10,7 @@
 #include <Net/Udp/Property.hpp>
 
 // Qt Header
-#include <QObject>
+#include <QtCore/QObject>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

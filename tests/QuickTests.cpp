@@ -8,9 +8,9 @@
 #    include <spdlog/sinks/stdout_color_sinks.h>
 #endif
 
-#include <QtQuickTest>
-#include <QQmlEngine>
-#include <QQmlContext>
+#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlContext>
+#include <QtQuickTest/QtQuickTest>
 
 class Setup : public QObject
 {
@@ -20,7 +20,7 @@ public:
     Setup() {}
 
 public slots:
-    void qmlEngineAvailable(QQmlEngine *engine)
+    void qmlEngineAvailable(QQmlEngine* engine)
     {
 #ifdef WIN32
         const auto msvcSink = std::make_shared<spdlog::sinks::msvc_sink_mt>();

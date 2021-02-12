@@ -6,11 +6,12 @@
 // Dependencies Headers
 
 // Qt Headers
-#include <QNetworkInterface>
-#include <QNetworkAddressEntry>
+#include <QtNetwork/QNetworkInterface>
+#include <QtNetwork/QNetworkAddressEntry>
 
 // Stl Headers
 #include <chrono>
+#include <mutex>
 
 // ──── DECLARATION ────
 

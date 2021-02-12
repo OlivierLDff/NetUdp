@@ -11,7 +11,8 @@
 #include <Net/Udp/InterfacesProvider.hpp>
 
 // Qt Header
-#include <QCoreApplication>
+#include <QtCore/QCoreApplication>
+#include <QtNetwork/QAbstractSocket>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

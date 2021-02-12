@@ -13,11 +13,11 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 // Qt
-#include <QCoreApplication>
-#include <QLoggingCategory>
-#include <QCommandLineParser>
-#include <QTimer>
-#include <QNetworkInterface>
+#include <QtCore/QCoreApplication>
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QCommandLineParser>
+#include <QtCore/QTimer>
+#include <QtNetwork/QNetworkInterface>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION

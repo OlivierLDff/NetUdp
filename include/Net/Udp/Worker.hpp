@@ -14,12 +14,13 @@
 #include <Recycler/Circular.hpp>
 
 // Qt Headers
-#include <QObject>
-#include <QString>
+#include <QtCore/QObject>
+#include <QtCore/QString>
+#include <QtNetwork/QAbstractSocket>
 
-class QUdpSocket;
-class QTimer;
-class QElapsedTimer;
+QT_FORWARD_DECLARE_CLASS(QUdpSocket);
+QT_FORWARD_DECLARE_CLASS(QTimer);
+QT_FORWARD_DECLARE_CLASS(QElapsedTimer);
 
 #include <set>
 #include <map>

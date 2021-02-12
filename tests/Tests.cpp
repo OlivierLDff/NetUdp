@@ -3,9 +3,6 @@
 // NetUdp
 #include <Net/Udp/NetUdp.hpp>
 
-// gtest
-#include <gtest/gtest.h>
-
 // spdlog
 #ifdef WIN32
 #    include <spdlog/sinks/msvc_sink.h>
@@ -15,12 +12,15 @@
 #endif
 
 // QtCore
-#include <QTimer>
-#include <QCoreApplication>
+#include <QtCore/QTimer>
+#include <QtCore/QCoreApplication>
 
 // QtTest
-#include <QTest>
-#include <QSignalSpy>
+#include <QtTest/QTest>
+#include <QtTest/QSignalSpy>
+
+// gtest
+#include <gtest/gtest.h>
 
 // Stl
 #include <string>

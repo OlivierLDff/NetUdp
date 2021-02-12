@@ -8,7 +8,8 @@
 #include <Net/Udp/Logger.hpp>
 
 // Qt Headers
-#include <QThread>
+#include <QtCore/QThread>
+#include <QtNetwork/QHostAddress>
 
 // Stl Headers
 #include <limits>
@@ -17,7 +18,7 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-using namespace net::udp;
+namespace net::udp {
 
 // clang-format off
 #ifdef NDEBUG
@@ -639,4 +640,6 @@ void Socket::onWorkerPacketsTxPerSecondsChanged(const quint64 txPackets)
 void Socket::onWorkerRxInvalidPacketsCounterChanged(const quint64 rxPackets)
 {
     setRxInvalidPacketTotal(rxInvalidPacketTotal() + rxPackets);
+}
+
 }

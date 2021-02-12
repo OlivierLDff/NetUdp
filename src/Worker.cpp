@@ -8,14 +8,13 @@
 #include <Net/Udp/InterfacesProvider.hpp>
 
 // Qt Core
-#include <QUdpSocket>
-#include <QTimer>
-#include <QElapsedTimer>
+#include <QtCore/QTimer>
+#include <QtCore/QElapsedTimer>
 
 // Qt Network
-#include <QNetworkInterface>
-#include <QUdpSocket>
-#include <QNetworkDatagram>
+#include <QtNetwork/QUdpSocket>
+#include <QtNetwork/QNetworkInterface>
+#include <QtNetwork/QNetworkDatagram>
 
 // Stl
 #include <algorithm>
@@ -24,7 +23,7 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-using namespace net::udp;
+namespace net::udp {
 
 // clang-format off
 #ifdef NDEBUG
@@ -163,7 +162,7 @@ void Worker::onStart()
                 // ) Create a watchdog timer
                 _watchdog = new QTimer(this);
                 _watchdog->setTimerType(Qt::TimerType::VeryCoarseTimer);
-;
+
                 // ) Connect timeout
                 connect(
                     _watchdog, &QTimer::timeout, this,
@@ -720,7 +719,9 @@ void Worker::setMulticastLoopbackToSocket() const
             _socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback);
 
         for(const auto [interfaceName, socket]: _multicastTxSockets)
-        { socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback); }
+        {
+            socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback);
+        }
     }
 }
 
@@ -828,7 +829,9 @@ void Worker::startListeningMulticastInterfaceWatcher()
                         if(interfaceJoinedIt != _joinedMulticastGroups.end())
                         {
                             for(const auto& group: interfaceJoinedIt->second)
-                            { socketLeaveMulticastGroup(group, interfaceName); }
+                            {
+                                socketLeaveMulticastGroup(group, interfaceName);
+                            }
 
                             _joinedMulticastGroups.erase(interfaceJoinedIt);
                         }
@@ -1441,4 +1444,6 @@ void Worker::stopBytesCounter()
     if(_bytesCounterTimer)
         _bytesCounterTimer->deleteLater();
     _bytesCounterTimer = nullptr;
+}
+
 }

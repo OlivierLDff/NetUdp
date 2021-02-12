@@ -1,10 +1,6 @@
 #ifndef __NETUDP_HPP__
 #define __NETUDP_HPP__
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
 // Private Utils
 #include <Net/Udp/Version.hpp>
 #include <Net/Udp/Utils.hpp>
