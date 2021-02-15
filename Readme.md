@@ -588,7 +588,12 @@ Then you just need to `#include <Net/Udp/NetUdp.hpp>`. You should also call in y
 
 ## Changelog
 
-### v1.2
+### v1.2.1
+
+* 🐛 Fix compilation with pch disabled (cmake < 3.17)
+* 🔊 Log missing cmake info : `NETUDP_ENABLE_PCH`, `NETUDP_ENABLE_EXAMPLES`, `NETUDP_ENABLE_TESTS`
+
+### v1.2.0
 
 * Allow to resize datagram with `resize` method.
 * Update NetUdp.Debug to comply with Qaterial v1.4
