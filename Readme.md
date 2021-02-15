@@ -1,5 +1,7 @@
 # NetUdp
 
+![CI](https://github.com/OlivierLDff/NetUdp/workflows/CI/badge.svg)
+
 NetUdp provide a Udp Socket that can send and receive Datagram.
 
 * Support Unicast/Multicast/Broadcast Datagram.
