@@ -21,7 +21,7 @@ void Datagram::reset()
     destinationPort = 0;
     senderAddress = QString();
     senderPort = 0;
-    ttl = 8;
+    ttl = 0;
 }
 
 void Datagram::reset(std::size_t length) { Datagram::reset(); }
