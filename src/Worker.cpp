@@ -1266,7 +1266,9 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
         startWatchdog();
 
         if(bytesWritten <= 0)
-            LOG_ERR("Fail to send datagram, 0 bytes written. Restart Socket. {}", _socket->errorString().toStdString());
+            LOG_ERR("Fail to send datagram to {}:{}, 0 bytes written out of {}. Restart Socket. {}",
+                datagram->destinationAddress.toStdString(), datagram->destinationPort, datagram->length(),
+                _socket->errorString().toStdString());
         else
             LOG_ERR("Fail to send datagram, {}/{} bytes written. Restart Socket. {}",
                 static_cast<long long>(bytesWritten), static_cast<long long>(datagram->length()),
