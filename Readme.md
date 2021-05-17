@@ -590,6 +590,11 @@ Then you just need to `#include <Net/Udp/NetUdp.hpp>`. You should also call in y
 
 ## Changelog
 
+### v1.2.2
+
+* 🐛 Fix reset Datagram. (ttl is now always reset to 0)
+* 🔊 Log more info about fail send datagram
+
 ### v1.2.1
 
 * 🐛 Fix compilation with pch disabled (cmake < 3.17)
