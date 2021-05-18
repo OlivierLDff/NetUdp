@@ -16,6 +16,7 @@
 // Qt Headers
 #include <QtCore/QObject>
 #include <QtCore/QString>
+#include <QtCore/QElapsedTimer>
 #include <QtNetwork/QAbstractSocket>
 
 QT_FORWARD_DECLARE_CLASS(QUdpSocket);
