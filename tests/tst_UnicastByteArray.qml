@@ -52,10 +52,11 @@ TestCase
   {
     waitForBounded()
 
-    txSocket.sendDatagram({
+    txSocket.sendDatagram(
+    {
       address: "127.0.0.1",
       port: 9992,
-      data: [77,121,32,68,97,116,97]
+      data: [77, 121, 32, 68, 97, 116, 97]
     })
 
     spyRxSocketReceived.wait()

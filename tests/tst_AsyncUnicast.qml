@@ -52,7 +52,8 @@ TestCase
   {
     waitForBounded()
 
-    txSocket.sendDatagram({
+    txSocket.sendDatagram(
+    {
       address: "127.0.0.1",
       port: 9993,
       data: "My Data Async"

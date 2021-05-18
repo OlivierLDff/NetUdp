@@ -21,7 +21,7 @@ TestCase
   {
     id: rxSocket
 
-    multicastGroups: [ "239.7.8.9" ]
+    multicastGroups: ["239.7.8.9"]
     // Should be true on windows systems
     multicastLoopback: true
 
@@ -65,7 +65,8 @@ TestCase
     waitForBounded()
 
     compare(rxSocket.isBounded, true)
-    txSocket.sendDatagram({
+    txSocket.sendDatagram(
+    {
       address: "239.7.8.9",
       port: 7891,
       data: "My Data Multicast"

@@ -13,12 +13,12 @@ import NetUdp.Debug 1.0 as Debug
 
 Qaterial.DebugObject
 {
-    id: root
-    property NetUdp.Socket object: null
-    title: "" + (root.object ? root.object : "Server null")
+  id: root
+  property NetUdp.Socket object: null
+  title: "" + (root.object ? root.object : "Server null")
 
-    content: Debug.SocketContent
-    {
-        object: root.object
-    }
+  content: Debug.SocketContent
+  {
+    object: root.object
+  }
 }
