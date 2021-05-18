@@ -108,4 +108,7 @@ void net::udp::registerQmlTypes(const char* uri, const quint8 major, const quint
     ::NetUdp_registerTypes(uri, major, minor);
 }
 
-void net::udp::loadQmlResources() { ::NetUdp_loadResources(); }
+void net::udp::loadQmlResources()
+{
+    ::NetUdp_loadResources();
+}

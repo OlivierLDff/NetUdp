@@ -33,7 +33,8 @@ const Logger::LogList Logger::LOGGERS = {WORKER, SERVER, UTILS};
 
 void Logger::registerSink(const SinkPtr& sink)
 {
-    for(const auto& it: LOGGERS) it->sinks().emplace_back(sink);
+    for(const auto& it: LOGGERS)
+        it->sinks().emplace_back(sink);
 }
 
 void Logger::unRegisterSink(const SinkPtr& sink)

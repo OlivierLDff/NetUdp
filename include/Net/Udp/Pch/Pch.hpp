@@ -34,10 +34,10 @@
 
 // Compatibility with gcc <= 7
 #ifdef major
-#undef major
+#    undef major
 #endif
 #ifdef minor
-#undef minor
+#    undef minor
 #endif
 
 #endif

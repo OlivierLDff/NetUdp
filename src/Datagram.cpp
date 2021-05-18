@@ -24,8 +24,13 @@ void Datagram::reset()
     ttl = 0;
 }
 
-void Datagram::reset(std::size_t length) { Datagram::reset(); }
+void Datagram::reset(std::size_t length)
+{
+    Datagram::reset();
+}
 
-void Datagram::resize(std::size_t length) {}
+void Datagram::resize(std::size_t length)
+{
+}
 
 }

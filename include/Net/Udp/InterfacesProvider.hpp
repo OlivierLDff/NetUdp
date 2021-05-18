@@ -24,7 +24,9 @@ namespace udp {
 class NETUDP_API_ IInterface
 {
 public:
-    virtual ~IInterface() {}
+    virtual ~IInterface()
+    {
+    }
 
     virtual bool isValid() const = 0;
 
@@ -70,7 +72,10 @@ class NETUDP_API_ InterfacesProviderSingleton : public QObject
     NETUDP_SINGLETON_IMPL(InterfacesProviderSingleton, interfacesProvider, InterfacesProvider)
 
 public:
-    InterfacesProviderSingleton(QObject* parent = nullptr) : QObject(parent) {}
+    InterfacesProviderSingleton(QObject* parent = nullptr)
+        : QObject(parent)
+    {
+    }
 
 protected:
     NETUDP_PROPERTY_RO(QStringList, interfaces, Interfaces);
