@@ -55,22 +55,26 @@ TestCase
 
     compare(rxSocket.isBounded, true)
 
-  compare(txSocket.sendDatagram({
-        port: 9991,
-        data: "My Data Unicast"
-      }), false)
+    compare(txSocket.sendDatagram(
+    {
+      port: 9991,
+      data: "My Data Unicast"
+    }), false)
 
-  compare(txSocket.sendDatagram({
-        address: "127.0.0.1",
-        data: "My Data Unicast"
-      }), false)
+    compare(txSocket.sendDatagram(
+    {
+      address: "127.0.0.1",
+      data: "My Data Unicast"
+    }), false)
 
-  compare(txSocket.sendDatagram({
-        address: "127.0.0.1",
-        port: 9991,
-      }), false)
+    compare(txSocket.sendDatagram(
+    {
+      address: "127.0.0.1",
+      port: 9991,
+    }), false)
 
-    compare(txSocket.sendDatagram({
+    compare(txSocket.sendDatagram(
+    {
       address: "127.0.0.1",
       port: 9991,
       data: "My Data Unicast"

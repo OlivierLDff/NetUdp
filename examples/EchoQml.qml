@@ -11,8 +11,10 @@ ApplicationWindow
   width: 800
   height: 600
 
-  property var listenedInterfaces: []
-  property var outputInterfaces: []
+  property
+  var listenedInterfaces: []
+  property
+  var outputInterfaces: []
 
   Qaterial.ScrollablePage
   {
@@ -24,21 +26,23 @@ ApplicationWindow
       Button
       {
         text: "send unicast"
-        onClicked: () => txSocket.sendDatagram({
+        onClicked: () => txSocket.sendDatagram(
+        {
           address: "127.0.0.1",
           port: 9999,
           data: "My Data"
-          })
+        })
       }
 
       Button
       {
         text: "send binary unicast"
-        onClicked: () => txSocket.sendDatagram({
+        onClicked: () => txSocket.sendDatagram(
+        {
           address: "127.0.0.1",
           port: 9999,
           data: [0, 1, 2, 3]
-          })
+        })
       }
 
       NetUdp.Socket
@@ -168,7 +172,7 @@ ApplicationWindow
         multicastListeningInterfaces: root.listenedInterfaces
         multicastOutgoingInterfaces: root.outputInterfaces
 
-        multicastGroups: [ "239.1.3.4" ]
+        multicastGroups: ["239.1.3.4"]
         multicastLoopback: true
 
         onDatagramReceived: function(datagram)
@@ -196,11 +200,12 @@ ApplicationWindow
       Button
       {
         text: "send multicast"
-        onClicked: () => multicastSocket.sendDatagram({
+        onClicked: () => multicastSocket.sendDatagram(
+        {
           address: "239.1.3.4",
           port: 1234,
           data: "Multicast Data"
-          })
+        })
       }
 
       NetUdpDebug.Socket
@@ -221,7 +226,6 @@ ApplicationWindow
         object: multicastSocket
         width: root.width
       }
-
 
     }
   }
