@@ -42,7 +42,10 @@ class NETUDP_API_ ISocket : public QObject
     Q_OBJECT
     // ──────── CONSTRUCTOR ────────
 public:
-    ISocket(QObject* parent = nullptr) : QObject(parent) {}
+    ISocket(QObject* parent = nullptr)
+        : QObject(parent)
+    {
+    }
 
     // ──────── ATTRIBUTE STATE ────────
 protected:
@@ -163,12 +166,11 @@ public Q_SLOTS:
     virtual bool sendDatagram(QJSValue datagram) = 0;
 
 public:
-    virtual bool sendDatagram(const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port,
-        const uint8_t ttl = 0) = 0;
-    virtual bool sendDatagram(const char* buffer, const size_t length, const QString& address, const uint16_t port,
-        const uint8_t ttl = 0) = 0;
     virtual bool sendDatagram(
-        std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0) = 0;
+        const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0) = 0;
+    virtual bool sendDatagram(
+        const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0) = 0;
+    virtual bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0) = 0;
     virtual bool sendDatagram(std::shared_ptr<Datagram> datagram) = 0;
 
     // ──────── SIGNALS ────────
@@ -255,12 +257,10 @@ public:
 
     // ──────── SEND DATAGRAM API ────────
 public:
-    bool sendDatagram(const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port,
-        const uint8_t ttl = 0) override;
-    bool sendDatagram(const char* buffer, const size_t length, const QString& address, const uint16_t port,
-        const uint8_t ttl = 0) override;
-    bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port,
-        const uint8_t ttl = 0) override;
+    bool sendDatagram(
+        const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0) override;
+    bool sendDatagram(const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0) override;
+    bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0) override;
     bool sendDatagram(std::shared_ptr<Datagram> datagram) override;
     bool sendDatagram(QJSValue datagram) override;
 

@@ -78,7 +78,7 @@ protected:
         if(spy.empty())
             ASSERT_TRUE(spy.wait(5000));
 
-        const auto arguments = spy.takeFirst();  // take the first signal
+        const auto arguments = spy.takeFirst(); // take the first signal
         ASSERT_FALSE(arguments.isEmpty());
         const auto datagram = qvariant_cast<net::udp::SharedDatagram>(arguments.at(0));
         ASSERT_NE(datagram, nullptr);
@@ -157,7 +157,7 @@ protected:
         if(spy.empty())
             ASSERT_TRUE(spy.wait(5000));
 
-        const auto arguments = spy.takeFirst();  // take the first signal
+        const auto arguments = spy.takeFirst(); // take the first signal
         ASSERT_FALSE(arguments.isEmpty());
         const auto datagram = qvariant_cast<net::udp::SharedDatagram>(arguments.at(0));
         ASSERT_NE(datagram, nullptr);

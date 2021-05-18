@@ -55,7 +55,11 @@ namespace net::udp {
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
-Socket::Socket(QObject* parent) : ISocket(parent) { LOG_DEV_DEBUG("Constructor"); }
+Socket::Socket(QObject* parent)
+    : ISocket(parent)
+{
+    LOG_DEV_DEBUG("Constructor");
+}
 
 Socket::~Socket()
 {
@@ -125,7 +129,10 @@ QStringList Socket::multicastGroups() const
 bool Socket::setMulticastGroups(const QStringList& value)
 {
     leaveAllMulticastGroups();
-    for(const auto& group: value) { joinMulticastGroup(group); }
+    for(const auto& group: value)
+    {
+        joinMulticastGroup(group);
+    }
     return true;
 }
 
@@ -158,7 +165,10 @@ bool Socket::setMulticastListeningInterfaces(const QStringList& values)
             interfacesToLeave.push_back(interfaceName);
         }
     }
-    for(const auto& interfaceName: interfacesToLeave) { leaveMulticastInterface(interfaceName); }
+    for(const auto& interfaceName: interfacesToLeave)
+    {
+        leaveMulticastInterface(interfaceName);
+    }
 
     return changedHappened;
 }
@@ -202,8 +212,15 @@ bool Socket::start()
 
     LOG_DEV_DEBUG("Connect to worker {}", static_cast<void*>(_worker));
 
-    _worker->initialize(watchdogPeriod(), rxAddress(), rxPort(), txPort(), separateRxTxSockets(),
-        _multicastListeningGroups, _multicastListeningInterfaces, _multicastOutgoingInterfaces, inputEnabled(),
+    _worker->initialize(watchdogPeriod(),
+        rxAddress(),
+        rxPort(),
+        txPort(),
+        separateRxTxSockets(),
+        _multicastListeningGroups,
+        _multicastListeningInterfaces,
+        _multicastOutgoingInterfaces,
+        inputEnabled(),
         multicastLoopback());
 
     connect(this, &Socket::startWorker, _worker, &Worker::onStart);
@@ -410,7 +427,10 @@ void Socket::clearTxCounter()
     resetTxBytesTotal();
 }
 
-void Socket::clearRxInvalidCounter() { resetRxInvalidPacketTotal(); }
+void Socket::clearRxInvalidCounter()
+{
+    resetRxInvalidPacketTotal();
+}
 
 void Socket::clearCounters()
 {
@@ -418,12 +438,17 @@ void Socket::clearCounters()
     clearTxCounter();
 }
 
-Worker* Socket::createWorker() { return new Worker; }
+Worker* Socket::createWorker()
+{
+    return new Worker;
+}
 
-std::shared_ptr<Datagram> Socket::makeDatagram(const size_t length) { return _cache.make(length); }
+std::shared_ptr<Datagram> Socket::makeDatagram(const size_t length)
+{
+    return _cache.make(length);
+}
 
-bool Socket::sendDatagram(
-    const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl)
+bool Socket::sendDatagram(const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl)
 {
     if(!isRunning() && !isBounded())
     {
@@ -452,14 +477,12 @@ bool Socket::sendDatagram(
     return true;
 }
 
-bool Socket::sendDatagram(
-    const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl)
+bool Socket::sendDatagram(const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl)
 {
     return sendDatagram(reinterpret_cast<const uint8_t*>(buffer), length, address, port, ttl);
 }
 
-bool Socket::sendDatagram(
-    std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl)
+bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl)
 {
     if(!datagram)
     {
@@ -567,7 +590,10 @@ bool Socket::sendDatagram(QJSValue datagram)
         {
             const int length = property.property("length").toInt();
             sharedDatagram = makeDatagram(length);
-            for(int i = 0; i < length; ++i) { sharedDatagram->buffer()[i] = property.property(i).toUInt(); }
+            for(int i = 0; i < length; ++i)
+            {
+                sharedDatagram->buffer()[i] = property.property(i).toUInt();
+            }
         }
         else
         {
@@ -600,8 +626,7 @@ void Socket::onDatagramReceived(const SharedDatagram& datagram)
     if(isSignalConnected(datagramReceivedSignal))
     {
         Q_ASSERT(datagram->length() < std::size_t(std::numeric_limits<int>::max()));
-        const QJSValue jsData(
-            QString::fromLatin1(reinterpret_cast<const char*>(datagram->buffer()), int(datagram->length())));
+        const QJSValue jsData(QString::fromLatin1(reinterpret_cast<const char*>(datagram->buffer()), int(datagram->length())));
         const QJSValue jsDestinationAddress(datagram->destinationAddress);
         const QJSValue jsDestinationPort(datagram->destinationPort);
         const QJSValue jsSenderAddress(datagram->senderAddress);

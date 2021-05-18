@@ -17,7 +17,9 @@ class Setup : public QObject
     Q_OBJECT
 
 public:
-    Setup() {}
+    Setup()
+    {
+    }
 
 public slots:
     void qmlEngineAvailable(QQmlEngine* engine)

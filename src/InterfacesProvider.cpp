@@ -21,23 +21,53 @@ namespace udp {
 class QRealNetworkIface : public IInterface
 {
 public:
-    QRealNetworkIface(const QNetworkInterface& iface) : _iface(iface) {}
+    QRealNetworkIface(const QNetworkInterface& iface)
+        : _iface(iface)
+    {
+    }
 
-    bool isValid() const override { return _iface.isValid(); }
-    QString name() const override { return _iface.name(); }
+    bool isValid() const override
+    {
+        return _iface.isValid();
+    }
+    QString name() const override
+    {
+        return _iface.name();
+    }
 
-    bool isUp() const override { return _iface.flags() & QNetworkInterface::IsUp; }
-    bool isRunning() const override { return _iface.flags() & QNetworkInterface::IsRunning; }
-    bool canBroadcast() const override { return _iface.flags() & QNetworkInterface::CanBroadcast; }
-    bool isLoopBack() const override { return _iface.flags() & QNetworkInterface::IsLoopBack; }
-    bool isPointToPoint() const override { return _iface.flags() & QNetworkInterface::IsPointToPoint; }
-    bool canMulticast() const override { return _iface.flags() & QNetworkInterface::CanMulticast; }
+    bool isUp() const override
+    {
+        return _iface.flags() & QNetworkInterface::IsUp;
+    }
+    bool isRunning() const override
+    {
+        return _iface.flags() & QNetworkInterface::IsRunning;
+    }
+    bool canBroadcast() const override
+    {
+        return _iface.flags() & QNetworkInterface::CanBroadcast;
+    }
+    bool isLoopBack() const override
+    {
+        return _iface.flags() & QNetworkInterface::IsLoopBack;
+    }
+    bool isPointToPoint() const override
+    {
+        return _iface.flags() & QNetworkInterface::IsPointToPoint;
+    }
+    bool canMulticast() const override
+    {
+        return _iface.flags() & QNetworkInterface::CanMulticast;
+    }
 
 private:
     QNetworkInterface _iface;
 
 public:
-    static InterfacePtr make(const QNetworkInterface& iface) { return std::make_shared<QRealNetworkIface>(iface); }
+    static InterfacePtr make(const QNetworkInterface& iface)
+    {
+        return std::make_shared<QRealNetworkIface>(iface);
+    }
 };
 
 class QRealNetworkIFaceProvider : public InterfacesProvider::IProvider
@@ -45,9 +75,7 @@ class QRealNetworkIFaceProvider : public InterfacesProvider::IProvider
 public:
     static std::uint64_t now()
     {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch())
-            .count();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
     mutable std::uint64_t lastCacheFetch = 0;
@@ -66,7 +94,10 @@ public:
         }
 
         InterfacePtrList result;
-        for(const auto& iface: QNetworkInterface::allInterfaces()) { result.push_back(QRealNetworkIface::make(iface)); }
+        for(const auto& iface: QNetworkInterface::allInterfaces())
+        {
+            result.push_back(QRealNetworkIface::make(iface));
+        }
         cache = result;
         fetchedOnce = true;
         lastCacheFetch = ms;

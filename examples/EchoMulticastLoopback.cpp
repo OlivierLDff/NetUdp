@@ -8,7 +8,7 @@
 
 // spdlog
 #ifdef WIN32
-#include <spdlog/sinks/msvc_sink.h>
+#    include <spdlog/sinks/msvc_sink.h>
 #endif
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -60,26 +60,29 @@ public:
         server.setUseWorkerThread(multiThreaded);
         server.setMulticastLoopback(true);
 
-        QObject::connect(&timer, &QTimer::timeout,
+        QObject::connect(&timer,
+            &QTimer::timeout,
             [this]()
             {
                 const std::string data = "Echo " + std::to_string(counter++);
                 server.sendDatagram(data.c_str(), data.length() + 1, ip, port);
             });
 
-        QObject::connect(&server, &net::udp::Socket::sharedDatagramReceived,
-            [](const net::udp::SharedDatagram& d)
-            { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
+        QObject::connect(&server,
+            &net::udp::Socket::sharedDatagramReceived,
+            [](const net::udp::SharedDatagram& d) { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
 
         qCInfo(APP_LOG_CAT, "Start application");
 
-        QObject::connect(&server, &net::udp::Socket::isRunningChanged,
+        QObject::connect(&server,
+            &net::udp::Socket::isRunningChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isRunning : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Socket::isBoundedChanged,
+        QObject::connect(&server,
+            &net::udp::Socket::isBoundedChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isBounded : %d", signed(value)); });
-        QObject::connect(&server, &net::udp::Socket::socketError,
-            [](int value, const QString error)
-            { qCInfo(SERVER_LOG_CAT, "error : %s", qPrintable(error)); });
+        QObject::connect(&server,
+            &net::udp::Socket::socketError,
+            [](int value, const QString error) { qCInfo(SERVER_LOG_CAT, "error : %s", qPrintable(error)); });
 
         server.start();
         timer.start(1000);
@@ -106,9 +109,8 @@ int main(int argc, char* argv[])
     parser.setApplicationDescription("Echo Client Server");
     parser.addHelpOption();
 
-    QCommandLineOption multiThreadOption(
-        QStringList() << "t", QCoreApplication::translate("main",
-                                  "Make the worker live in a different thread. Default false"));
+    QCommandLineOption multiThreadOption(QStringList() << "t",
+        QCoreApplication::translate("main", "Make the worker live in a different thread. Default false"));
     parser.addOption(multiThreadOption);
 
     QCommandLineOption printIfaceName(QStringList() << "p",

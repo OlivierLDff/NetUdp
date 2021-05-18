@@ -142,9 +142,16 @@ public Q_SLOTS:
     void onStop();
 
 public:
-    void initialize(quint64 watchdog, QString rxAddress, quint16 rxPort, quint16 txPort, bool separateRxTxSocket,
-        const std::set<QString>& multicastGroup, const std::set<QString>& multicastListeningInterfaces,
-        const std::set<QString>& multicastOutgoingInterfaces, bool inputEnabled, bool multicastLoopback);
+    void initialize(quint64 watchdog,
+        QString rxAddress,
+        quint16 rxPort,
+        quint16 txPort,
+        bool separateRxTxSocket,
+        const std::set<QString>& multicastGroup,
+        const std::set<QString>& multicastListeningInterfaces,
+        const std::set<QString>& multicastOutgoingInterfaces,
+        bool inputEnabled,
+        bool multicastLoopback);
 
 Q_SIGNALS:
     void isBoundedChanged(const bool isBounded);
@@ -277,4 +284,4 @@ Q_SIGNALS:
 }
 }
 
-#endif  // __NETUDP_SERVER_WORKER_HPP__
+#endif // __NETUDP_SERVER_WORKER_HPP__

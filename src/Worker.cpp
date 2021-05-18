@@ -62,27 +62,61 @@ namespace net::udp {
 
 const quint64 disableSocketTimeout = 10000;
 
-Worker::Worker(QObject* parent) : QObject(parent) { LOG_DEV_DEBUG("Constructor"); }
+Worker::Worker(QObject* parent)
+    : QObject(parent)
+{
+    LOG_DEV_DEBUG("Constructor");
+}
 
-Worker::~Worker() { LOG_DEV_DEBUG("Destructor"); }
+Worker::~Worker()
+{
+    LOG_DEV_DEBUG("Destructor");
+}
 
-bool Worker::isBounded() const { return _isBounded; }
+bool Worker::isBounded() const
+{
+    return _isBounded;
+}
 
-quint64 Worker::watchdogTimeout() const { return _watchdogTimeout; }
+quint64 Worker::watchdogTimeout() const
+{
+    return _watchdogTimeout;
+}
 
-QString Worker::rxAddress() const { return _rxAddress; }
+QString Worker::rxAddress() const
+{
+    return _rxAddress;
+}
 
-quint16 Worker::rxPort() const { return _rxPort; }
+quint16 Worker::rxPort() const
+{
+    return _rxPort;
+}
 
-quint16 Worker::txPort() const { return _txPort; }
+quint16 Worker::txPort() const
+{
+    return _txPort;
+}
 
-bool Worker::multicastLoopback() const { return _multicastLoopback; }
+bool Worker::multicastLoopback() const
+{
+    return _multicastLoopback;
+}
 
-quint8 Worker::multicastTtl() const { return _multicastTtl; }
+quint8 Worker::multicastTtl() const
+{
+    return _multicastTtl;
+}
 
-bool Worker::inputEnabled() const { return _inputEnabled; }
+bool Worker::inputEnabled() const
+{
+    return _inputEnabled;
+}
 
-bool Worker::separateRxTxSocketsChanged() const { return _separateRxTxSockets; }
+bool Worker::separateRxTxSocketsChanged() const
+{
+    return _separateRxTxSockets;
+}
 
 QUdpSocket* Worker::rxSocket() const
 {
@@ -91,15 +125,30 @@ QUdpSocket* Worker::rxSocket() const
     return _socket;
 }
 
-size_t Worker::cacheSize() const { return _cache.size(); }
+size_t Worker::cacheSize() const
+{
+    return _cache.size();
+}
 
-bool Worker::resizeCache(size_t length) { return _cache.resize(length); }
+bool Worker::resizeCache(size_t length)
+{
+    return _cache.resize(length);
+}
 
-void Worker::clearCache() { _cache.clear(); }
+void Worker::clearCache()
+{
+    _cache.clear();
+}
 
-void Worker::releaseCache() { _cache.release(); }
+void Worker::releaseCache()
+{
+    _cache.release();
+}
 
-std::shared_ptr<Datagram> Worker::makeDatagram(const size_t length) { return _cache.make(length); }
+std::shared_ptr<Datagram> Worker::makeDatagram(const size_t length)
+{
+    return _cache.make(length);
+}
 
 void Worker::onRestart()
 {
@@ -118,8 +167,7 @@ void Worker::onStart()
     if(_inputEnabled)
     {
         if(_rxAddress.isEmpty())
-            LOG_DEV_INFO(
-                "Start Udp Socket Worker rx : {}:{}, tx port : {}", _rxAddress.toStdString(), _rxPort, _txPort);
+            LOG_DEV_INFO("Start Udp Socket Worker rx : {}:{}, tx port : {}", _rxAddress.toStdString(), _rxPort, _txPort);
         else
             LOG_DEV_INFO("Start Udp Socket Worker rx port : {}, tx port : {}", _rxPort, _txPort);
     }
@@ -152,7 +200,9 @@ void Worker::onStart()
     }
 
     connect(
-        this, &Worker::queueStartWatchdog, this,
+        this,
+        &Worker::queueStartWatchdog,
+        this,
         [this]()
         {
             if(!_watchdog)
@@ -167,7 +217,9 @@ void Worker::onStart()
 
                 // ) Connect timeout
                 connect(
-                    _watchdog, &QTimer::timeout, this,
+                    _watchdog,
+                    &QTimer::timeout,
+                    this,
                     [this]()
                     {
                         LOG_DEV_INFO("Watchdog timeout, try to restart socket");
@@ -188,11 +240,9 @@ void Worker::onStart()
 
     // Connect to socket signals
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    connect(
-        _socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Worker::onSocketError);
+    connect(_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Worker::onSocketError);
 #else
-    connect(_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred), this,
-        &Worker::onSocketError);
+    connect(_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred), this, &Worker::onSocketError);
 #endif
 
     if(rxSocket())
@@ -205,11 +255,9 @@ void Worker::onStart()
     if(useTwoSockets)
     {
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-        connect(_rxSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this,
-            &Worker::onRxSocketError);
+        connect(_rxSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Worker::onRxSocketError);
 #else
-        connect(_rxSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred), this,
-            &Worker::onRxSocketError);
+        connect(_rxSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred), this, &Worker::onRxSocketError);
 #endif
     }
 
@@ -222,16 +270,12 @@ void Worker::onStart()
     const auto bindSuccess = [&]()
     {
         if(useTwoSockets)
-            return _rxSocket->bind(QHostAddress(_rxAddress), _rxPort,
-                       QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint) &&
-                   _socket->bind(
-                       QHostAddress(), _txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+            return _rxSocket->bind(QHostAddress(_rxAddress), _rxPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint)
+                   && _socket->bind(QHostAddress(), _txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
 
         if(_inputEnabled)
-            return _socket->bind(
-                QHostAddress(_rxAddress), _rxPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
-        return _socket->bind(
-            QHostAddress(), _txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+            return _socket->bind(QHostAddress(_rxAddress), _rxPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+        return _socket->bind(QHostAddress(), _txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
     }();
 
     // Finish the start of the socket
@@ -251,7 +295,8 @@ void Worker::onStart()
             {
                 for(const auto& interfaceName: _incomingMulticastInterfaces)
                 {
-                    for(const auto& group: _multicastGroups) joinAndTrackMulticastGroup(group, interfaceName);
+                    for(const auto& group: _multicastGroups)
+                        joinAndTrackMulticastGroup(group, interfaceName);
                 }
             }
         }
@@ -307,7 +352,8 @@ void Worker::onStop()
     _multicastTtl = 0;
 
     // Delete every multicast outgoing socket
-    for(const auto& [iface, socket]: _multicastTxSockets) socket->deleteLater();
+    for(const auto& [iface, socket]: _multicastTxSockets)
+        socket->deleteLater();
     _multicastTxSockets.clear();
 
     _failedJoiningMulticastGroup.clear();
@@ -317,9 +363,16 @@ void Worker::onStop()
     _multicastTxSocketsInstantiated = false;
 }
 
-void Worker::initialize(quint64 watchdog, QString rxAddress, quint16 rxPort, quint16 txPort, bool separateRxTxSocket,
-    const std::set<QString>& multicastGroup, const std::set<QString>& multicastListeningInterfaces,
-    const std::set<QString>& multicastOutgoingInterfaces, bool inputEnabled, bool multicastLoopback)
+void Worker::initialize(quint64 watchdog,
+    QString rxAddress,
+    quint16 rxPort,
+    quint16 txPort,
+    bool separateRxTxSocket,
+    const std::set<QString>& multicastGroup,
+    const std::set<QString>& multicastListeningInterfaces,
+    const std::set<QString>& multicastOutgoingInterfaces,
+    bool inputEnabled,
+    bool multicastLoopback)
 {
     _watchdogTimeout = watchdog;
     _rxAddress = rxAddress;
@@ -404,13 +457,15 @@ void Worker::joinMulticastGroup(const QString& address)
         else
         {
             // Join the group address an each interface an keep track of success or fail
-            for(const auto& interfaceName: _allMulticastInterfaces) joinAndTrackMulticastGroup(address, interfaceName);
+            for(const auto& interfaceName: _allMulticastInterfaces)
+                joinAndTrackMulticastGroup(address, interfaceName);
         }
     }
     else
     {
         // Join the group address an each interface an keep track of success or fail
-        for(const auto& interfaceName: _incomingMulticastInterfaces) joinAndTrackMulticastGroup(address, interfaceName);
+        for(const auto& interfaceName: _incomingMulticastInterfaces)
+            joinAndTrackMulticastGroup(address, interfaceName);
     }
 }
 
@@ -460,7 +515,8 @@ void Worker::leaveMulticastGroup(const QString& address)
     }
     else
     {
-        for(const auto& name: interfaceNameJoinedToRemove) _joinedMulticastGroups.erase(name);
+        for(const auto& name: interfaceNameJoinedToRemove)
+            _joinedMulticastGroups.erase(name);
     }
 
     if(interfaceNameFailedToRemove.size() == _failedJoiningMulticastGroup.size())
@@ -469,7 +525,8 @@ void Worker::leaveMulticastGroup(const QString& address)
     }
     else
     {
-        for(const auto& name: interfaceNameFailedToRemove) _failedJoiningMulticastGroup.erase(name);
+        for(const auto& name: interfaceNameFailedToRemove)
+            _failedJoiningMulticastGroup.erase(name);
     }
 
     if(_multicastGroups.empty())
@@ -497,7 +554,8 @@ void Worker::joinMulticastInterface(const QString& interfaceName)
         return;
 
     // Join each multicast group
-    for(const auto& group: _multicastGroups) joinAndTrackMulticastGroup(group, interfaceName);
+    for(const auto& group: _multicastGroups)
+        joinAndTrackMulticastGroup(group, interfaceName);
 }
 
 void Worker::leaveMulticastInterface(const QString& interfaceName)
@@ -515,7 +573,8 @@ void Worker::leaveMulticastInterface(const QString& interfaceName)
     if(it != _joinedMulticastGroups.end())
     {
         const auto& groupJoined = it->second;
-        for(const auto& group: groupJoined) socketLeaveMulticastGroup(group, interfaceName);
+        for(const auto& group: groupJoined)
+            socketLeaveMulticastGroup(group, interfaceName);
 
         _joinedMulticastGroups.erase(it);
     }
@@ -599,7 +658,10 @@ void Worker::tryJoinAllAvailableInterfaces()
         if(!success)
             continue;
 
-        for(const auto& group: _multicastGroups) { joinAndTrackMulticastGroup(group, interface->name()); }
+        for(const auto& group: _multicastGroups)
+        {
+            joinAndTrackMulticastGroup(group, interface->name());
+        }
     }
 }
 
@@ -614,7 +676,8 @@ void Worker::tryLeaveAllAvailableInterfaces()
 
     for(const auto& [interfaceName, groups]: _joinedMulticastGroups)
     {
-        for(const auto& group: groups) socketLeaveMulticastGroup(group, interfaceName);
+        for(const auto& group: groups)
+            socketLeaveMulticastGroup(group, interfaceName);
     }
 
     _joinedMulticastGroups.clear();
@@ -645,11 +708,10 @@ bool Worker::socketJoinMulticastGroup(const QString& address, const QString& int
 {
     const QHostAddress hostAddress(address);
     const auto networkInterface = QNetworkInterface::interfaceFromName(interfaceName);
-    const auto networkInterfaceValid =
-        networkInterface.isValid() && (networkInterface.flags() & QNetworkInterface::IsUp) &&
-        (networkInterface.flags() & QNetworkInterface::IsRunning) &&
-        ((networkInterface.flags() & QNetworkInterface::CanMulticast) ||
-            (multicastLoopback() && (networkInterface.flags() & QNetworkInterface::IsLoopBack)));
+    const auto networkInterfaceValid = networkInterface.isValid() && (networkInterface.flags() & QNetworkInterface::IsUp)
+                                       && (networkInterface.flags() & QNetworkInterface::IsRunning)
+                                       && ((networkInterface.flags() & QNetworkInterface::CanMulticast)
+                                           || (multicastLoopback() && (networkInterface.flags() & QNetworkInterface::IsLoopBack)));
 
     // should be verified by Socket
     Q_ASSERT(hostAddress.isMulticast());
@@ -666,12 +728,15 @@ bool Worker::socketJoinMulticastGroup(const QString& address, const QString& int
     if(!networkInterfaceValid || !rxSocket()->joinMulticastGroup(hostAddress, networkInterface))
     {
         if(networkInterfaceValid)
-            LOG_ERR("Fail to join multicast group {} an interface {}. {}", address.toStdString(),
-                interfaceName.toStdString(), rxSocket()->errorString().toStdString());
+            LOG_ERR("Fail to join multicast group {} an interface {}. {}",
+                address.toStdString(),
+                interfaceName.toStdString(),
+                rxSocket()->errorString().toStdString());
         else
             LOG_WARN("Fail to join multicast group {} an interface {} because interface is not valid. IsUp:{}, "
                      "IsRunning:{}, CanMulticast:{}, IsLoopBack:{}",
-                address.toStdString(), interfaceName.toStdString(),
+                address.toStdString(),
+                interfaceName.toStdString(),
                 bool(networkInterface.flags() & QNetworkInterface::IsUp),
                 bool(networkInterface.flags() & QNetworkInterface::IsRunning),
                 bool(networkInterface.flags() & QNetworkInterface::CanMulticast),
@@ -690,17 +755,19 @@ bool Worker::socketLeaveMulticastGroup(const QString& address, const QString& in
     const QHostAddress hostAddress(address);
     const auto networkInterface = QNetworkInterface::interfaceFromName(interfaceName);
     const auto networkInterfaceValid =
-        networkInterface.isValid() &&
-        networkInterface.flags() & (QNetworkInterface::IsRunning | QNetworkInterface::IsUp);
+        networkInterface.isValid() && networkInterface.flags() & (QNetworkInterface::IsRunning | QNetworkInterface::IsUp);
 
     if(!networkInterfaceValid || !rxSocket()->leaveMulticastGroup(hostAddress, networkInterface))
     {
         if(networkInterfaceValid)
-            LOG_ERR("Fail to leave multicast group {} an interface {}. {}", address.toStdString(),
-                interfaceName.toStdString(), rxSocket()->errorString().toStdString());
+            LOG_ERR("Fail to leave multicast group {} an interface {}. {}",
+                address.toStdString(),
+                interfaceName.toStdString(),
+                rxSocket()->errorString().toStdString());
         else
             LOG_ERR("Fail to leave multicast group {} an interface {} because interface is not valid",
-                address.toStdString(), interfaceName.toStdString());
+                address.toStdString(),
+                interfaceName.toStdString());
         return false;
     }
 
@@ -726,7 +793,10 @@ void Worker::setMulticastLoopbackToSocket() const
     }
 }
 
-void Worker::startWatchdog() { Q_EMIT queueStartWatchdog(); }
+void Worker::startWatchdog()
+{
+    Q_EMIT queueStartWatchdog();
+}
 
 void Worker::stopWatchdog()
 {
@@ -754,8 +824,7 @@ void Worker::setMulticastTtl(const quint8 ttl)
         _socket->setSocketOption(QAbstractSocket::MulticastTtlOption, int(_multicastTtl ? _multicastTtl : 8));
         for(const auto& [interfaceName, socket]: _multicastTxSockets)
         {
-            socket->setSocketOption(
-                QAbstractSocket::SocketOption::MulticastTtlOption, int(_multicastTtl ? _multicastTtl : 8));
+            socket->setSocketOption(QAbstractSocket::SocketOption::MulticastTtlOption, int(_multicastTtl ? _multicastTtl : 8));
         };
     }
 }
@@ -771,7 +840,9 @@ void Worker::startListeningMulticastInterfaceWatcher()
         _listeningMulticastInterfaceWatcher->setSingleShot(false);
 
         connect(
-            _listeningMulticastInterfaceWatcher, &QTimer::timeout, this,
+            _listeningMulticastInterfaceWatcher,
+            &QTimer::timeout,
+            this,
             [this]()
             {
                 // Should be deleted if _multicastGroups is empty
@@ -790,8 +861,7 @@ void Worker::startListeningMulticastInterfaceWatcher()
                         const auto interfaceName = interface->name();
                         if(_allMulticastInterfaces.find(interfaceName) == _allMulticastInterfaces.end())
                         {
-                            LOG_DEV_INFO(
-                                "Find a new interface to join for multicast : {}", interfaceName.toStdString());
+                            LOG_DEV_INFO("Find a new interface to join for multicast : {}", interfaceName.toStdString());
                             _allMulticastInterfaces.insert(interfaceName);
                             _failedJoiningMulticastGroup.insert({interfaceName, _multicastGroups});
                         }
@@ -849,9 +919,8 @@ void Worker::startListeningMulticastInterfaceWatcher()
                     // Only try to reconnect to interface that seems valid
                     if(const auto& interface = InterfacesProvider::interfaceFromName(interfaceName))
                     {
-                        const bool interfaceValid =
-                            interface->isValid() && interface->isRunning() && interface->isUp() &&
-                            (interface->canMulticast() || (multicastLoopback() && interface->isLoopBack()));
+                        const bool interfaceValid = interface->isValid() && interface->isRunning() && interface->isUp()
+                                                    && (interface->canMulticast() || (multicastLoopback() && interface->isLoopBack()));
                         if(!interfaceValid)
                         {
                             LOG_DEV_INFO("Interface {} isn't valid anymore, It will be removed from joined interfaces. "
@@ -867,7 +936,10 @@ void Worker::startListeningMulticastInterfaceWatcher()
                             else
                             {
                                 MulticastGroupList newList;
-                                std::merge(currentGroups.begin(), currentGroups.end(), groups.begin(), groups.end(),
+                                std::merge(currentGroups.begin(),
+                                    currentGroups.end(),
+                                    groups.begin(),
+                                    groups.end(),
                                     std::inserter(newList, newList.begin()));
                                 _failedJoiningMulticastGroup[interfaceName] = newList;
                             }
@@ -887,9 +959,8 @@ void Worker::startListeningMulticastInterfaceWatcher()
                     // Only try to reconnect to interface that seems valid
                     if(const auto& interface = InterfacesProvider::interfaceFromName(interfaceName))
                     {
-                        const bool interfaceValid = interface->isValid() && interface->isRunning() &&
-                                                    interface->isUp() &&
-                                                    (multicastLoopback() && interface->isLoopBack());
+                        const bool interfaceValid = interface->isValid() && interface->isRunning() && interface->isUp()
+                                                    && (multicastLoopback() && interface->isLoopBack());
                         if(!interfaceValid)
                             continue;
                     }
@@ -902,7 +973,10 @@ void Worker::startListeningMulticastInterfaceWatcher()
                             successFullyJoinedGroup.push_back(group);
                     }
 
-                    for(const auto& group: successFullyJoinedGroup) { groups.erase(group); }
+                    for(const auto& group: successFullyJoinedGroup)
+                    {
+                        groups.erase(group);
+                    }
                 }
 
                 // Remove interfaces with empty group
@@ -943,7 +1017,9 @@ void Worker::startOutputMulticastInterfaceWatcher()
         _outputMulticastInterfaceWatcher->setSingleShot(false);
         _outputMulticastInterfaceWatcher->setTimerType(Qt::VeryCoarseTimer);
 
-        connect(_outputMulticastInterfaceWatcher, &QTimer::timeout, this,
+        connect(_outputMulticastInterfaceWatcher,
+            &QTimer::timeout,
+            this,
             [this]()
             {
                 // If too much time without datagram send, then we destroy every sockets
@@ -963,11 +1039,9 @@ void Worker::startOutputMulticastInterfaceWatcher()
                     {
                         Q_CHECK_PTR(interface);
                         const auto interfaceName = interface->name();
-                        const auto multicastTxSocketFound =
-                            _multicastTxSockets.find(interfaceName) != _multicastTxSockets.end();
+                        const auto multicastTxSocketFound = _multicastTxSockets.find(interfaceName) != _multicastTxSockets.end();
                         const auto multicastFailedToCreateFound =
-                            _failedToInstantiateMulticastTxSockets.find(interfaceName) !=
-                            _failedToInstantiateMulticastTxSockets.end();
+                            _failedToInstantiateMulticastTxSockets.find(interfaceName) != _failedToInstantiateMulticastTxSockets.end();
 
                         // New interface detected, It's added to the list of _failedToInstantiateMulticastTxSockets
                         // Then it will be instantiated by the step of the algorithm.
@@ -987,8 +1061,7 @@ void Worker::startOutputMulticastInterfaceWatcher()
                 };
 
                 // Check for interfaces that are no longer here
-                for(auto it = _failedToInstantiateMulticastTxSockets.begin();
-                    it != _failedToInstantiateMulticastTxSockets.end();)
+                for(auto it = _failedToInstantiateMulticastTxSockets.begin(); it != _failedToInstantiateMulticastTxSockets.end();)
                 {
                     const auto interfaceName = *it;
                     if(isInterfacePresent(interfaceName))
@@ -997,8 +1070,7 @@ void Worker::startOutputMulticastInterfaceWatcher()
                     }
                     else
                     {
-                        LOG_DEV_INFO(
-                            "Detect interface {} disappear, stop trying to instantiate a udp multicast socket for it",
+                        LOG_DEV_INFO("Detect interface {} disappear, stop trying to instantiate a udp multicast socket for it",
                             interfaceName.toStdString());
                         it = _failedToInstantiateMulticastTxSockets.erase(it);
                     }
@@ -1012,8 +1084,7 @@ void Worker::startOutputMulticastInterfaceWatcher()
                     }
                     else
                     {
-                        LOG_DEV_INFO("Detect interface {} disappear, delete the associated multicast socket",
-                            interfaceName.toStdString());
+                        LOG_DEV_INFO("Detect interface {} disappear, delete the associated multicast socket", interfaceName.toStdString());
                         socket->deleteLater();
                         it = _multicastTxSockets.erase(it);
                     }
@@ -1050,16 +1121,20 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
     const auto successCreateSocket = [&]() -> bool
     {
         const auto interfaceName = interface.name();
-        const bool isInterfaceValid = interface.isValid() && interface.isUp() && interface.isRunning() &&
-                                      (interface.canMulticast() || (multicastLoopback() && interface.isLoopBack()));
+        const bool isInterfaceValid = interface.isValid() && interface.isUp() && interface.isRunning()
+                                      && (interface.canMulticast() || (multicastLoopback() && interface.isLoopBack()));
 
         if(!isInterfaceValid)
         {
-            LOG_DEV_DEBUG(
-                "Can't create multicast socket for interface {} because it's not valid: isValid: {}, isUp: {}, "
-                "isRunning: {}, canMulticast: {}, isLoopback: {}, multicastLoopback: {}",
-                interface.name().toStdString(), interface.isValid(), interface.isUp(), interface.isRunning(),
-                interface.canMulticast(), interface.isLoopBack(), multicastLoopback());
+            LOG_DEV_DEBUG("Can't create multicast socket for interface {} because it's not valid: isValid: {}, isUp: {}, "
+                          "isRunning: {}, canMulticast: {}, isLoopback: {}, multicastLoopback: {}",
+                interface.name().toStdString(),
+                interface.isValid(),
+                interface.isUp(),
+                interface.isRunning(),
+                interface.canMulticast(),
+                interface.isLoopBack(),
+                multicastLoopback());
             return false;
         }
 
@@ -1087,8 +1162,7 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
 
         const auto onError = [interfaceName, socket, this](QAbstractSocket::SocketError error)
         {
-            LOG_DEV_WARN(
-                "{}: Multicast tx error: {}", interfaceName.toStdString(), socket->errorString().toStdString());
+            LOG_DEV_WARN("{}: Multicast tx error: {}", interfaceName.toStdString(), socket->errorString().toStdString());
             socket->deleteLater();
             _multicastTxSockets.erase(interfaceName);
             _failedToInstantiateMulticastTxSockets.insert(interfaceName);
@@ -1096,11 +1170,9 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
 
         // Connect to socket signals
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-        connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, onError,
-            Qt::QueuedConnection);
+        connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, onError, Qt::QueuedConnection);
 #else
-        connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred), this, onError,
-            Qt::QueuedConnection);
+        connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred), this, onError, Qt::QueuedConnection);
 #endif
 
         const auto [it, success] = _multicastTxSockets.insert({interfaceName, socket});
@@ -1216,7 +1288,8 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
             // Copy will happen :(
             // Don't have other choice in order to set ttl
             QNetworkDatagram d(QByteArray(reinterpret_cast<const char*>(datagram->buffer()), int(datagram->length())),
-                host, datagram->destinationPort);
+                host,
+                datagram->destinationPort);
 
             d.setHopLimit(datagram->ttl ? datagram->ttl : -1);
             return _socket->writeDatagram(d);
@@ -1234,11 +1307,11 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
                 qint64 bytes = 0;
                 for(const auto& [interfaceName, socket]: _multicastTxSockets)
                 {
-                    socket->setSocketOption(
-                        QAbstractSocket::MulticastTtlOption, int(_multicastTtl ? _multicastTtl : 8));
-                    const auto currentBytesWritten =
-                        socket->writeDatagram(reinterpret_cast<const char*>(datagram->buffer()), datagram->length(),
-                            host, datagram->destinationPort);
+                    socket->setSocketOption(QAbstractSocket::MulticastTtlOption, int(_multicastTtl ? _multicastTtl : 8));
+                    const auto currentBytesWritten = socket->writeDatagram(reinterpret_cast<const char*>(datagram->buffer()),
+                        datagram->length(),
+                        host,
+                        datagram->destinationPort);
 
                     if(!byteWrittenInitialized)
                     {
@@ -1253,8 +1326,10 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
             }
         }
 
-        return _socket->writeDatagram(
-            reinterpret_cast<const char*>(datagram->buffer()), datagram->length(), host, datagram->destinationPort);
+        return _socket->writeDatagram(reinterpret_cast<const char*>(datagram->buffer()),
+            datagram->length(),
+            host,
+            datagram->destinationPort);
     }();
 
     if(bytesWritten <= 0 || bytesWritten != datagram->length())
@@ -1263,11 +1338,14 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
 
         if(bytesWritten <= 0)
             LOG_ERR("Fail to send datagram to {}:{}, 0 bytes written out of {}. Restart Socket. {}",
-                datagram->destinationAddress.toStdString(), datagram->destinationPort, datagram->length(),
+                datagram->destinationAddress.toStdString(),
+                datagram->destinationPort,
+                datagram->length(),
                 _socket->errorString().toStdString());
         else
             LOG_ERR("Fail to send datagram, {}/{} bytes written. Restart Socket. {}",
-                static_cast<long long>(bytesWritten), static_cast<long long>(datagram->length()),
+                static_cast<long long>(bytesWritten),
+                static_cast<long long>(datagram->length()),
                 _socket->errorString().toStdString());
         return;
     }
@@ -1276,7 +1354,10 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
     ++_txPacketsCounter;
 }
 
-bool Worker::isPacketValid(const uint8_t* buffer, const size_t length) const { return buffer && length; }
+bool Worker::isPacketValid(const uint8_t* buffer, const size_t length) const
+{
+    return buffer && length;
+}
 
 void Worker::readPendingDatagrams()
 {
@@ -1337,8 +1418,7 @@ void Worker::readPendingDatagrams()
         }
 
         SharedDatagram sharedDatagram = makeDatagram(datagram.data().size());
-        memcpy(sharedDatagram.get()->buffer(), reinterpret_cast<const uint8_t*>(datagram.data().constData()),
-            datagram.data().size());
+        memcpy(sharedDatagram.get()->buffer(), reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size());
         sharedDatagram->destinationAddress = datagram.destinationAddress().toString();
         if(datagram.destinationPort() >= 0)
             sharedDatagram->destinationPort = datagram.destinationPort();
@@ -1355,18 +1435,27 @@ void Worker::readPendingDatagrams()
     }
 }
 
-void Worker::onDatagramReceived(const SharedDatagram& datagram) { Q_EMIT datagramReceived(datagram); }
+void Worker::onDatagramReceived(const SharedDatagram& datagram)
+{
+    Q_EMIT datagramReceived(datagram);
+}
 
-void Worker::onSocketError(QAbstractSocket::SocketError error) { onSocketErrorCommon(error, _socket); }
+void Worker::onSocketError(QAbstractSocket::SocketError error)
+{
+    onSocketErrorCommon(error, _socket);
+}
 
-void Worker::onRxSocketError(QAbstractSocket::SocketError error) { onSocketErrorCommon(error, _rxSocket); }
+void Worker::onRxSocketError(QAbstractSocket::SocketError error)
+{
+    onSocketErrorCommon(error, _rxSocket);
+}
 
 void Worker::onSocketStateChanged(QAbstractSocket::SocketState socketState)
 {
     LOG_DEV_INFO("Socket State Changed to {} ({})", socketStateToString(socketState).toStdString(), socketState);
 
-    if((socketState == QAbstractSocket::SocketState::BoundState && !_isBounded) ||
-        (socketState != QAbstractSocket::SocketState::BoundState && _isBounded))
+    if((socketState == QAbstractSocket::SocketState::BoundState && !_isBounded)
+        || (socketState != QAbstractSocket::SocketState::BoundState && _isBounded))
     {
         _isBounded = socketState == QAbstractSocket::SocketState::BoundState;
         Q_EMIT isBoundedChanged(_isBounded);
@@ -1394,13 +1483,20 @@ QString Worker::socketStateToString(QAbstractSocket::SocketState socketState)
 {
     switch(socketState)
     {
-    case QAbstractSocket::UnconnectedState: return QStringLiteral("UnconnectedState");
-    case QAbstractSocket::HostLookupState: return QStringLiteral("HostLookupState");
-    case QAbstractSocket::ConnectingState: return QStringLiteral("ConnectingState");
-    case QAbstractSocket::ConnectedState: return QStringLiteral("ConnectedState");
-    case QAbstractSocket::BoundState: return QStringLiteral("BoundState");
-    case QAbstractSocket::ListeningState: return QStringLiteral("ListeningState");
-    case QAbstractSocket::ClosingState: return QStringLiteral("ClosingState");
+    case QAbstractSocket::UnconnectedState:
+        return QStringLiteral("UnconnectedState");
+    case QAbstractSocket::HostLookupState:
+        return QStringLiteral("HostLookupState");
+    case QAbstractSocket::ConnectingState:
+        return QStringLiteral("ConnectingState");
+    case QAbstractSocket::ConnectedState:
+        return QStringLiteral("ConnectedState");
+    case QAbstractSocket::BoundState:
+        return QStringLiteral("BoundState");
+    case QAbstractSocket::ListeningState:
+        return QStringLiteral("ListeningState");
+    case QAbstractSocket::ClosingState:
+        return QStringLiteral("ClosingState");
     default:;
     }
     return QStringLiteral("Unknown");
@@ -1414,7 +1510,9 @@ void Worker::startBytesCounter()
     _bytesCounterTimer->setTimerType(Qt::TimerType::VeryCoarseTimer);
     _bytesCounterTimer->setSingleShot(false);
     _bytesCounterTimer->setInterval(1000);
-    connect(_bytesCounterTimer, &QTimer::timeout, this,
+    connect(_bytesCounterTimer,
+        &QTimer::timeout,
+        this,
         [this]()
         {
             Q_EMIT rxBytesCounterChanged(_rxBytesCounter);
