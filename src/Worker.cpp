@@ -305,7 +305,7 @@ void Worker::onStop()
     _multicastTtl = 0;
 
     // Delete every multicast outgoing socket
-    for(const auto [iface, socket]: _multicastTxSockets) socket->deleteLater();
+    for(const auto& [iface, socket]: _multicastTxSockets) socket->deleteLater();
     _multicastTxSockets.clear();
     _txMulticastPacketElapsedTime = nullptr;
 
@@ -718,7 +718,7 @@ void Worker::setMulticastLoopbackToSocket() const
         if(rxSocket() != _socket)
             _socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback);
 
-        for(const auto [interfaceName, socket]: _multicastTxSockets)
+        for(const auto& [interfaceName, socket]: _multicastTxSockets)
         {
             socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _multicastLoopback);
         }
@@ -751,7 +751,7 @@ void Worker::setMulticastTtl(const quint8 ttl)
         // This should be set in case _multicastTxSockets is empty
         _multicastTtl = ttl;
         _socket->setSocketOption(QAbstractSocket::MulticastTtlOption, int(_multicastTtl ? _multicastTtl : 8));
-        for(const auto [interfaceName, socket]: _multicastTxSockets)
+        for(const auto& [interfaceName, socket]: _multicastTxSockets)
         {
             socket->setSocketOption(
                 QAbstractSocket::SocketOption::MulticastTtlOption, int(_multicastTtl ? _multicastTtl : 8));
@@ -1159,7 +1159,7 @@ void Worker::createMulticastOutputSockets()
 void Worker::destroyMulticastOutputSockets()
 {
     LOG_DEV_INFO("Destroy all multicast tx sockets");
-    for(const auto [interfaceName, socket]: _multicastTxSockets)
+    for(const auto& [interfaceName, socket]: _multicastTxSockets)
     {
         Q_CHECK_PTR(socket);
         socket->deleteLater();
@@ -1235,7 +1235,7 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
             {
                 bool byteWrittenInitialized = false;
                 qint64 bytes = 0;
-                for(const auto [interfaceName, socket]: _multicastTxSockets)
+                for(const auto& [interfaceName, socket]: _multicastTxSockets)
                 {
                     socket->setSocketOption(
                         QAbstractSocket::MulticastTtlOption, int(_multicastTtl ? _multicastTtl : 8));
