@@ -324,7 +324,7 @@ TEST(WorkerMultithreadFuzz, restartPointer)
     client->setUseWorkerThread(true);
 
 #ifdef NDEBUG
-    const auto CREATION_COUNT = 10;
+    const auto CREATION_COUNT = 100;
 #else
     const auto CREATION_COUNT = 10;
 #endif
@@ -368,4 +368,40 @@ int main(int argc, char** argv)
     // Start tests
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
+}
+
+TEST(WorkerMultithreadFuzz, releaseBindedPort)
+{
+#ifdef NDEBUG
+    const auto CREATION_COUNT = 100;
+    ;
+#else
+    const auto CREATION_COUNT = 10;
+#endif
+
+    for(int i = 0; i < CREATION_COUNT; ++i)
+    {
+        Socket client;
+        Socket server;
+        client.setUseWorkerThread(true);
+        server.setUseWorkerThread(true);
+        QSignalSpy spyServerBounded(&server, &Socket::isBoundedChanged);
+        QSignalSpy spyClientBounded(&client, &Socket::isBoundedChanged);
+        QSignalSpy spyDatagramReceived(&client, &Socket::sharedDatagramReceived);
+
+        client.start(1234);
+        server.start();
+
+        if(spyServerBounded.empty())
+            ASSERT_TRUE(spyServerBounded.wait());
+
+        if(spyClientBounded.empty())
+            ASSERT_TRUE(spyClientBounded.wait());
+
+        auto d = server.makeDatagram(10);
+        std::memset(d->buffer(), 0x12, 10);
+        server.sendDatagram(d, "127.0.0.1", 1234);
+
+        ASSERT_TRUE(spyDatagramReceived.wait());
+    }
 }
