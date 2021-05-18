@@ -1,5 +1,5 @@
 ---
-BasedOnStyle: Google
+BasedOnStyle: Microsoft
 AccessModifierOffset: -4
 Language: Cpp
 AlignAfterOpenBracket: DontAlign
@@ -8,21 +8,22 @@ AlignConsecutiveDeclarations: false
 AlignConsecutiveMacros: false
 AlignEscapedNewlines: Right
 AlignOperands: true
-ColumnLimit: 120
+ColumnLimit: 140
 AlignTrailingComments: false
 AllowAllArgumentsOnNextLine: false
-AllowAllConstructorInitializersOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
-AllowShortBlocksOnASingleLine: Empty
-AllowShortFunctionsOnASingleLine: All
-AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+AllowShortLoopsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
-AllowShortCaseLabelsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: false
 AlwaysBreakTemplateDeclarations: true
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: false
 
 BreakBeforeBraces: Custom
 BraceWrapping:
@@ -42,10 +43,10 @@ BraceWrapping:
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
 
-BreakBeforeBinaryOperators: None
+BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeTernaryOperators: false
-BreakConstructorInitializers: AfterColon
-BreakInheritanceList: AfterColon
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
 BreakStringLiterals: true
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
