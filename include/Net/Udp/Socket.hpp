@@ -190,7 +190,7 @@ class NETUDP_API_ Socket : public ISocket
     // ──────── CONSTRUCTOR ────────
 public:
     Socket(QObject* parent = nullptr);
-    ~Socket();
+    ~Socket() override;
 
     // ──────── WORKER ────────
 protected:
