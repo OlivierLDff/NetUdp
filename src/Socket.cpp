@@ -69,28 +69,31 @@ void Socket::killWorker()
     if(!_worker)
         return;
 
-    LOG_DEV_INFO("Stop Worker [{}]", static_cast<void*>(_worker.get()));
+    LOG_DEV_INFO("Stop Worker [{}]", static_cast<void*>(_worker));
     Q_EMIT stopWorker();
 
-    LOG_DEV_INFO("Disconnect Worker [{}]", static_cast<void*>(_worker.get()));
-    Q_ASSERT(_worker.get());
-    disconnect(_worker.get(), nullptr, this, nullptr);
-    disconnect(this, nullptr, _worker.get(), nullptr);
+    LOG_DEV_INFO("Disconnect Worker [{}]", static_cast<void*>(_worker));
+    Q_ASSERT(_worker);
+    disconnect(_worker, nullptr, this, nullptr);
+    disconnect(this, nullptr, _worker, nullptr);
 
     if(_workerThread)
     {
         // Ask to delete later in the event loop
         LOG_DEV_INFO("Kill worker thread ...");
-        _workerThread->exit();
+        _workerThread->quit();
         _workerThread->wait();
-        _workerThread.release()->deleteLater();
-        _worker.release()->deleteLater();
+        _workerThread->deleteLater();
+        _workerThread = nullptr;
+        // Worker will be deleted with the finished signal from QThread
+        _worker = nullptr;
         LOG_DEV_INFO("... Done");
     }
     else if(_worker)
     {
-        LOG_DEV_INFO("Delete worker [{}] later", static_cast<void*>(_worker.get()));
-        _worker.release()->deleteLater();
+        LOG_DEV_INFO("Delete worker [{}] later", static_cast<void*>(_worker));
+        _worker->deleteLater();
+        _worker = nullptr;
     }
 }
 
@@ -171,8 +174,8 @@ bool Socket::start()
 
     setRunning(true);
 
-    Q_ASSERT(_worker.get() == nullptr);
-    Q_ASSERT(_workerThread.get() == nullptr);
+    Q_ASSERT(_worker == nullptr);
+    Q_ASSERT(_workerThread == nullptr);
 
     LOG_DEV_DEBUG("Create worker");
 
@@ -180,55 +183,61 @@ bool Socket::start()
 
     if(useWorkerThread())
     {
-        _workerThread = std::make_unique<QThread>();
+        _workerThread = new QThread(this);
 
         if(objectName().size())
             _workerThread->setObjectName(objectName() + " Worker");
         else
-        {
-            _workerThread->setObjectName("Socket Worker");
-        }
-        _worker->moveToThread(_workerThread.get());
+            _workerThread->setObjectName("UdpSocket Thread");
+
+        _worker->moveToThread(_workerThread);
+        connect(_workerThread, &QThread::finished, _worker, &QObject::deleteLater);
+    }
+    else
+    {
+        _worker->setParent(this);
     }
 
-    LOG_DEV_DEBUG("Connect to worker {}", static_cast<void*>(_worker.get()));
+    _worker->setObjectName("Udp Worker");
+
+    LOG_DEV_DEBUG("Connect to worker {}", static_cast<void*>(_worker));
 
     _worker->initialize(watchdogPeriod(), rxAddress(), rxPort(), txPort(), separateRxTxSockets(),
         _multicastListeningGroups, _multicastListeningInterfaces, _multicastOutgoingInterfaces, inputEnabled(),
         multicastLoopback());
 
-    connect(this, &Socket::startWorker, _worker.get(), &Worker::onStart);
-    connect(this, &Socket::stopWorker, _worker.get(), &Worker::onStop);
-    connect(this, &Socket::restartWorker, _worker.get(), &Worker::onRestart);
+    connect(this, &Socket::startWorker, _worker, &Worker::onStart);
+    connect(this, &Socket::stopWorker, _worker, &Worker::onStop);
+    connect(this, &Socket::restartWorker, _worker, &Worker::onRestart);
 
-    connect(this, &Socket::joinMulticastGroupWorker, _worker.get(), &Worker::joinMulticastGroup);
-    connect(this, &Socket::leaveMulticastGroupWorker, _worker.get(), &Worker::leaveMulticastGroup);
+    connect(this, &Socket::joinMulticastGroupWorker, _worker, &Worker::joinMulticastGroup);
+    connect(this, &Socket::leaveMulticastGroupWorker, _worker, &Worker::leaveMulticastGroup);
 
-    connect(this, &Socket::joinMulticastInterfaceWorker, _worker.get(), &Worker::joinMulticastInterface);
-    connect(this, &Socket::leaveMulticastInterfaceWorker, _worker.get(), &Worker::leaveMulticastInterface);
+    connect(this, &Socket::joinMulticastInterfaceWorker, _worker, &Worker::joinMulticastInterface);
+    connect(this, &Socket::leaveMulticastInterfaceWorker, _worker, &Worker::leaveMulticastInterface);
 
-    connect(this, &Socket::rxAddressChanged, _worker.get(), &Worker::setAddress);
-    connect(this, &Socket::rxPortChanged, _worker.get(), &Worker::setRxPort);
-    connect(this, &Socket::txPortChanged, _worker.get(), &Worker::setTxPort);
-    connect(this, &Socket::separateRxTxSocketsChanged, _worker.get(), &Worker::setSeparateRxTxSockets);
-    connect(this, &Socket::multicastLoopbackChanged, _worker.get(), &Worker::setMulticastLoopback);
-    connect(this, &Socket::multicastOutgoingInterfacesChanged, _worker.get(), &Worker::setMulticastOutgoingInterfaces);
-    connect(this, &Socket::inputEnabledChanged, _worker.get(), &Worker::setInputEnabled);
-    connect(this, &Socket::watchdogPeriodChanged, _worker.get(), &Worker::setWatchdogTimeout);
+    connect(this, &Socket::rxAddressChanged, _worker, &Worker::setAddress);
+    connect(this, &Socket::rxPortChanged, _worker, &Worker::setRxPort);
+    connect(this, &Socket::txPortChanged, _worker, &Worker::setTxPort);
+    connect(this, &Socket::separateRxTxSocketsChanged, _worker, &Worker::setSeparateRxTxSockets);
+    connect(this, &Socket::multicastLoopbackChanged, _worker, &Worker::setMulticastLoopback);
+    connect(this, &Socket::multicastOutgoingInterfacesChanged, _worker, &Worker::setMulticastOutgoingInterfaces);
+    connect(this, &Socket::inputEnabledChanged, _worker, &Worker::setInputEnabled);
+    connect(this, &Socket::watchdogPeriodChanged, _worker, &Worker::setWatchdogTimeout);
 
-    connect(this, &Socket::sendDatagramToWorker, _worker.get(), &Worker::onSendDatagram, Qt::QueuedConnection);
-    connect(_worker.get(), &Worker::datagramReceived, this, &Socket::onDatagramReceived, Qt::QueuedConnection);
+    connect(this, &Socket::sendDatagramToWorker, _worker, &Worker::onSendDatagram, Qt::QueuedConnection);
+    connect(_worker, &Worker::datagramReceived, this, &Socket::onDatagramReceived, Qt::QueuedConnection);
 
-    connect(_worker.get(), &Worker::isBoundedChanged, this, &Socket::setBounded);
-    connect(_worker.get(), &Worker::socketError, this, &Socket::socketError);
+    connect(_worker, &Worker::isBoundedChanged, this, &Socket::setBounded);
+    connect(_worker, &Worker::socketError, this, &Socket::socketError);
 
-    connect(_worker.get(), &Worker::rxBytesCounterChanged, this, &Socket::onWorkerRxPerSecondsChanged);
-    connect(_worker.get(), &Worker::txBytesCounterChanged, this, &Socket::onWorkerTxPerSecondsChanged);
-    connect(_worker.get(), &Worker::rxPacketsCounterChanged, this, &Socket::onWorkerPacketsRxPerSecondsChanged);
-    connect(_worker.get(), &Worker::txPacketsCounterChanged, this, &Socket::onWorkerPacketsTxPerSecondsChanged);
+    connect(_worker, &Worker::rxBytesCounterChanged, this, &Socket::onWorkerRxPerSecondsChanged);
+    connect(_worker, &Worker::txBytesCounterChanged, this, &Socket::onWorkerTxPerSecondsChanged);
+    connect(_worker, &Worker::rxPacketsCounterChanged, this, &Socket::onWorkerPacketsRxPerSecondsChanged);
+    connect(_worker, &Worker::txPacketsCounterChanged, this, &Socket::onWorkerPacketsTxPerSecondsChanged);
 
-    connect(_worker.get(), &Worker::multicastGroupJoined, this, &Socket::multicastGroupJoined);
-    connect(_worker.get(), &Worker::multicastGroupLeaved, this, &Socket::multicastGroupLeaved);
+    connect(_worker, &Worker::multicastGroupJoined, this, &Socket::multicastGroupJoined);
+    connect(_worker, &Worker::multicastGroupLeaved, this, &Socket::multicastGroupLeaved);
 
     if(_workerThread)
     {
@@ -409,7 +418,7 @@ void Socket::clearCounters()
     clearTxCounter();
 }
 
-std::unique_ptr<Worker> Socket::createWorker() { return std::make_unique<Worker>(); }
+Worker* Socket::createWorker() { return new Worker; }
 
 std::shared_ptr<Datagram> Socket::makeDatagram(const size_t length) { return _cache.make(length); }
 

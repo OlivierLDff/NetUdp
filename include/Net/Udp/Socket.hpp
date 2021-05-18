@@ -194,8 +194,8 @@ public:
 
     // ──────── WORKER ────────
 protected:
-    std::unique_ptr<Worker> _worker;
-    std::unique_ptr<QThread> _workerThread;
+    Worker* _worker = nullptr;
+    QThread* _workerThread = nullptr;
 
     // Recycle datagram to reduce dynamic allocation
     recycler::Circular<RecycledDatagram> _cache;
@@ -247,7 +247,7 @@ public Q_SLOTS:
 
     // ──────── CUSTOM WORKER API ────────
 protected:
-    virtual std::unique_ptr<Worker> createWorker();
+    virtual Worker* createWorker();
 
     // ──────── CUSTOM DATAGRAM API ────────
 public:
