@@ -44,7 +44,7 @@ class NETUDP_API_ Worker : public QObject
 public:
     Worker(QObject* parent = nullptr);
     ~Worker();
-    
+
     using MulticastGroupList = std::set<QString>;
     using MulticastInterfaceList = std::set<QString>;
     using InterfaceToMulticastSocket = std::map<QString, QUdpSocket*>;
@@ -210,9 +210,9 @@ private:
 
     // ──────── MULTICAST TX JOIN WATCHER ────────
 private:
-    // Created when 
+    // Created when
     QTimer* _outputMulticastInterfaceWatcher = nullptr;
-    std::unique_ptr<QElapsedTimer> _txMulticastPacketElapsedTime;
+    QElapsedTimer _txMulticastPacketElapsedTime;
 
     void startOutputMulticastInterfaceWatcher();
     void stopOutputMulticastInterfaceWatcher();

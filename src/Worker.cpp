@@ -309,7 +309,6 @@ void Worker::onStop()
     // Delete every multicast outgoing socket
     for(const auto& [iface, socket]: _multicastTxSockets) socket->deleteLater();
     _multicastTxSockets.clear();
-    _txMulticastPacketElapsedTime = nullptr;
 
     _failedJoiningMulticastGroup.clear();
     _joinedMulticastGroups.clear();
@@ -948,8 +947,7 @@ void Worker::startOutputMulticastInterfaceWatcher()
             [this]()
             {
                 // If too much time without datagram send, then we destroy every sockets
-                Q_CHECK_PTR(_txMulticastPacketElapsedTime);
-                if(_txMulticastPacketElapsedTime->elapsed() > disableSocketTimeout)
+                if(_txMulticastPacketElapsedTime.elapsed() > disableSocketTimeout)
                 {
                     destroyMulticastOutputSockets();
                     return;
@@ -1152,7 +1150,6 @@ void Worker::createMulticastOutputSockets()
         }
     }
 
-    _txMulticastPacketElapsedTime = std::make_unique<QElapsedTimer>();
     startOutputMulticastInterfaceWatcher();
     _multicastTxSocketsInstantiated = true;
 }
@@ -1169,7 +1166,6 @@ void Worker::destroyMulticastOutputSockets()
     _failedJoiningMulticastGroup.clear();
     stopOutputMulticastInterfaceWatcher();
     _multicastTxSocketsInstantiated = false;
-    _txMulticastPacketElapsedTime = nullptr;
 }
 
 void Worker::onSendDatagram(const SharedDatagram& datagram)
@@ -1252,8 +1248,7 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
                 }
 
                 // _timeSinceNoTxMulticastDatagram can't be null when _multicastTxSockets are instantiated
-                Q_CHECK_PTR(_txMulticastPacketElapsedTime);
-                _txMulticastPacketElapsedTime->start();
+                _txMulticastPacketElapsedTime.start();
                 return bytes;
             }
         }
