@@ -60,6 +60,8 @@ namespace net::udp {
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
+const quint64 disableSocketTimeout = 10000;
+
 Worker::Worker(QObject* parent) : QObject(parent) { LOG_DEV_DEBUG("Constructor"); }
 
 Worker::~Worker() { LOG_DEV_DEBUG("Destructor"); }
@@ -947,8 +949,7 @@ void Worker::startOutputMulticastInterfaceWatcher()
             {
                 // If too much time without datagram send, then we destroy every sockets
                 Q_CHECK_PTR(_txMulticastPacketElapsedTime);
-                // todo : set to 10000
-                if(_txMulticastPacketElapsedTime->elapsed() > 100000)
+                if(_txMulticastPacketElapsedTime->elapsed() > disableSocketTimeout)
                 {
                     destroyMulticastOutputSockets();
                     return;
