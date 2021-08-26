@@ -8,22 +8,31 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ~~~
 
-# ┌──────────────────────────────────────────────────────────────────┐
-# │                       CMAKE PROPERTIES                           │
-# └──────────────────────────────────────────────────────────────────┘
-
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-# ┌──────────────────────────────────────────────────────────────────┐
-# │                       PROJECT SETTINGS                           │
-# └──────────────────────────────────────────────────────────────────┘
+# ──── Include guards ────
+
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+  message(FATAL_ERROR "In-source builds not allowed. " "Please make a new directory (called a build directory) and run CMake from there.")
+endif()
+
+# ──── Main Project behavior ────
 
 set(NETUDP_MAIN_PROJECT OFF)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(NETUDP_MAIN_PROJECT ON)
 endif()
 
-# OPTIONS
+# ──── Default build to Release ────
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE
+      "Release"
+      CACHE STRING "Choose Release or Debug" FORCE
+  )
+endif()
+
+# ───── 🔧 Configuration ─────
 
 set(NETUDP_VERSION_MAJOR 1)
 set(NETUDP_VERSION_MINOR 3)
@@ -88,6 +97,10 @@ set(NETUDP_ENABLE_TESTS
     OFF
     CACHE BOOL "Create test target for NetUdp"
 )
+set(NETUDP_VERBOSE
+    ${NETUDP_MAIN_PROJECT}
+    CACHE BOOL "Verbose cmake configuration"
+)
 
 # CREATE PROJECT
 
@@ -100,25 +113,23 @@ if(NETUDP_MAIN_PROJECT)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
 
-message(STATUS "---------------- NETUDP OPTIONS. ----------------")
+if(NETUDP_VERBOSE)
+  message(STATUS "---------------- NETUDP OPTIONS. ----------------")
+  message(STATUS "NETUDP_PROJECT            : " ${NETUDP_PROJECT})
+  message(STATUS "NETUDP_TARGET             : " ${NETUDP_TARGET})
+  message(STATUS "NETUDP_VERSION            : " ${NETUDP_VERSION})
+  message(STATUS "NETUDP_VERSION_TAG        : " ${NETUDP_VERSION_TAG})
+  message(STATUS "NETUDP_BUILD_SHARED       : " ${NETUDP_BUILD_SHARED})
+  message(STATUS "NETUDP_FOLDER_PREFIX      : " ${NETUDP_FOLDER_PREFIX})
+  message(STATUS "NETUDP_ENABLE_QML         : " ${NETUDP_ENABLE_QML})
+  message(STATUS "NETUDP_ENABLE_PCH         : " ${NETUDP_ENABLE_PCH})
+  message(STATUS "NETUDP_ENABLE_EXAMPLES    : " ${NETUDP_ENABLE_EXAMPLES})
+  message(STATUS "NETUDP_ENABLE_TESTS       : " ${NETUDP_ENABLE_TESTS})
+  message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
+endif()
 
-# General
-message(STATUS "NETUDP_PROJECT            : " ${NETUDP_PROJECT})
-message(STATUS "NETUDP_TARGET             : " ${NETUDP_TARGET})
-message(STATUS "NETUDP_VERSION            : " ${NETUDP_VERSION})
-message(STATUS "NETUDP_VERSION_TAG        : " ${NETUDP_VERSION_TAG})
-message(STATUS "NETUDP_BUILD_SHARED       : " ${NETUDP_BUILD_SHARED})
-message(STATUS "NETUDP_FOLDER_PREFIX      : " ${NETUDP_FOLDER_PREFIX})
-message(STATUS "NETUDP_ENABLE_QML         : " ${NETUDP_ENABLE_QML})
-message(STATUS "NETUDP_ENABLE_PCH         : " ${NETUDP_ENABLE_PCH})
-message(STATUS "NETUDP_ENABLE_EXAMPLES    : " ${NETUDP_ENABLE_EXAMPLES})
-message(STATUS "NETUDP_ENABLE_TESTS       : " ${NETUDP_ENABLE_TESTS})
+# ───── Add dependencies ─────
 
-message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
-
-# ┌──────────────────────────────────────────────────────────────────┐
-# │                       DEPENDENCIES                               │
-# └──────────────────────────────────────────────────────────────────┘
 find_package(
   QT NAMES Qt6 Qt5
   COMPONENTS Core
@@ -144,9 +155,7 @@ endif()
 include(cmake/FetchSpdlog.cmake)
 include(cmake/FetchRecyler.cmake)
 
-# ┌──────────────────────────────────────────────────────────────────┐
-# │                          NETUDP                                  │
-# └──────────────────────────────────────────────────────────────────┘
+# NetUdp
 
 if(NETUDP_ENABLE_QML)
   file(GLOB_RECURSE NETUDP_QML_SRCS qml/*.qml)
@@ -170,7 +179,6 @@ if(NETUDP_ENABLE_QML)
     source_group("Qml\\QtQuickCompiler Files" FILES ${NETUDP_CURRENT_QML_FILE})
   endforeach()
 endif()
-# NETUDP_ENABLE_QML
 
 set(NETUDP_SRCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(NETUDP_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -236,17 +244,13 @@ if(NETUDP_ENABLE_PCH AND COMMAND target_precompile_headers)
   target_precompile_headers(${NETUDP_TARGET} PRIVATE ${NETUDP_SRCS_FOLDER}/NetUdp/Pch/Pch.hpp)
 endif()
 
-# ┌──────────────────────────────────────────────────────────────────┐
-# │                         EXAMPLES                                 │
-# └──────────────────────────────────────────────────────────────────┘
+# ───── 🚀 Add Examples ─────
 
 if(NETUDP_ENABLE_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-# ┌──────────────────────────────────────────────────────────────────┐
-# │                         TESTS                                    │
-# └──────────────────────────────────────────────────────────────────┘
+# ───── ✅ Add Tests ─────
 
 if(NETUDP_ENABLE_TESTS)
   enable_testing()

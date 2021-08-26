@@ -9,7 +9,7 @@ include(${PROJECT_SOURCE_DIR}/cmake/FetchGTest.cmake)
 set(NETUDP_TEST_TARGET NetUdp_Tests)
 set(NETUDP_QUICK_TEST_TARGET NetUdp_QuickTests)
 
-message(STATUS "Add Test: ${NETUDP_TEST_TARGET}")
+message(STATUS "✅ Add Test: ${NETUDP_TEST_TARGET}")
 
 # Create the executable
 add_executable(${NETUDP_TEST_TARGET} Tests.cpp)
@@ -29,7 +29,7 @@ set_target_properties(${NETUDP_QUICK_TEST_TARGET} PROPERTIES FOLDER ${NETUDP_FOL
 file(GLOB QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.qml)
 foreach(QML_FILE ${QML_FILES})
   get_filename_component(QML_FILE_NAME ${QML_FILE} NAME_WE)
-  message(STATUS "Add Test: ${NETUDP_QUICK_TEST_TARGET}_${QML_FILE_NAME}")
+  message(STATUS "✅ Add Test: ${NETUDP_QUICK_TEST_TARGET}_${QML_FILE_NAME}")
   add_test(NAME ${NETUDP_QUICK_TEST_TARGET}_${QML_FILE_NAME} COMMAND "$<TARGET_FILE:${NETUDP_QUICK_TEST_TARGET}>" -input "${QML_FILE}")
 endforeach()
 
