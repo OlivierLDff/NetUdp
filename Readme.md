@@ -588,7 +588,47 @@ target_link_libraries(MyTarget PRIVATE NetUdp)
 
 Then you just need to `#include <Net/Udp/NetUdp.hpp>`. You should also call in your main : `net::udp::registerQmlTypes();`.
 
+## Dependencies
+
+All dependencies are managed in `cmake/Dependencies.cmake`.
+
+[![img](docs/dependencies.svg)]()
+
+> Dependencies graph can be generated with:
+>
+> ```bash
+> mkdir -p build && cd build
+> cmake -DNETUDP_ENABLE_TESTS=ON --graphviz=dependencies.dot ..
+> dot -Tsvg -o ../docs/dependencies.svg dependencies.dot -Gbgcolor=transparent -Nfillcolor=white -Nstyle=filled
+> ```
+
+## 🎨 Format
+
+* [clang-format](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.1) : format cpp
+* [cmake-format](https://github.com/cheshirekow/cmake_format) : format cmake (`pip install cmakelang`)
+* [js-beautify](https://github.com/beautify-web/js-beautify): format qml
+
+NetUdp use auto-formatting for `cpp`, `cmake`. The folder `scripts` contains helper script. It is recommended to setup auto-format within IDE.
+
+```
+cd scripts
+./clangformat.sh
+./cmakeformat.sh
+```
+
 ## Changelog
+
+### v1.3.1
+
+🐛 include missing QElapsedTimer header in Worker
+
+### v1.3.0
+
+⚠️ Don't use this release if you subclass Worker. Or include QElapsedTimer before include Worker.hpp. ⚠️
+This is fixed in v1.3.1
+
+💥 Use raw pointer for worker & worker thread.
+🚑️ This should fix issue when port was not completely released.
 
 ### v1.2.2
 
