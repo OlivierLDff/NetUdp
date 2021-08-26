@@ -6,27 +6,14 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
-// Application Headers
 #include <NetUdp/Socket.hpp>
 #include <NetUdp/Worker.hpp>
 #include <NetUdp/Logger.hpp>
-
-// Qt Headers
 #include <QtCore/QThread>
 #include <QtNetwork/QHostAddress>
-
-// Stl Headers
 #include <limits>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
-
-namespace net::udp {
+namespace netudp {
 
 // clang-format off
 #ifdef NDEBUG
@@ -58,10 +45,6 @@ namespace net::udp {
 #define LOG_WARN(str, ...)       Logger::SERVER->warn(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
 #define LOG_ERR(str, ...)        Logger::SERVER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__)
 // clang-format on
-
-// ─────────────────────────────────────────────────────────────
-//                  FUNCTIONS
-// ─────────────────────────────────────────────────────────────
 
 Socket::Socket(QObject* parent)
     : ISocket(parent)

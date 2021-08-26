@@ -6,25 +6,13 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// ──── INCLUDE ────
-
-// Library Headers
 #include <NetUdp/InterfacesProvider.hpp>
-
-// Dependencies Headers
-
-// Qt Headers
 #include <QtNetwork/QNetworkInterface>
 #include <QtNetwork/QNetworkAddressEntry>
-
-// Stl Headers
 #include <chrono>
 #include <mutex>
 
-// ──── DECLARATION ────
-
-namespace net {
-namespace udp {
+namespace netudp {
 
 class QRealNetworkIface : public IInterface
 {
@@ -135,11 +123,6 @@ public:
 
 InterfacesProvider::ProviderPtr InterfacesProvider::_provider = std::make_unique<QRealNetworkIFaceProvider>();
 
-}
-}
-
-using namespace net::udp;
-
 // ──── FUNCTIONS ────
 
 void InterfacesProvider::setProvider(ProviderPtr p)
@@ -168,4 +151,6 @@ void InterfacesProviderSingleton::fetchInterfaces()
             result.push_back(interface->name());
     }
     setInterfaces(result);
+}
+
 }

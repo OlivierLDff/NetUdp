@@ -6,32 +6,17 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
-// Application Header
 #include <NetUdp/Worker.hpp>
 #include <NetUdp/Logger.hpp>
 #include <NetUdp/InterfacesProvider.hpp>
-
-// Qt Core
 #include <QtCore/QTimer>
 #include <QtCore/QElapsedTimer>
-
-// Qt Network
 #include <QtNetwork/QUdpSocket>
 #include <QtNetwork/QNetworkInterface>
 #include <QtNetwork/QNetworkDatagram>
-
-// Stl
 #include <algorithm>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
-
-namespace net::udp {
+namespace netudp {
 
 // clang-format off
 #ifdef NDEBUG
@@ -63,10 +48,6 @@ namespace net::udp {
 #define LOG_WARN(str, ...)       Logger::WORKER->warn(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
 #define LOG_ERR(str, ...)        Logger::WORKER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__)
 // clang-format on
-
-// ─────────────────────────────────────────────────────────────
-//                  FUNCTIONS
-// ─────────────────────────────────────────────────────────────
 
 const quint64 disableSocketTimeout = 10000;
 

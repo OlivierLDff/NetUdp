@@ -9,41 +9,19 @@
 #ifndef __NETUDP_SERVER_HPP__
 #define __NETUDP_SERVER_HPP__
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
-// Application Header
 #include <NetUdp/Export.hpp>
 #include <NetUdp/Property.hpp>
 #include <NetUdp/RecycledDatagram.hpp>
-
-// Dependencies Header
 #include <Recycler/Circular.hpp>
-
-// Qt Core
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
-
-// Qt Qml
 #include <QtQml/QJSValue>
-
-// Stl Headers
 #include <set>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
-
-namespace net {
-namespace udp {
+namespace netudp {
 
 class Worker;
-
-// ─────────────────────────────────────────────────────────────
-//                  CLASS
-// ─────────────────────────────────────────────────────────────
 
 class NETUDP_API_ ISocket : public QObject
 {
@@ -94,7 +72,7 @@ protected:
 
     // Move the worker into a worker thread.
     // This allow to move in the worker serialization/deserialization/encoding/... work
-    // You need to subclass net::udp::Worker to have any benefit.
+    // You need to subclass netudp::Worker to have any benefit.
     NETUDP_PROPERTY(bool, useWorkerThread, UseWorkerThread);
 
     // ──────── ATTRIBUTE MULTICAST INPUT ────────
@@ -294,10 +272,9 @@ Q_SIGNALS:
     void leaveMulticastGroupWorker(const QString address);
     void joinMulticastInterfaceWorker(const QString address);
     void leaveMulticastInterfaceWorker(const QString address);
-    void sendDatagramToWorker(net::udp::SharedDatagram datagram);
+    void sendDatagramToWorker(netudp::SharedDatagram datagram);
 };
 
-}
 }
 
 #endif

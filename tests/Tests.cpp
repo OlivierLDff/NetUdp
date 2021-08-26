@@ -1,6 +1,5 @@
 // ────── INCLUDE ───────
 
-// NetUdp
 #include <NetUdp/NetUdp.hpp>
 
 // spdlog
@@ -11,25 +10,14 @@
 #    include <spdlog/sinks/stdout_color_sinks.h>
 #endif
 
-// QtCore
 #include <QtCore/QTimer>
 #include <QtCore/QCoreApplication>
-
-// QtTest
 #include <QtTest/QTest>
 #include <QtTest/QSignalSpy>
-
-// gtest
 #include <gtest/gtest.h>
-
-// Stl
 #include <string>
 
-// ────── DECLARATION ───────
-
-using namespace net::udp;
-
-// ────── TESTS ───────
+namespace netudp {
 
 class UnicastClientServer : public ::testing::Test
 {
@@ -43,8 +31,8 @@ protected:
     uint16_t serverListeningPort = 11111;
     QString serverListeningAddr = QStringLiteral("127.0.0.1");
 
-    net::udp::Socket rx;
-    net::udp::Socket tx;
+    netudp::Socket rx;
+    netudp::Socket tx;
 
     void start()
     {
@@ -80,7 +68,7 @@ protected:
 
         const auto arguments = spy.takeFirst(); // take the first signal
         ASSERT_FALSE(arguments.isEmpty());
-        const auto datagram = qvariant_cast<net::udp::SharedDatagram>(arguments.at(0));
+        const auto datagram = qvariant_cast<netudp::SharedDatagram>(arguments.at(0));
         ASSERT_NE(datagram, nullptr);
 
         const std::string receivedString(reinterpret_cast<const char*>(datagram->buffer()), datagram->length());
@@ -120,8 +108,8 @@ protected:
     uint16_t multicastPort = 11111;
     QString multicastGroup = QStringLiteral("239.1.2.3");
 
-    net::udp::Socket tx;
-    net::udp::Socket rx;
+    netudp::Socket tx;
+    netudp::Socket rx;
 
     void start()
     {
@@ -159,7 +147,7 @@ protected:
 
         const auto arguments = spy.takeFirst(); // take the first signal
         ASSERT_FALSE(arguments.isEmpty());
-        const auto datagram = qvariant_cast<net::udp::SharedDatagram>(arguments.at(0));
+        const auto datagram = qvariant_cast<netudp::SharedDatagram>(arguments.at(0));
         ASSERT_NE(datagram, nullptr);
 
         const std::string receivedString(reinterpret_cast<const char*>(datagram->buffer()), datagram->length());
@@ -188,9 +176,9 @@ protected:
     uint16_t multicastPort = 11234;
     QString multicastGroup = QStringLiteral("239.4.5.6");
 
-    net::udp::Socket tx;
-    net::udp::Socket rx1;
-    net::udp::Socket rx2;
+    netudp::Socket tx;
+    netudp::Socket rx1;
+    netudp::Socket rx2;
 
     void start()
     {
@@ -249,7 +237,7 @@ protected:
 
         const auto arguments1 = spy1.takeFirst();
         ASSERT_FALSE(arguments1.isEmpty());
-        const auto datagram1 = qvariant_cast<net::udp::SharedDatagram>(arguments1.at(0));
+        const auto datagram1 = qvariant_cast<netudp::SharedDatagram>(arguments1.at(0));
         ASSERT_NE(datagram1, nullptr);
         const std::string receivedString1(reinterpret_cast<const char*>(datagram1->buffer()), datagram1->length());
         ASSERT_EQ(receivedString1, sentString);
@@ -259,7 +247,7 @@ protected:
 
         const auto arguments2 = spy2.takeFirst();
         ASSERT_FALSE(arguments2.isEmpty());
-        const auto datagram2 = qvariant_cast<net::udp::SharedDatagram>(arguments2.at(0));
+        const auto datagram2 = qvariant_cast<netudp::SharedDatagram>(arguments2.at(0));
         ASSERT_NE(datagram2, nullptr);
         const std::string receivedString2(reinterpret_cast<const char*>(datagram2->buffer()), datagram2->length());
         ASSERT_EQ(receivedString2, sentString);
@@ -344,32 +332,6 @@ TEST(WorkerMultithreadFuzz, restartPointer)
     delete client;
 }
 
-int main(int argc, char** argv)
-{
-    // Register logger to see what is happening
-#ifdef WIN32
-    const auto msvcSink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-    msvcSink->set_level(spdlog::level::debug);
-    net::udp::Logger::registerSink(msvcSink);
-#endif
-
-#ifndef NDEBUG
-    const auto stdoutSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    stdoutSink->set_level(spdlog::level::debug);
-    net::udp::Logger::registerSink(stdoutSink);
-#endif
-
-    // An application is required to wait for signals with QSignalSpy
-    QCoreApplication application(argc, argv);
-
-    // Register custom type to work with signals
-    net::udp::registerQmlTypes();
-
-    // Start tests
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
-
 TEST(WorkerMultithreadFuzz, releaseBindedPort)
 {
 #ifdef NDEBUG
@@ -404,4 +366,32 @@ TEST(WorkerMultithreadFuzz, releaseBindedPort)
 
         ASSERT_TRUE(spyDatagramReceived.wait());
     }
+}
+
+}
+
+int main(int argc, char** argv)
+{
+    // Register logger to see what is happening
+#ifdef WIN32
+    const auto msvcSink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
+    msvcSink->set_level(spdlog::level::debug);
+    netudp::Logger::registerSink(msvcSink);
+#endif
+
+#ifndef NDEBUG
+    const auto stdoutSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    stdoutSink->set_level(spdlog::level::debug);
+    netudp::Logger::registerSink(stdoutSink);
+#endif
+
+    // An application is required to wait for signals with QSignalSpy
+    QCoreApplication application(argc, argv);
+
+    // Register custom type to work with signals
+    netudp::registerQmlTypes();
+
+    // Start tests
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

@@ -9,25 +9,13 @@
 #ifndef __NETUDP_INTERFACE_FINDER_HPP__
 #define __NETUDP_INTERFACE_FINDER_HPP__
 
-// ──── INCLUDE ────
-
-// Library Headers
 #include <NetUdp/Export.hpp>
 #include <NetUdp/Property.hpp>
-
-// Dependencies Headers
-#include <QString>
-
-// Standard Header
+#include <QtCore/QString>
 #include <memory>
 #include <vector>
 
-// ──── DECLARATION ────
-
-namespace net {
-namespace udp {
-
-// ──── CLASS ────
+namespace netudp {
 
 class NETUDP_API_ IInterface
 {
@@ -92,7 +80,6 @@ public Q_SLOTS:
     void fetchInterfaces();
 };
 
-}
 }
 
 #endif

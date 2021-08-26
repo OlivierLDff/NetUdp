@@ -9,19 +9,10 @@
 #ifndef __NETUDP_SERVER_WORKER_HPP__
 #define __NETUDP_SERVER_WORKER_HPP__
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
-// Application Headers
 #include <NetUdp/RecycledDatagram.hpp>
 #include <NetUdp/Export.hpp>
 #include <NetUdp/InterfacesProvider.hpp>
-
-// Dependencies Headers
 #include <Recycler/Circular.hpp>
-
-// Qt Headers
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QElapsedTimer>
@@ -35,16 +26,8 @@ QT_FORWARD_DECLARE_CLASS(QElapsedTimer);
 #include <map>
 #include <memory>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
+namespace netudp {
 
-namespace net {
-namespace udp {
-
-// ─────────────────────────────────────────────────────────────
-//                  CLASS
-// ─────────────────────────────────────────────────────────────
 class NETUDP_API_ Worker : public QObject
 {
     Q_OBJECT
@@ -290,7 +273,6 @@ Q_SIGNALS:
     void rxInvalidPacketsCounterChanged(const quint64 rx);
 };
 
-}
 }
 
 #endif // __NETUDP_SERVER_WORKER_HPP__

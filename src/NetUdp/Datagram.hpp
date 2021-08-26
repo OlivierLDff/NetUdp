@@ -9,30 +9,12 @@
 #ifndef __NETUDP_DATAGRAM_HPP__
 #define __NETUDP_DATAGRAM_HPP__
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
-// Application Header
 #include <NetUdp/Export.hpp>
-
-// Qt Header
 #include <QtCore/QString>
 #include <QtCore/QMetaType>
-
-// C++ Header
 #include <memory>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
-
-namespace net {
-namespace udp {
-
-// ─────────────────────────────────────────────────────────────
-//                  CLASS
-// ─────────────────────────────────────────────────────────────
+namespace netudp {
 
 class NETUDP_API_ Datagram
 {
@@ -68,8 +50,7 @@ public:
 typedef std::shared_ptr<Datagram> SharedDatagram;
 
 }
-}
 
-Q_DECLARE_METATYPE(net::udp::SharedDatagram);
+Q_DECLARE_METATYPE(netudp::SharedDatagram);
 
 #endif

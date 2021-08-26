@@ -1,4 +1,4 @@
-#include <NetUdp/NetUdp.hpp>
+﻿#include <NetUdp/NetUdp.hpp>
 
 // spdlog
 #ifdef WIN32
@@ -27,16 +27,16 @@ public slots:
 #ifdef WIN32
         const auto msvcSink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
         msvcSink->set_level(spdlog::level::debug);
-        net::udp::Logger::registerSink(msvcSink);
+        netudp::Logger::registerSink(msvcSink);
 #endif
 
 #ifndef NDEBUG
         const auto stdoutSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         stdoutSink->set_level(spdlog::level::debug);
-        net::udp::Logger::registerSink(stdoutSink);
+        netudp::Logger::registerSink(stdoutSink);
 #endif
 
-        net::udp::registerQmlTypes();
+        netudp::registerQmlTypes();
     }
 };
 

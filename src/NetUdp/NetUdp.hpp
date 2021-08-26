@@ -9,12 +9,9 @@
 #ifndef __NETUDP_HPP__
 #define __NETUDP_HPP__
 
-// Private Utils
 #include <NetUdp/Version.hpp>
 #include <NetUdp/Utils.hpp>
 #include <NetUdp/Logger.hpp>
-
-// Library code
 #include <NetUdp/RecycledDatagram.hpp>
 #include <NetUdp/Socket.hpp>
 

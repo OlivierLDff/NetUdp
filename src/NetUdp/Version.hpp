@@ -9,23 +9,11 @@
 #ifndef __NETUDP_COMMON_HPP__
 #define __NETUDP_COMMON_HPP__
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
-// Application Header
 #include <NetUdp/Export.hpp>
 #include <NetUdp/Property.hpp>
-
-// Qt Header
 #include <QtCore/QObject>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
-
-namespace net {
-namespace udp {
+namespace netudp {
 
 class NETUDP_API_ Version : public QObject
 {
@@ -54,7 +42,6 @@ private:
     NETUDP_PROPERTY_CONST(QString, readable, Readable);
 };
 
-}
 }
 
 #endif

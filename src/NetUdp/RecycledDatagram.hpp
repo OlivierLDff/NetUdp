@@ -9,26 +9,10 @@
 #ifndef __NETUDP_RECYCLED_DATAGRAM_HPP__
 #define __NETUDP_RECYCLED_DATAGRAM_HPP__
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
-// Application Header
 #include <NetUdp/Datagram.hpp>
-
-// Dependencies Headers
 #include <Recycler/Buffer.hpp>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
-
-namespace net {
-namespace udp {
-
-// ─────────────────────────────────────────────────────────────
-//                  CLASS
-// ─────────────────────────────────────────────────────────────
+namespace netudp {
 
 class NETUDP_API_ RecycledDatagram : public Datagram
 {
@@ -49,7 +33,6 @@ public:
     std::size_t length() const override final;
 };
 
-}
 }
 
 #endif

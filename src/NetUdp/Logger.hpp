@@ -9,31 +9,13 @@
 #ifndef __NETUDP_UTILS_LOGGER_HPP__
 #define __NETUDP_UTILS_LOGGER_HPP__
 
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
-
-// Library Headers
 #include <NetUdp/Export.hpp>
-
-// Dependencies Headers
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/sink.h>
-
-// Stl Headers
 #include <memory>
 #include <set>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
-
-namespace net {
-namespace udp {
-
-// ─────────────────────────────────────────────────────────────
-//                  CLASS
-// ─────────────────────────────────────────────────────────────
+namespace netudp {
 
 /**
  * Define static logger that library use.
@@ -72,7 +54,6 @@ public:
     static void unRegisterSink(const SinkPtr& sink);
 };
 
-}
 }
 
 #endif

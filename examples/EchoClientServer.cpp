@@ -1,7 +1,10 @@
-﻿
-// ─────────────────────────────────────────────────────────────
-//                  INCLUDE
-// ─────────────────────────────────────────────────────────────
+﻿// Copyright 2019 - 2021 Olivier Le Doeuff
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright noticeand this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // Dependencies
 #include <NetUdp/NetUdp.hpp>
@@ -18,10 +21,6 @@
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTimer>
 
-// ─────────────────────────────────────────────────────────────
-//                  DECLARATION
-// ─────────────────────────────────────────────────────────────
-
 Q_LOGGING_CATEGORY(APP_LOG_CAT, "app")
 Q_LOGGING_CATEGORY(SERVER_LOG_CAT, "server")
 Q_LOGGING_CATEGORY(CLIENT_LOG_CAT, "client")
@@ -37,8 +36,8 @@ public:
     QString srcAddr = QStringLiteral("127.0.0.1");
     QString dstAddr = QStringLiteral("127.0.0.1");
 
-    net::udp::Socket server;
-    net::udp::Socket client;
+    netudp::Socket server;
+    netudp::Socket client;
 
     bool multiThreaded = false;
 
@@ -71,12 +70,12 @@ public:
             });
 
         QObject::connect(&server,
-            &net::udp::Socket::sharedDatagramReceived,
-            [](const net::udp::SharedDatagram& d) { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
+            &netudp::Socket::sharedDatagramReceived,
+            [](const netudp::SharedDatagram& d) { qCInfo(SERVER_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer())); });
 
         QObject::connect(&client,
-            &net::udp::Socket::sharedDatagramReceived,
-            [this](const net::udp::SharedDatagram& d)
+            &netudp::Socket::sharedDatagramReceived,
+            [this](const netudp::SharedDatagram& d)
             {
                 qCInfo(CLIENT_LOG_CAT, "Rx : %s", reinterpret_cast<const char*>(d->buffer()));
                 client.sendDatagram(d->buffer(), d->length(), srcAddr, src);
@@ -85,22 +84,22 @@ public:
         qCInfo(APP_LOG_CAT, "Start application");
 
         QObject::connect(&server,
-            &net::udp::Socket::isRunningChanged,
+            &netudp::Socket::isRunningChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isRunning : %d", signed(value)); });
         QObject::connect(&server,
-            &net::udp::Socket::isBoundedChanged,
+            &netudp::Socket::isBoundedChanged,
             [](bool value) { qCInfo(SERVER_LOG_CAT, "isBounded : %d", signed(value)); });
         QObject::connect(&server,
-            &net::udp::Socket::socketError,
+            &netudp::Socket::socketError,
             [](int value, const QString error) { qCInfo(SERVER_LOG_CAT, "error : %s", qPrintable(error)); });
         QObject::connect(&client,
-            &net::udp::Socket::isRunningChanged,
+            &netudp::Socket::isRunningChanged,
             [](bool value) { qCInfo(CLIENT_LOG_CAT, "isRunning : %d", signed(value)); });
         QObject::connect(&client,
-            &net::udp::Socket::isBoundedChanged,
+            &netudp::Socket::isBoundedChanged,
             [](bool value) { qCInfo(CLIENT_LOG_CAT, "isBounded : %d", signed(value)); });
         QObject::connect(&client,
-            &net::udp::Socket::socketError,
+            &netudp::Socket::socketError,
             [](int value, const QString error) { qCInfo(CLIENT_LOG_CAT, "error : %s", qPrintable(error)); });
 
         server.start();
@@ -114,12 +113,12 @@ int main(int argc, char* argv[])
 #ifdef WIN32
     const auto msvcSink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
     msvcSink->set_level(spdlog::level::debug);
-    net::udp::Logger::registerSink(msvcSink);
+    netudp::Logger::registerSink(msvcSink);
 #endif
 
     const auto stdoutSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     stdoutSink->set_level(spdlog::level::debug);
-    net::udp::Logger::Logger::registerSink(stdoutSink);
+    netudp::Logger::Logger::registerSink(stdoutSink);
 
     QCoreApplication app(argc, argv);
 
@@ -165,7 +164,7 @@ int main(int argc, char* argv[])
     // ────────── APPLICATION ──────────────────────────────────────
 
     // Register types for to use SharedDatagram in signals
-    net::udp::registerQmlTypes();
+    netudp::registerQmlTypes();
 
     // Create the app and start it
     App echo;
