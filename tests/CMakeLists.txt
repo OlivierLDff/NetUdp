@@ -34,6 +34,6 @@ foreach(QML_FILE ${QML_FILES})
 endforeach()
 
 if(NETUDP_ENABLE_PCH AND COMMAND target_precompile_headers)
-  target_precompile_headers(${NETUDP_TEST_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include/Net/Udp/Pch/Pch.hpp)
-  target_precompile_headers(${NETUDP_QUICK_TEST_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include/Net/Udp/Pch/Pch.hpp)
+  target_precompile_headers(${NETUDP_TEST_TARGET} PRIVATE ${NETUDP_SRCS_FOLDER}/NetUdp/Pch/Pch.hpp)
+  target_precompile_headers(${NETUDP_QUICK_TEST_TARGET} PRIVATE ${NETUDP_SRCS_FOLDER}/NetUdp/Pch/Pch.hpp)
 endif()

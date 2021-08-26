@@ -11,9 +11,9 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Worker.hpp>
-#include <Net/Udp/Logger.hpp>
-#include <Net/Udp/InterfacesProvider.hpp>
+#include <NetUdp/Worker.hpp>
+#include <NetUdp/Logger.hpp>
+#include <NetUdp/InterfacesProvider.hpp>
 
 // Qt Core
 #include <QtCore/QTimer>

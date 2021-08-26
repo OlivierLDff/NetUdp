@@ -1,9 +1,12 @@
+#ifndef __NETUDP_TEMPLATE_HPP__
+#define __NETUDP_TEMPLATE_HPP__
+
 // ─────────────────────────────────────────────────────────────
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/_Template.hpp>
+#include <NetUdp/Export.hpp>
 
 // Dependencies Header
 
@@ -17,8 +20,14 @@
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-using namespace net::udp;
+namespace net {
+namespace udp {
 
 // ─────────────────────────────────────────────────────────────
-//                  FUNCTIONS
+//                  CLASS
 // ─────────────────────────────────────────────────────────────
+
+}
+}
+
+#endif

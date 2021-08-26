@@ -1,4 +1,4 @@
-#include <Net/Udp/NetUdp.hpp>
+#include <NetUdp/NetUdp.hpp>
 
 // spdlog
 #ifdef WIN32

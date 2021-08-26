@@ -14,9 +14,9 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Export.hpp>
-#include <Net/Udp/Property.hpp>
-#include <Net/Udp/RecycledDatagram.hpp>
+#include <NetUdp/Export.hpp>
+#include <NetUdp/Property.hpp>
+#include <NetUdp/RecycledDatagram.hpp>
 
 // Dependencies Header
 #include <Recycler/Circular.hpp>

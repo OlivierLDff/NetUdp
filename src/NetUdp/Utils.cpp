@@ -11,12 +11,12 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Utils.hpp>
-#include <Net/Udp/RecycledDatagram.hpp>
-#include <Net/Udp/Socket.hpp>
-#include <Net/Udp/Version.hpp>
-#include <Net/Udp/Logger.hpp>
-#include <Net/Udp/InterfacesProvider.hpp>
+#include <NetUdp/Utils.hpp>
+#include <NetUdp/RecycledDatagram.hpp>
+#include <NetUdp/Socket.hpp>
+#include <NetUdp/Version.hpp>
+#include <NetUdp/Logger.hpp>
+#include <NetUdp/InterfacesProvider.hpp>
 
 // Qt Header
 #include <QtCore/QCoreApplication>

@@ -6,23 +6,18 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef __NETUDP_UTILS_LOGGER_HPP__
-#define __NETUDP_UTILS_LOGGER_HPP__
+#ifndef __NETUDP_RECYCLED_DATAGRAM_HPP__
+#define __NETUDP_RECYCLED_DATAGRAM_HPP__
 
 // ─────────────────────────────────────────────────────────────
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// Library Headers
-#include <Net/Udp/Export.hpp>
+// Application Header
+#include <NetUdp/Datagram.hpp>
 
 // Dependencies Headers
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/sink.h>
-
-// Stl Headers
-#include <memory>
-#include <set>
+#include <Recycler/Buffer.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -35,41 +30,23 @@ namespace udp {
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-/**
- * Define static logger that library use.
- * You need to install sink on them
- */
-class NETUDP_API_ Logger
+class NETUDP_API_ RecycledDatagram : public Datagram
 {
-    // ─────── TYPES ─────────
+    // ────── CONSTRUCTOR ────────
 public:
-    using Log = spdlog::logger;
-    using LogPtr = std::shared_ptr<Log>;
-    using LogList = std::set<LogPtr>;
-    using Sink = spdlog::sinks::sink;
-    using SinkPtr = std::shared_ptr<Sink>;
+    RecycledDatagram(const std::size_t length);
+    void reset() override final;
+    void reset(const std::size_t length) override final;
+    void resize(std::size_t length) override;
 
-    // ─────── LOGGERS NAME ─────────
-public:
-    static const char* const WORKER_NAME;
-    static const char* const SERVER_NAME;
-    static const char* const UTILS_NAME;
+private:
+    recycler::Buffer<std::uint8_t> _buffer;
 
-    // ─────── LOGGERS ─────────
+    // ────── API ────────
 public:
-    static const LogPtr WORKER;
-    static const LogPtr SERVER;
-    static const LogPtr UTILS;
-
-    // ─────── LIST OF ALL LOGGERS ─────────
-public:
-    // Loggers
-    static const LogList LOGGERS;
-
-    // ─────── API ─────────
-public:
-    static void registerSink(const SinkPtr& sink);
-    static void unRegisterSink(const SinkPtr& sink);
+    std::uint8_t* buffer() override final;
+    const std::uint8_t* buffer() const override final;
+    std::size_t length() const override final;
 };
 
 }

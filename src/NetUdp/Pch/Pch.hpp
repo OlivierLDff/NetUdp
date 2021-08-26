@@ -10,27 +10,12 @@
 #include <memory>
 #include <set>
 
-// spdlog
-#include <spdlog/logger.h>
-#include <spdlog/sinks/sink.h>
-
-// Recycler
-#include <Recycler/Recycler.hpp>
-
 // Qt Core Headers
-#include <QtGlobal>
-#include <QObject>
-#include <QThread>
-#include <QTimer>
-#include <QElapsedTimer>
-
-// Qt Qml Headers
-#include <QQmlEngine>
-
-// Qt Network Headers
-#include <QHostAddress>
-#include <QNetworkDatagram>
-#include <QUdpSocket>
+#include <QtCore/QtGlobal>
+#include <QtCore/QObject>
+#include <QtCore/QThread>
+#include <QtCore/QTimer>
+#include <QtCore/QElapsedTimer>
 
 // Compatibility with gcc <= 7
 #ifdef major

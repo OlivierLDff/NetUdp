@@ -6,22 +6,19 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef __NETUDP_DATAGRAM_HPP__
-#define __NETUDP_DATAGRAM_HPP__
+#ifndef __NETUDP_COMMON_HPP__
+#define __NETUDP_COMMON_HPP__
 
 // ─────────────────────────────────────────────────────────────
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Export.hpp>
+#include <NetUdp/Export.hpp>
+#include <NetUdp/Property.hpp>
 
 // Qt Header
-#include <QtCore/QString>
-#include <QtCore/QMetaType>
-
-// C++ Header
-#include <memory>
+#include <QtCore/QObject>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -30,46 +27,34 @@
 namespace net {
 namespace udp {
 
-// ─────────────────────────────────────────────────────────────
-//                  CLASS
-// ─────────────────────────────────────────────────────────────
-
-class NETUDP_API_ Datagram
+class NETUDP_API_ Version : public QObject
 {
-    // ────── CONSTRUCTOR ────────
+    Q_OBJECT
+    NETUDP_SINGLETON_IMPL(Version, version, Version);
+
+    // ──────── CONSTRUCTOR ────────────────
 public:
-    virtual ~Datagram() = default;
-    virtual void reset();
+    Version(QObject* parent = nullptr);
 
-    // Reset the datagram and clear the content.
-    // Also force the buffer to be initialized with size length
-    virtual void reset(std::size_t length);
+    // ──────── ATTRIBUTES ────────────────
+private:
+    /** \brief Library Major Version */
+    NETUDP_PROPERTY_CONST(quint32, major, Major);
 
-    // Resize the datagram without destroying the data
-    virtual void resize(std::size_t length);
+    /** \brief Library Minor Version */
+    NETUDP_PROPERTY_CONST(quint32, minor, Minor);
 
-    // ────── API ────────
-public:
-    virtual std::uint8_t* buffer() = 0;
-    virtual const std::uint8_t* buffer() const = 0;
-    virtual std::size_t length() const = 0;
+    /** \brief Library Patch Version */
+    NETUDP_PROPERTY_CONST(quint32, patch, Patch);
 
-    // ────── ATTRIBUTES ────────
-public:
-    QString destinationAddress;
-    quint16 destinationPort = 0;
+    /** \brief Library Tag Version */
+    NETUDP_PROPERTY_CONST(quint32, tag, Tag);
 
-    QString senderAddress;
-    quint16 senderPort = 0;
-
-    quint8 ttl = 0;
+    /** \brief Library Version as major.minor.patch.tag */
+    NETUDP_PROPERTY_CONST(QString, readable, Readable);
 };
 
-typedef std::shared_ptr<Datagram> SharedDatagram;
-
 }
 }
-
-Q_DECLARE_METATYPE(net::udp::SharedDatagram);
 
 #endif

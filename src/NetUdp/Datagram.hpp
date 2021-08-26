@@ -6,18 +6,22 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef __NETUDP_RECYCLED_DATAGRAM_HPP__
-#define __NETUDP_RECYCLED_DATAGRAM_HPP__
+#ifndef __NETUDP_DATAGRAM_HPP__
+#define __NETUDP_DATAGRAM_HPP__
 
 // ─────────────────────────────────────────────────────────────
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Datagram.hpp>
+#include <NetUdp/Export.hpp>
 
-// Dependencies Headers
-#include <Recycler/Buffer.hpp>
+// Qt Header
+#include <QtCore/QString>
+#include <QtCore/QMetaType>
+
+// C++ Header
+#include <memory>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -30,26 +34,42 @@ namespace udp {
 //                  CLASS
 // ─────────────────────────────────────────────────────────────
 
-class NETUDP_API_ RecycledDatagram : public Datagram
+class NETUDP_API_ Datagram
 {
     // ────── CONSTRUCTOR ────────
 public:
-    RecycledDatagram(const std::size_t length);
-    void reset() override final;
-    void reset(const std::size_t length) override final;
-    void resize(std::size_t length) override;
+    virtual ~Datagram() = default;
+    virtual void reset();
 
-private:
-    recycler::Buffer<std::uint8_t> _buffer;
+    // Reset the datagram and clear the content.
+    // Also force the buffer to be initialized with size length
+    virtual void reset(std::size_t length);
+
+    // Resize the datagram without destroying the data
+    virtual void resize(std::size_t length);
 
     // ────── API ────────
 public:
-    std::uint8_t* buffer() override final;
-    const std::uint8_t* buffer() const override final;
-    std::size_t length() const override final;
+    virtual std::uint8_t* buffer() = 0;
+    virtual const std::uint8_t* buffer() const = 0;
+    virtual std::size_t length() const = 0;
+
+    // ────── ATTRIBUTES ────────
+public:
+    QString destinationAddress;
+    quint16 destinationPort = 0;
+
+    QString senderAddress;
+    quint16 senderPort = 0;
+
+    quint8 ttl = 0;
 };
+
+typedef std::shared_ptr<Datagram> SharedDatagram;
 
 }
 }
+
+Q_DECLARE_METATYPE(net::udp::SharedDatagram);
 
 #endif

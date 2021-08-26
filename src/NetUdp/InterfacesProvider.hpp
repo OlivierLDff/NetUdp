@@ -12,8 +12,8 @@
 // ──── INCLUDE ────
 
 // Library Headers
-#include <Net/Udp/Export.hpp>
-#include <Net/Udp/Property.hpp>
+#include <NetUdp/Export.hpp>
+#include <NetUdp/Property.hpp>
 
 // Dependencies Headers
 #include <QString>

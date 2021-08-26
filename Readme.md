@@ -52,7 +52,7 @@ A Basic Client/Socket can be found in `examples/EchoClientServer.cpp`.
 This example demonstrate how to create a server that send datagram to address `127.0.0.1` on port `9999`.
 
 ```cpp
-#include <Net/Udp/NetUdp.hpp>
+#include <NetUdp/NetUdp.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 This example demonstrate how to receive a packet on address `127.0.0.1` on port `9999`.
 
 ```c++
-#include <Net/Udp/NetUdp.hpp>
+#include <NetUdp/NetUdp.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -164,7 +164,7 @@ You need to override:
 * `leaveMulticastGroup(const QString& groupAddress)`: Implementation to leave a multicast group. Don't forget to call `ISocket::leaveMulticastGroup`.
 
 ```cpp
-#include <Net/Udp/ISocket.hpp>
+#include <NetUdp/ISocket.hpp>
 
 class MyAbstractSocket : net::udp::ISocket
 {
@@ -231,7 +231,7 @@ Using a custom `Datagram` can reduce memory copy depending on your application.
   * Customize `Socket` to use it when calling with `Socket::sendDatagram(const uint8_t*, ...)`.  *A `memcpy` will happen. So don't use a custom `Datagram` for that purpose.*
 
 ```cpp
-#include <Net/Udp/Datagram.hpp>
+#include <NetUdp/Datagram.hpp>
 
 class MyDatagram : net::udp::Datagram
 {
@@ -257,7 +257,7 @@ When inheriting from `SocketWorker` you can override:
 Example:
 
 ```cpp
-#include <Net/Udp/Worker.hpp>
+#include <NetUdp/Worker.hpp>
 
 class MySocketWorker : net::udp::Worker
 {
@@ -317,7 +317,7 @@ When inheriting from `Socket` you can override:
 Example:
 
 ```cpp
-#include <Net/Udp/Socket.hpp>
+#include <NetUdp/Socket.hpp>
 
 class MySocket : net::udp::Socket
 {
@@ -586,7 +586,7 @@ FetchContent_MakeAvailable(NetUdp)
 target_link_libraries(MyTarget PRIVATE NetUdp)
 ```
 
-Then you just need to `#include <Net/Udp/NetUdp.hpp>`. You should also call in your main : `net::udp::registerQmlTypes();`.
+Then you just need to `#include <NetUdp/NetUdp.hpp>`. You should also call in your main : `net::udp::registerQmlTypes();`.
 
 ## Dependencies
 

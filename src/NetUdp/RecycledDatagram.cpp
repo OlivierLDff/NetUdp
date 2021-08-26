@@ -11,7 +11,7 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Datagram.hpp>
+#include <NetUdp/RecycledDatagram.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
@@ -23,22 +23,41 @@ namespace net::udp {
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
-void Datagram::reset()
+RecycledDatagram::RecycledDatagram(const std::size_t length)
+    : _buffer(length)
 {
-    destinationAddress = QString();
-    destinationPort = 0;
-    senderAddress = QString();
-    senderPort = 0;
-    ttl = 0;
 }
 
-void Datagram::reset(std::size_t length)
+void RecycledDatagram::reset()
 {
+    _buffer.reset(0);
     Datagram::reset();
 }
 
-void Datagram::resize(std::size_t length)
+void RecycledDatagram::reset(const std::size_t length)
 {
+    _buffer.reset(length);
+    Datagram::reset(length);
+}
+
+void RecycledDatagram::resize(std::size_t length)
+{
+    _buffer.resize(length);
+}
+
+std::uint8_t* RecycledDatagram::buffer()
+{
+    return _buffer;
+}
+
+const std::uint8_t* RecycledDatagram::buffer() const
+{
+    return _buffer;
+}
+
+std::size_t RecycledDatagram::length() const
+{
+    return _buffer.length();
 }
 
 }

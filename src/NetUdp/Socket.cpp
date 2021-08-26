@@ -11,9 +11,9 @@
 // ─────────────────────────────────────────────────────────────
 
 // Application Headers
-#include <Net/Udp/Socket.hpp>
-#include <Net/Udp/Worker.hpp>
-#include <Net/Udp/Logger.hpp>
+#include <NetUdp/Socket.hpp>
+#include <NetUdp/Worker.hpp>
+#include <NetUdp/Logger.hpp>
 
 // Qt Headers
 #include <QtCore/QThread>

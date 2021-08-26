@@ -10,12 +10,12 @@
 #define __NETUDP_HPP__
 
 // Private Utils
-#include <Net/Udp/Version.hpp>
-#include <Net/Udp/Utils.hpp>
-#include <Net/Udp/Logger.hpp>
+#include <NetUdp/Version.hpp>
+#include <NetUdp/Utils.hpp>
+#include <NetUdp/Logger.hpp>
 
 // Library code
-#include <Net/Udp/RecycledDatagram.hpp>
-#include <Net/Udp/Socket.hpp>
+#include <NetUdp/RecycledDatagram.hpp>
+#include <NetUdp/Socket.hpp>
 
 #endif

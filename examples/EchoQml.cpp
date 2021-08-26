@@ -1,6 +1,6 @@
 ﻿// ──── INCLUDE ────
 
-#include <Net/Udp/NetUdp.hpp>
+#include <NetUdp/NetUdp.hpp>
 #include <Qaterial/Qaterial.hpp>
 
 // spdlog

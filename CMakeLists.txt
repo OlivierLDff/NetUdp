@@ -158,44 +158,42 @@ endif()
 # NETUDP_ENABLE_QML
 
 set(NETUDP_SRCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(NETUDP_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(NETUDP_PRIVATE_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/include/Net/Udp)
+set(NETUDP_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-# NETUDP SOURCES
-set(NETUDP_UTILS_SRCS ${NETUDP_SRCS_FOLDER}/Utils.cpp ${NETUDP_SRCS_FOLDER}/Logger.cpp ${NETUDP_SRCS_FOLDER}/Version.cpp ${NETUDP_SRCS_FOLDER}/InterfacesProvider.cpp)
-
-set(NETUDP_API_SRCS ${NETUDP_SRCS_FOLDER}/Datagram.cpp ${NETUDP_SRCS_FOLDER}/RecycledDatagram.cpp ${NETUDP_SRCS_FOLDER}/Socket.cpp ${NETUDP_SRCS_FOLDER}/Worker.cpp)
-
-set(NETUDP_SRCS ${NETUDP_UTILS_SRCS} ${NETUDP_API_SRCS} ${NETUDP_QML_SRCS} ${NETUDP_QML_RES})
-
-set(NETUDP_UTILS_INCS
-    ${NETUDP_PRIVATE_INCS_FOLDER}/NetUdp.hpp
-    ${NETUDP_PRIVATE_INCS_FOLDER}/Export.hpp
-    ${NETUDP_PRIVATE_INCS_FOLDER}/Property.hpp
-    ${NETUDP_PRIVATE_INCS_FOLDER}/Logger.hpp
-    ${NETUDP_PRIVATE_INCS_FOLDER}/Utils.hpp
-    ${NETUDP_PRIVATE_INCS_FOLDER}/Version.hpp
-    ${NETUDP_PRIVATE_INCS_FOLDER}/InterfacesProvider.hpp
+set(NETUDP_SRCS
+    ${NETUDP_INCS_FOLDER}/NetUdp/NetUdp.hpp
+    ${NETUDP_INCS_FOLDER}/NetUdp/Export.hpp
+    ${NETUDP_INCS_FOLDER}/NetUdp/Utils.hpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Utils.cpp
+    ${NETUDP_INCS_FOLDER}/NetUdp/Logger.hpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Logger.cpp
+    ${NETUDP_INCS_FOLDER}/NetUdp/Version.hpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Version.cpp
+    ${NETUDP_INCS_FOLDER}/NetUdp/InterfacesProvider.hpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/InterfacesProvider.cpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Datagram.hpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Datagram.cpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/RecycledDatagram.hpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/RecycledDatagram.cpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Socket.hpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Socket.cpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Worker.hpp
+    ${NETUDP_SRCS_FOLDER}/NetUdp/Worker.cpp
 )
 
-set(NETUDP_API_INCS ${NETUDP_PRIVATE_INCS_FOLDER}/Datagram.hpp ${NETUDP_PRIVATE_INCS_FOLDER}/RecycledDatagram.hpp ${NETUDP_PRIVATE_INCS_FOLDER}/Socket.hpp ${NETUDP_PRIVATE_INCS_FOLDER}/Worker.hpp)
+source_group(TREE "${NETUDP_SRCS_FOLDER}/" FILES ${NETUDP_SRCS})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/" FILES ${NETUDP_QML_SRCS})
 
-set(NETUDP_INCS ${NETUDP_UTILS_INCS} ${NETUDP_API_INCS})
-
-source_group("Udp\\Utils" FILES ${NETUDP_UTILS_INCS})
-source_group("Udp" FILES ${NETUDP_API_INCS})
-
-source_group("Udp\\Utils" FILES ${NETUDP_UTILS_SRCS})
-source_group("Udp" FILES ${NETUDP_API_SRCS})
+set(NETUDP_SRCS ${NETUDP_SRCS} ${NETUDP_QML_RES} ${NETUDP_QML_SRCS})
 
 if(NETUDP_BUILD_SHARED)
 
-  add_library(${NETUDP_TARGET} SHARED ${NETUDP_SRCS} ${NETUDP_INCS})
+  add_library(${NETUDP_TARGET} SHARED ${NETUDP_SRCS})
   target_compile_definitions(${NETUDP_TARGET} PRIVATE "-DNETUDP_DLL_EXPORT")
 
 else()
 
-  add_library(${NETUDP_TARGET} STATIC ${NETUDP_SRCS} ${NETUDP_INCS})
+  add_library(${NETUDP_TARGET} STATIC ${NETUDP_SRCS})
   target_compile_definitions(${NETUDP_TARGET} PUBLIC "-DNETUDP_STATIC")
 
 endif()
@@ -220,7 +218,7 @@ target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_TAG=${NETUD
 target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_VERSION_TAG_HEX=${NETUDP_VERSION_TAG_HEX})
 
 if(NETUDP_ENABLE_PCH AND COMMAND target_precompile_headers)
-  target_precompile_headers(${NETUDP_TARGET} PRIVATE ${NETUDP_PRIVATE_INCS_FOLDER}/Pch/Pch.hpp)
+  target_precompile_headers(${NETUDP_TARGET} PRIVATE ${NETUDP_SRCS_FOLDER}/NetUdp/Pch/Pch.hpp)
 endif()
 
 # ┌──────────────────────────────────────────────────────────────────┐

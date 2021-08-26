@@ -10,54 +10,56 @@
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
-// Application Header
-#include <Net/Udp/RecycledDatagram.hpp>
+// Library Headers
+#include <NetUdp/Logger.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-namespace net::udp {
+using namespace net::udp;
+
+template<typename... Args>
+static Logger::LogPtr makeLog(Args&&... args)
+{
+    return std::make_shared<Logger::Log>(std::forward<Args>(args)...);
+}
+
+const char* const Logger::WORKER_NAME = "net.udp.worker";
+const char* const Logger::SERVER_NAME = "net.udp.socket";
+const char* const Logger::UTILS_NAME = "net.udp.utils";
+
+const Logger::LogPtr Logger::WORKER = makeLog(WORKER_NAME);
+const Logger::LogPtr Logger::SERVER = makeLog(SERVER_NAME);
+const Logger::LogPtr Logger::UTILS = makeLog(UTILS_NAME);
+
+const Logger::LogList Logger::LOGGERS = {WORKER, SERVER, UTILS};
 
 // ─────────────────────────────────────────────────────────────
 //                  FUNCTIONS
 // ─────────────────────────────────────────────────────────────
 
-RecycledDatagram::RecycledDatagram(const std::size_t length)
-    : _buffer(length)
+void Logger::registerSink(const SinkPtr& sink)
 {
+    for(const auto& it: LOGGERS)
+        it->sinks().emplace_back(sink);
 }
 
-void RecycledDatagram::reset()
+void Logger::unRegisterSink(const SinkPtr& sink)
 {
-    _buffer.reset(0);
-    Datagram::reset();
-}
+    for(const auto& it: LOGGERS)
+    {
+        auto& sinks = it->sinks();
 
-void RecycledDatagram::reset(const std::size_t length)
-{
-    _buffer.reset(length);
-    Datagram::reset(length);
-}
-
-void RecycledDatagram::resize(std::size_t length)
-{
-    _buffer.resize(length);
-}
-
-std::uint8_t* RecycledDatagram::buffer()
-{
-    return _buffer;
-}
-
-const std::uint8_t* RecycledDatagram::buffer() const
-{
-    return _buffer;
-}
-
-std::size_t RecycledDatagram::length() const
-{
-    return _buffer.length();
-}
-
+        auto sinkIt = sinks.begin();
+        while(sinkIt != sinks.end())
+        {
+            const auto& s = *sinkIt;
+            if(s == sink)
+            {
+                sinks.erase(sinkIt);
+                break;
+            }
+        }
+    }
 }

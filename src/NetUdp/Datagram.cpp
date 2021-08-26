@@ -6,55 +6,39 @@
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef __NETUDP_COMMON_HPP__
-#define __NETUDP_COMMON_HPP__
-
 // ─────────────────────────────────────────────────────────────
 //                  INCLUDE
 // ─────────────────────────────────────────────────────────────
 
 // Application Header
-#include <Net/Udp/Export.hpp>
-#include <Net/Udp/Property.hpp>
-
-// Qt Header
-#include <QtCore/QObject>
+#include <NetUdp/Datagram.hpp>
 
 // ─────────────────────────────────────────────────────────────
 //                  DECLARATION
 // ─────────────────────────────────────────────────────────────
 
-namespace net {
-namespace udp {
+namespace net::udp {
 
-class NETUDP_API_ Version : public QObject
+// ─────────────────────────────────────────────────────────────
+//                  FUNCTIONS
+// ─────────────────────────────────────────────────────────────
+
+void Datagram::reset()
 {
-    Q_OBJECT
-    NETUDP_SINGLETON_IMPL(Version, version, Version);
-
-    // ──────── CONSTRUCTOR ────────────────
-public:
-    Version(QObject* parent = nullptr);
-
-    // ──────── ATTRIBUTES ────────────────
-private:
-    /** \brief Library Major Version */
-    NETUDP_PROPERTY_CONST(quint32, major, Major);
-
-    /** \brief Library Minor Version */
-    NETUDP_PROPERTY_CONST(quint32, minor, Minor);
-
-    /** \brief Library Patch Version */
-    NETUDP_PROPERTY_CONST(quint32, patch, Patch);
-
-    /** \brief Library Tag Version */
-    NETUDP_PROPERTY_CONST(quint32, tag, Tag);
-
-    /** \brief Library Version as major.minor.patch.tag */
-    NETUDP_PROPERTY_CONST(QString, readable, Readable);
-};
-
-}
+    destinationAddress = QString();
+    destinationPort = 0;
+    senderAddress = QString();
+    senderPort = 0;
+    ttl = 0;
 }
 
-#endif
+void Datagram::reset(std::size_t length)
+{
+    Datagram::reset();
+}
+
+void Datagram::resize(std::size_t length)
+{
+}
+
+}
