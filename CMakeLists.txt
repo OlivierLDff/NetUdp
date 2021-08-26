@@ -34,9 +34,9 @@ endif()
 
 # ───── 🔧 Configuration ─────
 
-set(NETUDP_VERSION_MAJOR 1)
-set(NETUDP_VERSION_MINOR 3)
-set(NETUDP_VERSION_PATCH 1)
+set(NETUDP_VERSION_MAJOR 2)
+set(NETUDP_VERSION_MINOR 0)
+set(NETUDP_VERSION_PATCH 0)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
   execute_process(
     COMMAND git rev-parse --short HEAD
