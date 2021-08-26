@@ -157,7 +157,6 @@ if(NETUDP_ENABLE_QML)
   )
 endif()
 
-include(cmake/FetchSpdlog.cmake)
 include(cmake/FetchRecyler.cmake)
 
 # NetUdp
@@ -193,8 +192,6 @@ set(NETUDP_SRCS
     ${NETUDP_INCS_FOLDER}/NetUdp/Export.hpp
     ${NETUDP_INCS_FOLDER}/NetUdp/Utils.hpp
     ${NETUDP_SRCS_FOLDER}/NetUdp/Utils.cpp
-    ${NETUDP_INCS_FOLDER}/NetUdp/Logger.hpp
-    ${NETUDP_SRCS_FOLDER}/NetUdp/Logger.cpp
     ${NETUDP_INCS_FOLDER}/NetUdp/Version.hpp
     ${NETUDP_SRCS_FOLDER}/NetUdp/Version.cpp
     ${NETUDP_INCS_FOLDER}/NetUdp/InterfacesProvider.hpp
@@ -233,7 +230,6 @@ set_target_properties(${NETUDP_TARGET} PROPERTIES UNITY_BUILD ${NETUDP_ENABLE_UN
 target_link_libraries(
   ${NETUDP_TARGET}
   PRIVATE Recycler
-  PUBLIC spdlog
   PUBLIC Qt${QT_VERSION_MAJOR}::Core
   PUBLIC Qt${QT_VERSION_MAJOR}::Qml
   PUBLIC Qt${QT_VERSION_MAJOR}::Network

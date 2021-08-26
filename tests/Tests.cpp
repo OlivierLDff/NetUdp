@@ -1,21 +1,13 @@
 // ────── INCLUDE ───────
 
 #include <NetUdp/NetUdp.hpp>
-
-// spdlog
-#ifdef WIN32
-#    include <spdlog/sinks/msvc_sink.h>
-#endif
-#ifndef NDEBUG
-#    include <spdlog/sinks/stdout_color_sinks.h>
-#endif
-
 #include <QtCore/QTimer>
 #include <QtCore/QCoreApplication>
 #include <QtTest/QTest>
 #include <QtTest/QSignalSpy>
 #include <gtest/gtest.h>
 #include <string>
+#include <cstring>
 
 namespace netudp {
 
@@ -372,19 +364,6 @@ TEST(WorkerMultithreadFuzz, releaseBindedPort)
 
 int main(int argc, char** argv)
 {
-    // Register logger to see what is happening
-#ifdef WIN32
-    const auto msvcSink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-    msvcSink->set_level(spdlog::level::debug);
-    netudp::Logger::registerSink(msvcSink);
-#endif
-
-#ifndef NDEBUG
-    const auto stdoutSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    stdoutSink->set_level(spdlog::level::debug);
-    netudp::Logger::registerSink(stdoutSink);
-#endif
-
     // An application is required to wait for signals with QSignalSpy
     QCoreApplication application(argc, argv);
 

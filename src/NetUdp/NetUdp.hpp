@@ -11,7 +11,6 @@
 
 #include <NetUdp/Version.hpp>
 #include <NetUdp/Utils.hpp>
-#include <NetUdp/Logger.hpp>
 #include <NetUdp/RecycledDatagram.hpp>
 #include <NetUdp/Socket.hpp>
 

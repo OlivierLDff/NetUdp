@@ -7,14 +7,6 @@
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <NetUdp/NetUdp.hpp>
-
-// spdlog
-#ifdef WIN32
-#    include <spdlog/sinks/msvc_sink.h>
-#endif
-#include <spdlog/sinks/stdout_color_sinks.h>
-
-// Qt
 #include <QtCore/QCoreApplication>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QCommandLineParser>
@@ -82,16 +74,6 @@ public:
 
 int main(int argc, char* argv[])
 {
-#ifdef WIN32
-    const auto msvcSink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-    msvcSink->set_level(spdlog::level::debug);
-    netudp::Logger::registerSink(msvcSink);
-#endif
-
-    const auto stdoutSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    stdoutSink->set_level(spdlog::level::debug);
-    netudp::Logger::Logger::registerSink(stdoutSink);
-
     QCoreApplication app(argc, argv);
 
     // ────────── COMMAND PARSER ──────────────────────────────────────

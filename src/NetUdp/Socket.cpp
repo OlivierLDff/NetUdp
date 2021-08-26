@@ -8,45 +8,17 @@
 
 #include <NetUdp/Socket.hpp>
 #include <NetUdp/Worker.hpp>
-#include <NetUdp/Logger.hpp>
 #include <NetUdp/RecycledDatagram.hpp>
 #include <QtCore/QThread>
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QDebug>
 #include <QtNetwork/QHostAddress>
 #include <Recycler/Circular.hpp>
 #include <limits>
 
+Q_LOGGING_CATEGORY(netudp_socket_log, "netudp.socket");
+
 namespace netudp {
-
-// clang-format off
-#ifdef NDEBUG
-# define LOG_DEV_DEBUG(str, ...) do {} while (0)
-#else
-# define LOG_DEV_DEBUG(str, ...) Logger::SERVER->debug( "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#endif
-
-#ifdef NDEBUG
-# define LOG_DEV_INFO(str, ...)  do {} while (0)
-#else
-# define LOG_DEV_INFO(str, ...)  Logger::SERVER->info(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#endif
-
-#ifdef NDEBUG
-# define LOG_DEV_WARN(str, ...)  do {} while (0)
-#else
-# define LOG_DEV_WARN(str, ...)  Logger::SERVER->warn(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#endif
-
-#ifdef NDEBUG
-# define LOG_DEV_ERR(str, ...)   do {} while (0)
-#else
-# define LOG_DEV_ERR(str, ...)   Logger::SERVER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#endif
-
-#define LOG_DEBUG(str, ...)      Logger::SERVER->debug( "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#define LOG_INFO(str, ...)       Logger::SERVER->info(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#define LOG_WARN(str, ...)       Logger::SERVER->warn(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#define LOG_ERR(str, ...)        Logger::SERVER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__)
-// clang-format on
 
 struct SocketPrivate
 {
@@ -75,13 +47,10 @@ Socket::Socket(QObject* parent)
     : ISocket(parent)
     , _p(std::make_unique<SocketPrivate>())
 {
-    LOG_DEV_DEBUG("Constructor");
 }
 
 Socket::~Socket()
 {
-    LOG_DEV_DEBUG("Destructor");
-
     killWorker();
 }
 
@@ -90,10 +59,10 @@ void Socket::killWorker()
     if(!_p->worker)
         return;
 
-    LOG_DEV_INFO("Stop Worker [{}]", static_cast<void*>(_p->worker));
+    qCDebug(netudp_socket_log) << "Stop Worker " << static_cast<void*>(_p->worker);
     Q_EMIT stopWorker();
 
-    LOG_DEV_INFO("Disconnect Worker [{}]", static_cast<void*>(_p->worker));
+    qCDebug(netudp_socket_log) << "Disconnect Worker " << static_cast<void*>(_p->worker);
     Q_ASSERT(_p->worker);
     disconnect(_p->worker, nullptr, this, nullptr);
     disconnect(this, nullptr, _p->worker, nullptr);
@@ -101,18 +70,18 @@ void Socket::killWorker()
     if(_p->workerThread)
     {
         // Ask to delete later in the event loop
-        LOG_DEV_INFO("Kill worker thread ...");
+        qCDebug(netudp_socket_log) << "Kill worker thread ...";
         _p->workerThread->quit();
         _p->workerThread->wait();
         _p->workerThread->deleteLater();
         _p->workerThread = nullptr;
         // Worker will be deleted with the finished signal from QThread
         _p->worker = nullptr;
-        LOG_DEV_INFO("... Done");
+        qCDebug(netudp_socket_log) << "... Done";
     }
     else if(_p->worker)
     {
-        LOG_DEV_INFO("Delete worker [{}] later", static_cast<void*>(_p->worker));
+        qCDebug(netudp_socket_log) << "Delete worker later" << static_cast<void*>(_p->worker);
         _p->worker->deleteLater();
         _p->worker = nullptr;
     }
@@ -124,11 +93,11 @@ bool Socket::setUseWorkerThread(const bool& enabled)
     {
         if(isRunning())
         {
-            LOG_DEV_INFO("Use worker thread change to {}, restart server to reflect change on worker.", enabled);
+            qCDebug(netudp_socket_log) << "Use worker thread change to " << enabled << ", restart server to reflect change on worker.";
         }
         else
         {
-            LOG_DEV_INFO("Use worker thread change to {}.", enabled);
+            qCDebug(netudp_socket_log) << "Use worker thread change to " << enabled;
         }
 
         if(isRunning())
@@ -192,10 +161,9 @@ bool Socket::setMulticastListeningInterfaces(const QStringList& values)
 
 bool Socket::start()
 {
-    LOG_INFO("Start");
     if(isRunning())
     {
-        LOG_DEV_WARN("Can't start socket that is already running. Please call 'stop' before.");
+        qCWarning(netudp_socket_log) << "Can't start socket that is already running. Please call 'stop' before.";
         return false;
     }
 
@@ -203,8 +171,6 @@ bool Socket::start()
 
     Q_ASSERT(_p->worker == nullptr);
     Q_ASSERT(_p->workerThread == nullptr);
-
-    LOG_DEV_DEBUG("Create worker");
 
     _p->worker = createWorker();
 
@@ -226,8 +192,6 @@ bool Socket::start()
     }
 
     _p->worker->setObjectName("Udp Worker");
-
-    LOG_DEV_DEBUG("Connect to worker {}", static_cast<void*>(_p->worker));
 
     _p->worker->initialize(watchdogPeriod(),
         rxAddress(),
@@ -275,11 +239,11 @@ bool Socket::start()
 
     if(_p->workerThread)
     {
-        LOG_DEV_INFO("Start worker thread");
+        qCDebug(netudp_socket_log) << "Start worker thread " << _p->workerThread;
         _p->workerThread->start();
     }
 
-    LOG_DEV_INFO("Start worker");
+    qCDebug(netudp_socket_log) << "Start worker thread " << _p->worker;
     Q_EMIT startWorker();
 
     return true;
@@ -305,7 +269,6 @@ bool Socket::restart()
 
 bool Socket::stop()
 {
-    LOG_DEV_INFO("Stop");
     if(!isRunning())
         return false;
 
@@ -338,7 +301,6 @@ bool Socket::joinMulticastGroup(const QString& groupAddress)
     _p->multicastListeningGroups.insert(groupAddress);
     Q_EMIT multicastGroupsChanged(multicastGroups());
 
-    LOG_DEV_INFO("Join multicast group {} request", qPrintable(groupAddress));
     Q_EMIT joinMulticastGroupWorker(groupAddress);
     return true;
 }
@@ -355,7 +317,6 @@ bool Socket::leaveMulticastGroup(const QString& groupAddress)
     _p->multicastListeningGroups.erase(it);
     Q_EMIT multicastGroupsChanged(multicastGroups());
 
-    LOG_DEV_INFO("Leave multicast group {} request", qPrintable(groupAddress));
     Q_EMIT leaveMulticastGroupWorker(groupAddress);
     return true;
 }
@@ -388,7 +349,6 @@ bool Socket::joinMulticastInterface(const QString& name)
     _p->multicastListeningInterfaces.insert(name);
     Q_EMIT multicastListeningInterfacesChanged(multicastListeningInterfaces());
 
-    LOG_DEV_INFO("Join interface for multicast {}", qPrintable(name));
     Q_EMIT joinMulticastInterfaceWorker(name);
     return true;
 }
@@ -405,7 +365,6 @@ bool Socket::leaveMulticastInterface(const QString& name)
     _p->multicastListeningInterfaces.erase(it);
     Q_EMIT multicastListeningInterfacesChanged(multicastListeningInterfaces());
 
-    LOG_DEV_INFO("Leave interface for multicast {}", qPrintable(name));
     Q_EMIT leaveMulticastInterfaceWorker(name);
     return true;
 }
@@ -467,19 +426,18 @@ std::shared_ptr<Datagram> Socket::makeDatagram(const size_t length)
 
 bool Socket::sendDatagram(const uint8_t* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl)
 {
-    if(!isRunning() && !isBounded())
+    if(!isSendDatagramAllowed())
+        return false;
+
+    if(!buffer)
     {
-        if(!isRunning())
-            LOG_DEV_ERR("Error: Fail to send datagram because the Udp Server isn't running");
-        else if(!isBounded())
-            LOG_ERR("Error: Fail to send datagram because the Udp Server isn't bounded to any "
-                    "interfaces.");
+        qCWarning(netudp_socket_log) << "Fail to send null datagram";
         return false;
     }
 
     if(length <= 0)
     {
-        LOG_DEV_ERR("Error: Fail to send datagram because the length is <= 0");
+        qCWarning(netudp_socket_log) << "Fail to send datagram because the length is <= 0";
         return false;
     }
 
@@ -503,7 +461,7 @@ bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram, const QString& add
 {
     if(!datagram)
     {
-        LOG_DEV_ERR("Error: Fail to send null datagram");
+        qCWarning(netudp_socket_log) << "Fail to send null datagram";
         return false;
     }
 
@@ -515,25 +473,18 @@ bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram, const QString& add
 
 bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram)
 {
-    if(!datagram)
-    {
-        LOG_DEV_ERR("Error: Fail to send null datagram");
+    if(!isSendDatagramAllowed())
         return false;
-    }
 
-    if(!isRunning() && !isBounded())
+    if(!datagram || !datagram->buffer())
     {
-        if(!isRunning())
-            LOG_DEV_ERR("Error: Fail to send datagram because the Udp Server isn't running");
-        else if(!isBounded())
-            LOG_ERR("Error: Fail to send datagram because the Udp Server isn't bounded to any "
-                    "interfaces.");
+        qCWarning(netudp_socket_log) << "Fail to send null datagram";
         return false;
     }
 
     if(datagram->length() <= 0)
     {
-        LOG_DEV_ERR("Error: Fail to send datagram because the length is <= 0");
+        qCWarning(netudp_socket_log) << "Fail to send datagram because the length is <= 0";
         return false;
     }
 
@@ -560,32 +511,34 @@ bool Socket::sendDatagram(QJSValue datagram)
     }
     else
     {
-        LOG_WARN("Can't send datagram because no 'address' specified");
+        qCWarning(netudp_socket_log) << "Can't send datagram because no 'address' specified";
         return false;
     }
 
     if(const auto property = datagram.property(portKey); property.isNumber())
     {
         const auto rawPort = property.toUInt();
-        if(rawPort > std::numeric_limits<quint16>::max())
+        const auto maxPort = std::numeric_limits<quint16>::max();
+        if(rawPort > maxPort)
         {
-            LOG_WARN("Can't send datagram because 'port' is out of bound ({})", rawPort);
+            qCWarning(netudp_socket_log) << "Can't send datagram because 'port' is out of bound " << rawPort << ">" << int(maxPort);
             return false;
         }
         port = quint16(property.toUInt());
     }
     else
     {
-        LOG_WARN("Can't send datagram because no 'port' specified");
+        qCWarning(netudp_socket_log) << "Can't send datagram because no 'port' specified";
         return false;
     }
 
     if(const auto property = datagram.property(ttlKey); property.isNumber())
     {
         const auto rawTtl = property.toUInt();
-        if(rawTtl > std::numeric_limits<quint8>::max())
+        const auto maxTtl = std::numeric_limits<quint8>::max();
+        if(rawTtl > maxTtl)
         {
-            LOG_WARN("'ttl' will be default to os because the value ({}) is out of bound", rawTtl);
+            qCWarning(netudp_socket_log) << "'ttl' will be default to os because the value is out of bound " << rawTtl << ">" << maxTtl;
             ttl = 0;
         }
         else
@@ -614,13 +567,13 @@ bool Socket::sendDatagram(QJSValue datagram)
         }
         else
         {
-            LOG_WARN("Can't send datagram because no 'data' is unknown type");
+            qCWarning(netudp_socket_log) << "Can't send datagram because no 'data' is unknown type";
             return false;
         }
     }
     else
     {
-        LOG_WARN("Can't send datagram because no 'data' specified");
+        qCWarning(netudp_socket_log) << "Can't send datagram because no 'data' specified";
         return false;
     }
     Q_ASSERT(sharedDatagram);
@@ -630,6 +583,25 @@ bool Socket::sendDatagram(QJSValue datagram)
     sharedDatagram->ttl = ttl;
 
     return sendDatagram(sharedDatagram);
+}
+
+bool Socket::isSendDatagramAllowed() const
+{
+    if(!isRunning() && !isBounded())
+    {
+        if(!isRunning())
+        {
+            qCWarning(netudp_socket_log) << "Fail to send datagram because the Udp socket isn't running";
+        }
+        else if(!isBounded())
+        {
+            qCWarning(netudp_socket_log) << "Fail to send datagram because the Udp Server isn't bounded to any "
+                                            "interfaces.";
+        }
+        return false;
+    }
+
+    return true;
 }
 
 void Socket::onDatagramReceived(const SharedDatagram& datagram)

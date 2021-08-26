@@ -7,49 +7,21 @@
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <NetUdp/Worker.hpp>
-#include <NetUdp/Logger.hpp>
 #include <NetUdp/InterfacesProvider.hpp>
 #include <NetUdp/RecycledDatagram.hpp>
 #include <QtCore/QTimer>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QDebug>
 #include <QtNetwork/QUdpSocket>
 #include <QtNetwork/QNetworkInterface>
 #include <QtNetwork/QNetworkDatagram>
 #include <Recycler/Circular.hpp>
 #include <algorithm>
 
+Q_LOGGING_CATEGORY(netudp_worker_log, "netudp.worker");
+
 namespace netudp {
-
-// clang-format off
-#ifdef NDEBUG
-# define LOG_DEV_DEBUG(str, ...) do {} while (0)
-#else
-# define LOG_DEV_DEBUG(str, ...) Logger::WORKER->debug( "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#endif
-
-#ifdef NDEBUG
-# define LOG_DEV_INFO(str, ...)  do {} while (0)
-#else
-# define LOG_DEV_INFO(str, ...)  Logger::WORKER->info(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#endif
-
-#ifdef NDEBUG
-# define LOG_DEV_WARN(str, ...)  do {} while (0)
-#else
-# define LOG_DEV_WARN(str, ...)  Logger::WORKER->warn(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#endif
-
-#ifdef NDEBUG
-# define LOG_DEV_ERR(str, ...)   do {} while (0)
-#else
-# define LOG_DEV_ERR(str, ...)   Logger::WORKER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#endif
-
-#define LOG_DEBUG(str, ...)      Logger::WORKER->debug( "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#define LOG_INFO(str, ...)       Logger::WORKER->info(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#define LOG_WARN(str, ...)       Logger::WORKER->warn(  "[{}] " str, (void*)(this), ## __VA_ARGS__)
-#define LOG_ERR(str, ...)        Logger::WORKER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__)
-// clang-format on
 
 static const quint64 disableSocketTimeout = 10000;
 
@@ -150,13 +122,9 @@ Worker::Worker(QObject* parent)
     : QObject(parent)
     , _p(std::make_unique<WorkerPrivate>())
 {
-    LOG_DEV_DEBUG("Constructor");
 }
 
-Worker::~Worker()
-{
-    LOG_DEV_DEBUG("Destructor");
-}
+Worker::~Worker() = default;
 
 bool Worker::isBounded() const
 {
@@ -245,23 +213,32 @@ void Worker::onStart()
 {
     if(_p->socket)
     {
-        LOG_DEV_ERR("Can't start udp socket worker because socket is already valid");
+        qCWarning(netudp_worker_log) << "Can't start udp socket worker because socket is already valid";
         return;
     }
 
     if(_p->inputEnabled)
     {
         if(_p->rxAddress.isEmpty())
-            LOG_DEV_INFO("Start Udp Socket Worker rx : {}:{}, tx port : {}", _p->rxAddress.toStdString(), _p->rxPort, _p->txPort);
+        {
+            qCWarning(netudp_worker_log) << "Start Udp Socket Worker rx : " << _p->rxAddress << ":" << _p->rxPort
+                                         << "tx port :" << _p->txPort;
+        }
         else
-            LOG_DEV_INFO("Start Udp Socket Worker rx port : {}, tx port : {}", _p->rxPort, _p->txPort);
+        {
+            qCWarning(netudp_worker_log) << "Start Udp Socket Worker rx : " << _p->rxPort << "tx port :" << _p->txPort;
+        }
     }
     else
     {
         if(_p->rxAddress.isEmpty())
-            LOG_DEV_INFO("Start Udp Socket Worker rx : {}:{}", _p->rxAddress.toStdString(), _p->rxPort);
+        {
+            qCWarning(netudp_worker_log) << "Start Udp Socket Worker rx port : " << _p->rxAddress << ":" << _p->rxPort;
+        }
         else
-            LOG_DEV_INFO("Start Udp Socket Worker rx port : {}", _p->rxPort);
+        {
+            qCWarning(netudp_worker_log) << "Start Udp Socket Worker rx port : " << _p->rxPort;
+        }
     }
 
     _p->isBounded = false;
@@ -278,7 +255,6 @@ void Worker::onStart()
     const bool useTwoSockets = (_p->separateRxTxSockets || _p->txPort) && _p->inputEnabled;
     if(useTwoSockets)
     {
-        LOG_DEV_INFO("Create separate rx socket");
         if(_p->rxSocket)
             _p->rxSocket->deleteLater();
         _p->rxSocket = new QUdpSocket(this);
@@ -307,18 +283,18 @@ void Worker::onStart()
                     this,
                     [this]()
                     {
-                        LOG_DEV_INFO("Watchdog timeout, try to restart socket");
+                        qCDebug(netudp_worker_log) << "Watchdog timeout, try to restart socket";
                         onRestart();
                     },
                     Qt::ConnectionType::QueuedConnection);
 
-                LOG_INFO("Start watchdog to restart socket in {} millis", watchdogTimeout());
+                qCDebug(netudp_worker_log) << "Start watchdog to restart socket in " << watchdogTimeout() << " ms";
                 // Start the watchdog
                 _p->watchdog->start(watchdogTimeout());
             }
             else
             {
-                LOG_DEV_WARN("Watchdog already running, fail to start it");
+                qCWarning(netudp_worker_log) << "Watchdog already running, fail to start it";
             }
         },
         Qt::QueuedConnection);
@@ -371,7 +347,7 @@ void Worker::onStart()
     // Or start watchdog on failure
     if(bindSuccess)
     {
-        LOG_INFO("Success bind to {}:{}", qPrintable(_p->socket->localAddress().toString()), _p->socket->localPort());
+        qCDebug(netudp_worker_log) << "Success bind to " << _p->socket->localAddress() << ":" << _p->socket->localPort();
 
         if(!_p->multicastGroups.empty() && rxSocket() && _p->inputEnabled)
         {
@@ -395,9 +371,8 @@ void Worker::onStart()
     }
     else
     {
-        LOG_ERR("Fail to bind to {} : {}", qPrintable(_p->rxAddress.isEmpty() ? "Any" : _p->rxAddress), _p->rxPort);
-        //_p->socket = nullptr;
-        //_p->rxSocket = nullptr;
+        qCWarning(netudp_worker_log) << "Fail to bind to " << (_p->rxAddress.isEmpty() ? "Any" : _p->rxAddress) << ":"
+                                     << _p->socket->localPort();
         startWatchdog();
     }
 }
@@ -413,11 +388,9 @@ void Worker::onStop()
         Q_ASSERT(_p->multicastTxSockets.empty());
         Q_ASSERT(_p->watchdog == nullptr);
         Q_ASSERT(!_p->isBounded);
-        LOG_DEV_WARN("Can't stop udp socket worker because socket isn't valid");
+        qCWarning(netudp_worker_log) << "Can't stop udp socket worker because socket isn't valid";
         return;
     }
-
-    LOG_INFO("Stop Udp Socket Worker");
 
     stopListeningMulticastInterfaceWatcher();
     stopOutputMulticastInterfaceWatcher();
@@ -502,7 +475,6 @@ void Worker::setRxPort(const quint16 port)
 
 void Worker::setInputEnabled(const bool enabled)
 {
-    LOG_DEV_INFO("Set Input Enabled : {}", enabled);
     if(enabled != _p->inputEnabled)
     {
         _p->inputEnabled = enabled;
@@ -521,7 +493,7 @@ void Worker::setTxPort(const quint16 port)
 
 void Worker::joinMulticastGroup(const QString& address)
 {
-    LOG_INFO("Join Multicast group {}", address.toStdString());
+    qCDebug(netudp_worker_log) << "Join Multicast group " << address;
 
     const auto [groupIt, groupInsertSuccess] = _p->multicastGroups.insert(address);
 
@@ -560,7 +532,7 @@ void Worker::joinMulticastGroup(const QString& address)
 
 void Worker::leaveMulticastGroup(const QString& address)
 {
-    LOG_INFO("Leave Multicast group {}", address.toStdString());
+    qCDebug(netudp_worker_log) << "Leave Multicast group " << address;
 
     const auto it = _p->multicastGroups.find(address);
 
@@ -682,8 +654,6 @@ void Worker::leaveMulticastInterface(const QString& ifaceName)
 
 void Worker::setMulticastLoopback(const bool loopback)
 {
-    LOG_DEV_INFO("Set Multicast Loopback : {}", loopback);
-
     if(_p->multicastLoopback != loopback)
     {
         _p->multicastLoopback = loopback;
@@ -808,7 +778,7 @@ bool Worker::socketJoinMulticastGroup(const QString& address, const QString& ifa
 
     if(!rxSocket())
     {
-        LOG_ERR("Can't join multicast group when socket isn't started");
+        qCWarning(netudp_worker_log) << "Can't join multicast group when socket isn't started";
         return false;
     }
 
@@ -816,23 +786,23 @@ bool Worker::socketJoinMulticastGroup(const QString& address, const QString& ifa
     if(!networkInterfaceValid || !rxSocket()->joinMulticastGroup(hostAddress, networkInterface))
     {
         if(networkInterfaceValid)
-            LOG_ERR("Fail to join multicast group {} an iface {}. {}",
-                address.toStdString(),
-                ifaceName.toStdString(),
-                rxSocket()->errorString().toStdString());
+        {
+            qCWarning(netudp_worker_log) << "Fail to join multicast group " << address << " on interface " << ifaceName
+                                         << ", error : " << rxSocket()->errorString();
+        }
         else
-            LOG_WARN("Fail to join multicast group {} an iface {} because iface is not valid. IsUp:{}, "
-                     "IsRunning:{}, CanMulticast:{}, IsLoopBack:{}",
-                address.toStdString(),
-                ifaceName.toStdString(),
-                bool(networkInterface.flags() & QNetworkInterface::IsUp),
-                bool(networkInterface.flags() & QNetworkInterface::IsRunning),
-                bool(networkInterface.flags() & QNetworkInterface::CanMulticast),
-                bool(networkInterface.flags() & QNetworkInterface::IsLoopBack));
+        {
+            qCWarning(netudp_worker_log) << "Fail to join multicast group " << address << " on interface " << ifaceName
+                                         << "because iface is not valid : IsUp:" << bool(networkInterface.flags() & QNetworkInterface::IsUp)
+                                         << ", IsRunning:" << bool(networkInterface.flags() & QNetworkInterface::IsRunning)
+                                         << ", CanMulticast:" << bool(networkInterface.flags() & QNetworkInterface::CanMulticast)
+                                         << ", IsLoopBack:" << bool(networkInterface.flags() & QNetworkInterface::IsLoopBack);
+        }
         return false;
     }
 
-    LOG_INFO("Success Join multicast group {} on iface {}", address.toStdString(), ifaceName.toStdString());
+    qCDebug(netudp_worker_log) << "Success Join multicast group " << address << " on iface " << ifaceName;
+
     Q_EMIT multicastGroupJoined(address, ifaceName);
 
     return true;
@@ -848,18 +818,20 @@ bool Worker::socketLeaveMulticastGroup(const QString& address, const QString& if
     if(!networkInterfaceValid || !rxSocket()->leaveMulticastGroup(hostAddress, networkInterface))
     {
         if(networkInterfaceValid)
-            LOG_ERR("Fail to leave multicast group {} an iface {}. {}",
-                address.toStdString(),
-                ifaceName.toStdString(),
-                rxSocket()->errorString().toStdString());
+        {
+            qCWarning(netudp_worker_log) << "Fail to leave multicast group " << address << "  on interface " << ifaceName
+                                         << ", error : " << rxSocket()->errorString();
+        }
         else
-            LOG_ERR("Fail to leave multicast group {} an iface {} because iface is not valid",
-                address.toStdString(),
-                ifaceName.toStdString());
+        {
+            qCWarning(netudp_worker_log) << "Fail to leave multicast group " << address << "  on interface " << ifaceName
+                                         << ", because interface is not valid";
+        }
+
         return false;
     }
 
-    LOG_INFO("Success Leave multicast group {} on iface {}", address.toStdString(), ifaceName.toStdString());
+    qCDebug(netudp_worker_log) << "Success Leave multicast group " << address << " on interface " << ifaceName;
     Q_EMIT multicastGroupLeaved(address, ifaceName);
 
     return true;
@@ -869,7 +841,6 @@ void Worker::setMulticastLoopbackToSocket() const
 {
     if(rxSocket() && _p->inputEnabled)
     {
-        LOG_INFO("Set MulticastLoopbackOption to {}", int(_p->multicastLoopback));
         rxSocket()->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _p->multicastLoopback);
         if(rxSocket() != _p->socket)
             _p->socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _p->multicastLoopback);
@@ -949,7 +920,6 @@ void Worker::startListeningMulticastInterfaceWatcher()
                         const auto ifaceName = iface->name();
                         if(_p->allMulticastInterfaces.find(ifaceName) == _p->allMulticastInterfaces.end())
                         {
-                            LOG_DEV_INFO("Find a new iface to join for multicast : {}", ifaceName.toStdString());
                             _p->allMulticastInterfaces.insert(ifaceName);
                             _p->failedJoiningMulticastGroup.insert({ifaceName, _p->multicastGroups});
                         }
@@ -975,7 +945,9 @@ void Worker::startListeningMulticastInterfaceWatcher()
                         // If not add it to the list to delete later
                         if(!found)
                         {
-                            LOG_DEV_INFO("Interface {} disappeared, It will be removed from tracked ifaces", ifaceName.toStdString());
+                            qCDebug(netudp_worker_log)
+                                << "Interface " << ifaceName << "  disappeared, It will be removed from tracked ifaces";
+
                             ifaceNameToRemove.push_back(ifaceName);
                         }
                     }
@@ -1010,9 +982,9 @@ void Worker::startListeningMulticastInterfaceWatcher()
                                                 && (iface->canMulticast() || (multicastLoopback() && iface->isLoopBack()));
                         if(!ifaceValid)
                         {
-                            LOG_DEV_INFO("Interface {} isn't valid anymore, It will be removed from joined ifaces. "
-                                         "The worker will try to re join later the iface",
-                                ifaceName.toStdString());
+                            qCDebug(netudp_worker_log) << "Interface " << ifaceName
+                                                       << " isn't valid anymore, It will be removed from joined ifaces. "
+                                                          "The worker will try to re join later the iface";
                             const auto& currentGroups = _p->failedJoiningMulticastGroup[ifaceName];
 
                             // Move the list of joined multicast group to the failed one.
@@ -1157,8 +1129,8 @@ void Worker::startOutputMulticastInterfaceWatcher()
                     }
                     else
                     {
-                        LOG_DEV_INFO("Detect iface {} disappear, stop trying to instantiate a udp multicast socket for it",
-                            ifaceName.toStdString());
+                        qCDebug(netudp_worker_log)
+                            << "Detect iface " << ifaceName << " disappear, stop trying to instantiate a udp multicast socket for it";
                         it = _p->failedToInstantiateMulticastTxSockets.erase(it);
                     }
                 }
@@ -1171,7 +1143,7 @@ void Worker::startOutputMulticastInterfaceWatcher()
                     }
                     else
                     {
-                        LOG_DEV_INFO("Detect iface {} disappear, delete the associated multicast socket", ifaceName.toStdString());
+                        qCDebug(netudp_worker_log) << "Detect iface " << ifaceName << "disappear, delete the associated multicast socket";
                         socket->deleteLater();
                         it = _p->multicastTxSockets.erase(it);
                     }
@@ -1213,23 +1185,13 @@ void Worker::createMulticastSocketForInterface(const IInterface& iface)
 
         if(!isInterfaceValid)
         {
-            LOG_DEV_DEBUG("Can't create multicast socket for iface {} because it's not valid: isValid: {}, isUp: {}, "
-                          "isRunning: {}, canMulticast: {}, isLoopback: {}, multicastLoopback: {}",
-                iface.name().toStdString(),
-                iface.isValid(),
-                iface.isUp(),
-                iface.isRunning(),
-                iface.canMulticast(),
-                iface.isLoopBack(),
-                multicastLoopback());
             return false;
         }
 
         if(_p->multicastTxSockets.find(ifaceName) != _p->multicastTxSockets.end())
         {
-            LOG_DEV_ERR("Multicast tx socket is already instantiated for iface {}. This might hide a bug in "
-                        "the iface retrieving system",
-                ifaceName.toStdString());
+            qCWarning(netudp_worker_log) << "Multicast tx socket is already instantiated for iface " << ifaceName
+                                         << ". This might hide a bug in the iface retrieving system";
             return false;
         }
 
@@ -1249,7 +1211,7 @@ void Worker::createMulticastSocketForInterface(const IInterface& iface)
 
         const auto onError = [ifaceName, socket, this](QAbstractSocket::SocketError error)
         {
-            LOG_DEV_WARN("{}: Multicast tx error: {}", ifaceName.toStdString(), socket->errorString().toStdString());
+            qCWarning(netudp_worker_log) << ifaceName << ": Multicast tx error: " << socket->errorString();
             socket->deleteLater();
             _p->multicastTxSockets.erase(ifaceName);
             _p->failedToInstantiateMulticastTxSockets.insert(ifaceName);
@@ -1267,8 +1229,6 @@ void Worker::createMulticastSocketForInterface(const IInterface& iface)
         // This have been checked before creating the socket if(_p->multicastTxSockets.find(ifaceName) != _p->multicastTxSockets.end())
         Q_ASSERT(success);
 
-        LOG_DEV_INFO("Create multicast tx socket for iface {}", ifaceName.toStdString());
-
         return true;
     }();
 
@@ -1280,8 +1240,8 @@ void Worker::createMulticastOutputSockets()
 {
     if(_p->multicastTxSocketsInstantiated)
     {
-        LOG_DEV_WARN("Can't create Multicast output sockets because they are already created. You should call "
-                     "'destroyMulticastOutputSockets' before.");
+        qCWarning(netudp_worker_log) << "Can't create Multicast output sockets because they are already created. You should call "
+                                        "'destroyMulticastOutputSockets' before.";
         return;
     }
 
@@ -1291,7 +1251,6 @@ void Worker::createMulticastOutputSockets()
     // Create sockets only for the ifaces specified by user or for every ifaces if nothing is specified
     if(_p->outgoingMulticastInterfaces.empty())
     {
-        LOG_DEV_INFO("Create multicast tx sockets for all ifaces");
         const auto ifaces = InterfacesProvider::allInterfaces();
         for(const auto& iface: ifaces)
         {
@@ -1315,7 +1274,6 @@ void Worker::createMulticastOutputSockets()
 
 void Worker::destroyMulticastOutputSockets()
 {
-    LOG_DEV_INFO("Destroy all multicast tx sockets");
     for(const auto& [ifaceName, socket]: _p->multicastTxSockets)
     {
         Q_CHECK_PTR(socket);
@@ -1331,36 +1289,36 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
 {
     if(!isBounded())
     {
-        LOG_DEV_ERR("Can't send datagram if socket isn't bounded");
+        qCWarning(netudp_worker_log) << "Can't send datagram if socket isn't bounded";
         return;
     }
     if(!datagram)
     {
-        LOG_DEV_ERR("Can't send null datagram");
+        qCWarning(netudp_worker_log) << "Can't send null datagram";
         return;
     }
 
     if(!_p->socket)
     {
-        LOG_DEV_ERR("Can't send a datagram when the socket is null");
+        qCWarning(netudp_worker_log) << "Can't send a datagram when the socket is null";
         return;
     }
 
     if(datagram->destinationAddress.isNull())
     {
-        LOG_DEV_ERR("Can't send datagram to null address");
+        qCWarning(netudp_worker_log) << "Can't send datagram to null address";
         return;
     }
 
     if(!datagram->buffer())
     {
-        LOG_DEV_ERR("Can't send datagram with empty buffer");
+        qCWarning(netudp_worker_log) << "Can't send datagram with empty buffer";
         return;
     }
 
     if(!datagram->length())
     {
-        LOG_DEV_ERR("Can't send datagram with data length to 0");
+        qCWarning(netudp_worker_log) << "Can't send datagram with data length to 0";
         return;
     }
 
@@ -1424,16 +1382,18 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
         startWatchdog();
 
         if(bytesWritten <= 0)
-            LOG_ERR("Fail to send datagram to {}:{}, 0 bytes written out of {}. Restart Socket. {}",
-                datagram->destinationAddress.toStdString(),
-                datagram->destinationPort,
-                datagram->length(),
-                _p->socket->errorString().toStdString());
+        {
+            qCWarning(netudp_worker_log) << "Fail to send datagram to " << datagram->destinationAddress << ":" << datagram->destinationPort
+                                         << ", 0 bytes written out of " << datagram->length() << ". Restart Socket. "
+                                         << _p->socket->errorString();
+        }
         else
-            LOG_ERR("Fail to send datagram, {}/{} bytes written. Restart Socket. {}",
-                static_cast<long long>(bytesWritten),
-                static_cast<long long>(datagram->length()),
-                _p->socket->errorString().toStdString());
+        {
+            qCWarning(netudp_worker_log) << "Fail to send datagram, " << static_cast<long long>(bytesWritten) << "/"
+                                         << static_cast<long long>(datagram->length()) << " bytes written. Restart Socket. "
+                                         << _p->socket->errorString();
+        }
+
         return;
     }
 
@@ -1455,10 +1415,10 @@ void Worker::readPendingDatagrams()
     {
         if(rxSocket()->pendingDatagramSize() == 0)
         {
-            LOG_DEV_WARN("Receive datagram with size 0. This may means : \n"
-                         "- That host is unreachable (receive an ICMP packet destination unreachable).\n"
-                         "- Your OS doesn't support IGMP (if last packet sent was multicast). "
-                         "On unix system you can check with netstat -g");
+            qCWarning(netudp_worker_log) << "Receive datagram with size 0. This may means : \n"
+                                            "- That host is unreachable (receive an ICMP packet destination unreachable).\n"
+                                            "- Your OS doesn't support IGMP (if last packet sent was multicast). "
+                                            "On unix system you can check with netstat -g";
             ++_p->rxInvalidPacket;
             // This might happen, so don't close socket.
             // This will cause an error  Connection reset by peer, that we need to ignore
@@ -1471,9 +1431,9 @@ void Worker::readPendingDatagrams()
 
         if(!datagram.isValid())
         {
-            LOG_ERR("Receive datagram that is marked not valid. Restart Socket."
-                    "This may be a sign that your OS doesn't support IGMP. On unix system you can "
-                    "check with netstat -g");
+            qCWarning(netudp_worker_log) << "Receive datagram that is marked not valid. Restart Socket."
+                                            "This may be a sign that your OS doesn't support IGMP. On unix system you can "
+                                            "check with netstat -g";
             ++_p->rxInvalidPacket;
             startWatchdog();
             return;
@@ -1481,7 +1441,7 @@ void Worker::readPendingDatagrams()
 
         if(datagram.data().size() <= 0)
         {
-            LOG_ERR("Receive datagram with size {}. Restart Socket.", datagram.data().size());
+            qCWarning(netudp_worker_log) << "Receive datagram with size {}. Restart Socket.", datagram.data().size();
             ++_p->rxInvalidPacket;
             startWatchdog();
             return;
@@ -1489,16 +1449,15 @@ void Worker::readPendingDatagrams()
 
         if(!isPacketValid(reinterpret_cast<const uint8_t*>(datagram.data().constData()), datagram.data().size()))
         {
-            LOG_WARN("Receive not valid application datagram. Simply discard the packet");
+            qCWarning(netudp_worker_log) << "Receive not valid application datagram. Simply discard the packet";
             ++_p->rxInvalidPacket;
             continue;
         }
 
         if(datagram.data().size() > 65535)
         {
-            LOG_ERR("Receive a datagram with size of {}, that is too big for a datagram. Restart "
-                    "Socket.",
-                datagram.data().size());
+            qCWarning(netudp_worker_log) << "Receive a datagram with size of " << datagram.data().size()
+                                         << ", that is too big for a datagram. Restart Socket.";
             ++_p->rxInvalidPacket;
             startWatchdog();
             return;
@@ -1539,8 +1498,6 @@ void Worker::onRxSocketError(QAbstractSocket::SocketError error)
 
 void Worker::onSocketStateChanged(QAbstractSocket::SocketState socketState)
 {
-    LOG_DEV_INFO("Socket State Changed to {} ({})", socketStateToString(socketState).toStdString(), socketState);
-
     if((socketState == QAbstractSocket::SocketState::BoundState && !_p->isBounded)
         || (socketState != QAbstractSocket::SocketState::BoundState && _p->isBounded))
     {
@@ -1555,12 +1512,12 @@ void Worker::onSocketErrorCommon(QAbstractSocket::SocketError error, QUdpSocket*
     {
         if(error == QAbstractSocket::SocketError::ConnectionRefusedError)
         {
-            LOG_DEV_WARN("Ignoring socket error ({}), because it simply mean we received an ICMP "
-                         "packet Destination unreachable.",
-                qPrintable(socket->errorString()));
+            qCDebug(netudp_worker_log) << "Ignoring socket error (" << socket->errorString()
+                                       << "), because it simply mean we received an ICMP "
+                                          "packet Destination unreachable.";
             return;
         }
-        LOG_ERR("Socket Error ({}) : {}", error, qPrintable(socket->errorString()));
+        qCWarning(netudp_worker_log) << "Socket Error (" << error << ") : " << socket->errorString();
         Q_EMIT socketError(error, socket->errorString());
         startWatchdog();
     }

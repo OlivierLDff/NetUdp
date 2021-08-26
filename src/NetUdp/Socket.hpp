@@ -11,6 +11,7 @@
 
 #include <NetUdp/Export.hpp>
 #include <NetUdp/Property.hpp>
+#include <NetUdp/Datagram.hpp>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -231,6 +232,8 @@ public:
     bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0) override;
     bool sendDatagram(std::shared_ptr<Datagram> datagram) override;
     bool sendDatagram(QJSValue datagram) override;
+
+    bool isSendDatagramAllowed() const;
 
     // ──────── RECEIVE DATAGRAM API ────────
 protected Q_SLOTS:
