@@ -22,6 +22,7 @@ QT_FORWARD_DECLARE_CLASS(QUdpSocket);
 
 namespace netudp {
 
+class IInterface;
 struct WorkerPrivate;
 
 class NETUDP_API_ Worker : public QObject
