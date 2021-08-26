@@ -10,21 +10,24 @@
 #define __NETUDP_RECYCLED_DATAGRAM_HPP__
 
 #include <NetUdp/Datagram.hpp>
-#include <Recycler/Buffer.hpp>
+#include <memory>
 
 namespace netudp {
+
+struct RecycledDatagramPrivate;
 
 class NETUDP_API_ RecycledDatagram : public Datagram
 {
     // ────── CONSTRUCTOR ────────
 public:
     RecycledDatagram(const std::size_t length);
+    ~RecycledDatagram() override;
     void reset() override final;
     void reset(const std::size_t length) override final;
     void resize(std::size_t length) override;
 
 private:
-    recycler::Buffer<std::uint8_t> _buffer;
+    std::unique_ptr<RecycledDatagramPrivate> _p;
 
     // ────── API ────────
 public:
