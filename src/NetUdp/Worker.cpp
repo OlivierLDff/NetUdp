@@ -1630,3 +1630,5 @@ void Worker::stopBytesCounter()
 }
 
 }
+
+#include "moc_Worker.cpp"
