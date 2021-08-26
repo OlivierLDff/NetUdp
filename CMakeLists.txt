@@ -119,11 +119,26 @@ message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                       DEPENDENCIES                               │
 # └──────────────────────────────────────────────────────────────────┘
+find_package(
+  QT NAMES Qt6 Qt5
+  COMPONENTS Core
+  REQUIRED
+)
+
+find_package(
+  Qt${QT_VERSION_MAJOR}
+  COMPONENTS Core Qml Network CONFIG
+  REQUIRED
+)
 
 find_package(Qt5 REQUIRED COMPONENTS Core Qml Network)
 
 if(NETUDP_ENABLE_QML)
-  find_package(Qt5 REQUIRED COMPONENTS QuickCompiler)
+  find_package(
+    Qt${QT_VERSION_MAJOR}
+    COMPONENTS Quick QuickCompiler CONFIG
+    REQUIRED
+  )
 endif()
 
 include(cmake/FetchSpdlog.cmake)
@@ -201,7 +216,7 @@ endif()
 target_compile_features(${NETUDP_TARGET} PUBLIC cxx_std_17)
 target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_INCS_FOLDER}>)
 
-target_link_libraries(${NETUDP_TARGET} PUBLIC Recycler spdlog Qt5::Core Qt5::Qml Qt5::Network)
+target_link_libraries(${NETUDP_TARGET} PUBLIC Recycler spdlog Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Qml Qt${QT_VERSION_MAJOR}::Network)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)

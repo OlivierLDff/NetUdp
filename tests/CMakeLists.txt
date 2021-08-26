@@ -3,7 +3,7 @@
 #
 # Copyright Olivier Le Doeuff 2020
 
-find_package(Qt5 REQUIRED COMPONENTS Test Quick QuickTest)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Test Quick QuickTest)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchGTest.cmake)
 
 set(NETUDP_TEST_TARGET NetUdp_Tests)
@@ -14,7 +14,7 @@ message(STATUS "Add Test: ${NETUDP_TEST_TARGET}")
 # Create the executable
 add_executable(${NETUDP_TEST_TARGET} Tests.cpp)
 target_include_directories(${NETUDP_TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(${NETUDP_TEST_TARGET} PRIVATE ${NETUDP_TARGET} gtest gmock Qt5::Test)
+target_link_libraries(${NETUDP_TEST_TARGET} PRIVATE ${NETUDP_TARGET} gtest gmock Qt${QT_VERSION_MAJOR}::Test)
 set_target_properties(${NETUDP_TEST_TARGET} PROPERTIES AUTOMOC TRUE)
 set_target_properties(${NETUDP_TEST_TARGET} PROPERTIES FOLDER ${NETUDP_FOLDER_PREFIX}/Tests)
 
@@ -23,7 +23,7 @@ add_test(NAME ${NETUDP_TEST_TARGET} COMMAND ${NETUDP_TEST_TARGET})
 
 add_executable(${NETUDP_QUICK_TEST_TARGET} QuickTests.cpp)
 set_target_properties(${NETUDP_QUICK_TEST_TARGET} PROPERTIES AUTOMOC TRUE AUTORCC TRUE)
-target_link_libraries(${NETUDP_QUICK_TEST_TARGET} PRIVATE ${NETUDP_TARGET} Qt5::QuickTest Qt5::Test Qt5::Quick)
+target_link_libraries(${NETUDP_QUICK_TEST_TARGET} PRIVATE ${NETUDP_TARGET} Qt${QT_VERSION_MAJOR}::QuickTest Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Quick)
 set_target_properties(${NETUDP_QUICK_TEST_TARGET} PROPERTIES FOLDER ${NETUDP_FOLDER_PREFIX}/Tests)
 
 file(GLOB QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.qml)
