@@ -1,8 +1,12 @@
+# ~~~
+# Copyright 2019 - 2021 Olivier Le Doeuff
 #
-#   NetUdp CMake build script
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 #
-#   Copyright Olivier Le Doeuff 2019
+# The above copyright noticeand this permission notice shall be included in all copies or substantial portions of the Software.
 #
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# ~~~
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                       CMAKE PROPERTIES                           │
@@ -15,7 +19,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 # └──────────────────────────────────────────────────────────────────┘
 
 set(NETUDP_MAIN_PROJECT OFF)
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(NETUDP_MAIN_PROJECT ON)
 endif()
 
@@ -25,47 +29,80 @@ set(NETUDP_VERSION_MAJOR 1)
 set(NETUDP_VERSION_MINOR 3)
 set(NETUDP_VERSION_PATCH 1)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
-  EXECUTE_PROCESS(
+  execute_process(
     COMMAND git rev-parse --short HEAD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE NETUDP_VERSION_TAG
     OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+  )
 endif()
 if(NOT NETUDP_VERSION_TAG)
   set(NETUDP_VERSION_TAG 00000000)
 endif(NOT NETUDP_VERSION_TAG)
 set(NETUDP_VERSION_TAG_HEX 0x${NETUDP_VERSION_TAG})
-set(NETUDP_VERSION ${NETUDP_VERSION_MAJOR}.${NETUDP_VERSION_MINOR}.${NETUDP_VERSION_PATCH} CACHE STRING "" FORCE)
+set(NETUDP_VERSION
+    ${NETUDP_VERSION_MAJOR}.${NETUDP_VERSION_MINOR}.${NETUDP_VERSION_PATCH}
+    CACHE STRING "" FORCE
+)
 
 # General
-set(NETUDP_PROJECT "NetUdp" CACHE STRING "Project Name")
-set(NETUDP_TARGET ${NETUDP_PROJECT} CACHE STRING "NetUdp library name")
-set(NETUDP_VERSION ${NETUDP_VERSION_MAJOR}.${NETUDP_VERSION_MINOR}.${NETUDP_VERSION_PATCH} CACHE STRING "NetUdp current version, this is only decorative and will not configure any files" FORCE)
+set(NETUDP_PROJECT
+    "NetUdp"
+    CACHE STRING "Project Name"
+)
+set(NETUDP_TARGET
+    ${NETUDP_PROJECT}
+    CACHE STRING "NetUdp library name"
+)
+set(NETUDP_VERSION
+    ${NETUDP_VERSION_MAJOR}.${NETUDP_VERSION_MINOR}.${NETUDP_VERSION_PATCH}
+    CACHE STRING "NetUdp current version, this is only decorative and will not configure any files" FORCE
+)
 
-set(NETUDP_BUILD_SHARED OFF CACHE BOOL "Build as a shared library (ON) or as static (OFF)")
-set(NETUDP_FOLDER_PREFIX ${NETUDP_PROJECT} CACHE STRING "Prefix folder for all NetUdp generated targets in generated project (only decorative)")
+set(NETUDP_BUILD_SHARED
+    OFF
+    CACHE BOOL "Build as a shared library (ON) or as static (OFF)"
+)
+set(NETUDP_FOLDER_PREFIX
+    ${NETUDP_PROJECT}
+    CACHE STRING "Prefix folder for all NetUdp generated targets in generated project (only decorative)"
+)
 
-set(NETUDP_ENABLE_QML ON CACHE BOOL "Embedded Debug Qml module for NetUdp class")
-set(NETUDP_ENABLE_PCH ON CACHE BOOL
- "Enable precompile headers support for 'NetUdp'. \"
+set(NETUDP_ENABLE_QML
+    ON
+    CACHE BOOL "Embedded Debug Qml module for NetUdp class"
+)
+set(NETUDP_ENABLE_PCH
+    ON
+    CACHE BOOL "Enable precompile headers support for 'NetUdp'. \"
  Only work if CMake support 'target_precompile_headers'. \"
- This can speed up compilation time.")
+ This can speed up compilation time."
+)
 
 # Extra
-set(NETUDP_ENABLE_EXAMPLES OFF CACHE BOOL "Create NetUdp examples")
-set(NETUDP_ENABLE_TESTS OFF CACHE BOOL "Create test target for NetUdp")
+set(NETUDP_ENABLE_EXAMPLES
+    OFF
+    CACHE BOOL "Create NetUdp examples"
+)
+set(NETUDP_ENABLE_TESTS
+    OFF
+    CACHE BOOL "Create test target for NetUdp"
+)
 
 # CREATE PROJECT
 
-project(${NETUDP_PROJECT} VERSION ${NETUDP_VERSION} LANGUAGES C CXX)
+project(
+  ${NETUDP_PROJECT}
+  VERSION ${NETUDP_VERSION}
+  LANGUAGES C CXX
+)
 if(NETUDP_MAIN_PROJECT)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
 
 message(STATUS "---------------- NETUDP OPTIONS. ----------------")
 
-#General
+# General
 message(STATUS "NETUDP_PROJECT            : " ${NETUDP_PROJECT})
 message(STATUS "NETUDP_TARGET             : " ${NETUDP_TARGET})
 message(STATUS "NETUDP_VERSION            : " ${NETUDP_VERSION})
@@ -83,11 +120,7 @@ message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
 # │                       DEPENDENCIES                               │
 # └──────────────────────────────────────────────────────────────────┘
 
-find_package(Qt5 REQUIRED COMPONENTS
-  Core
-  Qml
-  Network
-)
+find_package(Qt5 REQUIRED COMPONENTS Core Qml Network)
 
 if(NETUDP_ENABLE_QML)
   find_package(Qt5 REQUIRED COMPONENTS QuickCompiler)
@@ -114,10 +147,7 @@ if(NETUDP_ENABLE_QML)
   qtquick_compiler_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
 
   # Trick to rerun cmake each time NetUdp.qrc is updated
-  configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc
-    ${CMAKE_CURRENT_BINARY_DIR}/qml.junk
-    )
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc ${CMAKE_CURRENT_BINARY_DIR}/qml.junk)
 
   # Dont Run Moc on cpp file generated from qml
   foreach(NETUDP_CURRENT_QML_FILE ${NETUDP_QML_RES})
@@ -132,46 +162,25 @@ set(NETUDP_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(NETUDP_PRIVATE_INCS_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/include/Net/Udp)
 
 # NETUDP SOURCES
-set(NETUDP_UTILS_SRCS
-  ${NETUDP_SRCS_FOLDER}/Utils.cpp
-  ${NETUDP_SRCS_FOLDER}/Logger.cpp
-  ${NETUDP_SRCS_FOLDER}/Version.cpp
-  ${NETUDP_SRCS_FOLDER}/InterfacesProvider.cpp
-  )
+set(NETUDP_UTILS_SRCS ${NETUDP_SRCS_FOLDER}/Utils.cpp ${NETUDP_SRCS_FOLDER}/Logger.cpp ${NETUDP_SRCS_FOLDER}/Version.cpp ${NETUDP_SRCS_FOLDER}/InterfacesProvider.cpp)
 
-set(NETUDP_API_SRCS
-  ${NETUDP_SRCS_FOLDER}/Datagram.cpp
-  ${NETUDP_SRCS_FOLDER}/RecycledDatagram.cpp
-  ${NETUDP_SRCS_FOLDER}/Socket.cpp
-  ${NETUDP_SRCS_FOLDER}/Worker.cpp
-  )
+set(NETUDP_API_SRCS ${NETUDP_SRCS_FOLDER}/Datagram.cpp ${NETUDP_SRCS_FOLDER}/RecycledDatagram.cpp ${NETUDP_SRCS_FOLDER}/Socket.cpp ${NETUDP_SRCS_FOLDER}/Worker.cpp)
 
-set(NETUDP_SRCS ${NETUDP_UTILS_SRCS}
-  ${NETUDP_API_SRCS}
-  ${NETUDP_QML_SRCS}
-  ${NETUDP_QML_RES}
-  )
+set(NETUDP_SRCS ${NETUDP_UTILS_SRCS} ${NETUDP_API_SRCS} ${NETUDP_QML_SRCS} ${NETUDP_QML_RES})
 
 set(NETUDP_UTILS_INCS
-  ${NETUDP_PRIVATE_INCS_FOLDER}/NetUdp.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Export.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Property.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Logger.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Utils.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Version.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/InterfacesProvider.hpp
-  )
+    ${NETUDP_PRIVATE_INCS_FOLDER}/NetUdp.hpp
+    ${NETUDP_PRIVATE_INCS_FOLDER}/Export.hpp
+    ${NETUDP_PRIVATE_INCS_FOLDER}/Property.hpp
+    ${NETUDP_PRIVATE_INCS_FOLDER}/Logger.hpp
+    ${NETUDP_PRIVATE_INCS_FOLDER}/Utils.hpp
+    ${NETUDP_PRIVATE_INCS_FOLDER}/Version.hpp
+    ${NETUDP_PRIVATE_INCS_FOLDER}/InterfacesProvider.hpp
+)
 
-set(NETUDP_API_INCS
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Datagram.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/RecycledDatagram.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Socket.hpp
-  ${NETUDP_PRIVATE_INCS_FOLDER}/Worker.hpp
-  )
+set(NETUDP_API_INCS ${NETUDP_PRIVATE_INCS_FOLDER}/Datagram.hpp ${NETUDP_PRIVATE_INCS_FOLDER}/RecycledDatagram.hpp ${NETUDP_PRIVATE_INCS_FOLDER}/Socket.hpp ${NETUDP_PRIVATE_INCS_FOLDER}/Worker.hpp)
 
-set(NETUDP_INCS ${NETUDP_UTILS_INCS}
-  ${NETUDP_API_INCS}
-  )
+set(NETUDP_INCS ${NETUDP_UTILS_INCS} ${NETUDP_API_INCS})
 
 source_group("Udp\\Utils" FILES ${NETUDP_UTILS_INCS})
 source_group("Udp" FILES ${NETUDP_API_INCS})
@@ -186,7 +195,7 @@ if(NETUDP_BUILD_SHARED)
 
 else()
 
-  add_library(${NETUDP_TARGET} STATIC  ${NETUDP_SRCS} ${NETUDP_INCS})
+  add_library(${NETUDP_TARGET} STATIC ${NETUDP_SRCS} ${NETUDP_INCS})
   target_compile_definitions(${NETUDP_TARGET} PUBLIC "-DNETUDP_STATIC")
 
 endif()
@@ -194,13 +203,7 @@ endif()
 target_compile_features(${NETUDP_TARGET} PUBLIC cxx_std_17)
 target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_INCS_FOLDER}>)
 
-target_link_libraries(${NETUDP_TARGET} PUBLIC
-  Recycler
-  spdlog
-  Qt5::Core
-  Qt5::Qml
-  Qt5::Network
-  )
+target_link_libraries(${NETUDP_TARGET} PUBLIC Recycler spdlog Qt5::Core Qt5::Qml Qt5::Network)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)
@@ -227,7 +230,6 @@ endif()
 if(NETUDP_ENABLE_EXAMPLES)
   add_subdirectory(examples)
 endif()
-
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │                         TESTS                                    │

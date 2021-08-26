@@ -22,10 +22,7 @@ add_executable(${NETUDP_EXAMPLE4_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/EchoMultic
 target_link_libraries(${NETUDP_EXAMPLE4_TARGET} NetUdp)
 set_target_properties(${NETUDP_EXAMPLE4_TARGET} PROPERTIES FOLDER "${NETUDP_FOLDER_PREFIX}/Examples")
 
-find_package(Qt5 REQUIRED COMPONENTS
-  Quick
-  QuickControls2
-)
+find_package(Qt5 REQUIRED COMPONENTS Quick QuickControls2)
 include(${PROJECT_SOURCE_DIR}/cmake/FetchQaterial.cmake)
 
 set(NETUDP_EXAMPLE5_TARGET ${NETUDP_TARGET}_EchoQml)
