@@ -232,7 +232,7 @@ set_target_properties(${NETUDP_TARGET} PROPERTIES UNITY_BUILD ${NETUDP_ENABLE_UN
 
 target_link_libraries(
   ${NETUDP_TARGET}
-  PUBLIC Recycler
+  PRIVATE Recycler
   PUBLIC spdlog
   PUBLIC Qt${QT_VERSION_MAJOR}::Core
   PUBLIC Qt${QT_VERSION_MAJOR}::Qml
