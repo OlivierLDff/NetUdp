@@ -49,7 +49,7 @@ namespace netudp {
 #define LOG_ERR(str, ...)        Logger::WORKER->error( "[{}] " str, (void*)(this), ## __VA_ARGS__)
 // clang-format on
 
-const quint64 disableSocketTimeout = 10000;
+static const quint64 disableSocketTimeout = 10000;
 
 Worker::Worker(QObject* parent)
     : QObject(parent)
