@@ -130,7 +130,7 @@ private:
     void startOutputMulticastInterfaceWatcher();
     void stopOutputMulticastInterfaceWatcher();
 
-    void createMulticastSocketForInterface(const IInterface& interface);
+    void createMulticastSocketForInterface(const IInterface& iface);
 
     void createMulticastOutputSockets();
     void destroyMulticastOutputSockets();

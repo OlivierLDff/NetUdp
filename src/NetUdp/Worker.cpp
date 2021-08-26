@@ -75,9 +75,9 @@ struct WorkerPrivate
     // List of all multicast group the socket is listening to
     MulticastGroupList multicastGroups;
 
-    // Incoming interfaces for multicast packets that are going to be listened.
-    // If empty, then every interfaces available on your system that support multicast are going to be listened.
-    // This set doesn't reflect the interfaces that are really joined. If you want to know which interfaces are really joined
+    // Incoming ifaces for multicast packets that are going to be listened.
+    // If empty, then every ifaces available on your system that support multicast are going to be listened.
+    // This set doesn't reflect the ifaces that are really joined. If you want to know which ifaces are really joined
     // or which one failed to joined, then check `_failedToJoinIfaces` & '_joinedIfaces'
     MulticastInterfaceList incomingMulticastInterfaces;
     MulticastInterfaceList allMulticastInterfaces;
@@ -87,33 +87,33 @@ struct WorkerPrivate
         return incomingMulticastInterfaces.empty() ? allMulticastInterfaces : incomingMulticastInterfaces;
     }
 
-    // Keep track of all multicast interfaces, to know which one are available
+    // Keep track of all multicast ifaces, to know which one are available
     //std::set<QString> allMulticastInterfaces;
 
-    // Keep track of group that were joined on each interfaces
+    // Keep track of group that were joined on each ifaces
     std::map<QString, MulticastGroupList> joinedMulticastGroups;
 
-    // Keep track of the interfaces that couldn't be joined, to retry periodically when the interface will be up again
+    // Keep track of the ifaces that couldn't be joined, to retry periodically when the iface will be up again
     // See 'startListeningMulticastInterfaceWatcher'
     std::map<QString, MulticastGroupList> failedJoiningMulticastGroup;
 
     // ─── Multicast - Output ───
 
-    // User requested outgoing multicast interfaces
+    // User requested outgoing multicast ifaces
     MulticastInterfaceList outgoingMulticastInterfaces;
 
-    // Keep track of interfaces for which sockets couldn't be created and try later.
+    // Keep track of ifaces for which sockets couldn't be created and try later.
     // See 'startOutputMulticastInterfaceWatcher'
     MulticastInterfaceList failedToInstantiateMulticastTxSockets;
 
-    // Create a socket for each interface on which we want to multicast
+    // Create a socket for each iface on which we want to multicast
     // This is way more efficient than changing IP_MULTICAST_IF at each packet send.
     // socket won't be used for multicast packet sending
     // Port used for each socket will be the one specified by txPort
     InterfaceToMulticastSocket multicastTxSockets;
 
     // Indicate if multicastSockets are created or not.
-    // !_p->multicastSockets.empty() can't be used since it's possible that they is no interface at all.
+    // !_p->multicastSockets.empty() can't be used since it's possible that they is no iface at all.
     // In that case the regular socket should be used to send datagram.
     // Creation and destruction is controlled by startMulticastOutputSockets/stopMulticastOutputSockets.
     // Each time multicastSocketsInstantiated to true, a QElapsedTimer is instantiated.
@@ -126,7 +126,7 @@ struct WorkerPrivate
     bool separateRxTxSockets = false;
 
     // ──────── MULTICAST INTERFACE JOIN WATCHER ────────
-    // Created when at least one interface is being joined. ie (!_p->joinedMulticastGroups.empty() || !_p->failedJoiningMulticastGroup.empty())
+    // Created when at least one iface is being joined. ie (!_p->joinedMulticastGroups.empty() || !_p->failedJoiningMulticastGroup.empty())
     // Destroy in 'onStop', when joinedMulticastGroups & failedJoiningMulticastGroup are both empty
     QTimer* listeningMulticastInterfaceWatcher = nullptr;
 
@@ -375,17 +375,17 @@ void Worker::onStart()
 
         if(!_p->multicastGroups.empty() && rxSocket() && _p->inputEnabled)
         {
-            // Join multicast groups either on every interfaces or in '_p->incomingMulticastInterfaces' given by user
+            // Join multicast groups either on every ifaces or in '_p->incomingMulticastInterfaces' given by user
             if(_p->incomingMulticastInterfaces.empty())
             {
                 tryJoinAllAvailableInterfaces();
             }
             else
             {
-                for(const auto& interfaceName: _p->incomingMulticastInterfaces)
+                for(const auto& ifaceName: _p->incomingMulticastInterfaces)
                 {
                     for(const auto& group: _p->multicastGroups)
-                        joinAndTrackMulticastGroup(group, interfaceName);
+                        joinAndTrackMulticastGroup(group, ifaceName);
                 }
             }
         }
@@ -545,16 +545,16 @@ void Worker::joinMulticastGroup(const QString& address)
         }
         else
         {
-            // Join the group address an each interface an keep track of success or fail
-            for(const auto& interfaceName: _p->allMulticastInterfaces)
-                joinAndTrackMulticastGroup(address, interfaceName);
+            // Join the group address an each iface an keep track of success or fail
+            for(const auto& ifaceName: _p->allMulticastInterfaces)
+                joinAndTrackMulticastGroup(address, ifaceName);
         }
     }
     else
     {
-        // Join the group address an each interface an keep track of success or fail
-        for(const auto& interfaceName: _p->incomingMulticastInterfaces)
-            joinAndTrackMulticastGroup(address, interfaceName);
+        // Join the group address an each iface an keep track of success or fail
+        for(const auto& ifaceName: _p->incomingMulticastInterfaces)
+            joinAndTrackMulticastGroup(address, ifaceName);
     }
 }
 
@@ -574,47 +574,47 @@ void Worker::leaveMulticastGroup(const QString& address)
     if(!rxSocket())
         return;
 
-    std::vector<QString> interfaceNameJoinedToRemove;
-    std::vector<QString> interfaceNameFailedToRemove;
+    std::vector<QString> ifaceNameJoinedToRemove;
+    std::vector<QString> ifaceNameFailedToRemove;
 
-    // Leave the multicast group on every interface that were joined successfully
-    for(auto& [interfaceName, groups]: _p->joinedMulticastGroups)
+    // Leave the multicast group on every iface that were joined successfully
+    for(auto& [ifaceName, groups]: _p->joinedMulticastGroups)
     {
         // Really leave if the address was erased(ie found) in the set.
         if(groups.erase(address))
-            socketLeaveMulticastGroup(address, interfaceName);
+            socketLeaveMulticastGroup(address, ifaceName);
 
         if(groups.empty())
-            interfaceNameJoinedToRemove.push_back(interfaceName);
+            ifaceNameJoinedToRemove.push_back(ifaceName);
     }
 
     // And also clean _p->failedJoiningMulticastGroup from the multicast group we are leaving
-    for(auto& [interfaceName, groups]: _p->failedJoiningMulticastGroup)
+    for(auto& [ifaceName, groups]: _p->failedJoiningMulticastGroup)
     {
         groups.erase(address);
 
         if(groups.empty())
-            interfaceNameFailedToRemove.push_back(interfaceName);
+            ifaceNameFailedToRemove.push_back(ifaceName);
     }
 
-    // Remove interfaces from that that have an empty key
-    if(interfaceNameJoinedToRemove.size() == _p->joinedMulticastGroups.size())
+    // Remove ifaces from that that have an empty key
+    if(ifaceNameJoinedToRemove.size() == _p->joinedMulticastGroups.size())
     {
         _p->joinedMulticastGroups.clear();
     }
     else
     {
-        for(const auto& name: interfaceNameJoinedToRemove)
+        for(const auto& name: ifaceNameJoinedToRemove)
             _p->joinedMulticastGroups.erase(name);
     }
 
-    if(interfaceNameFailedToRemove.size() == _p->failedJoiningMulticastGroup.size())
+    if(ifaceNameFailedToRemove.size() == _p->failedJoiningMulticastGroup.size())
     {
         _p->failedJoiningMulticastGroup.clear();
     }
     else
     {
-        for(const auto& name: interfaceNameFailedToRemove)
+        for(const auto& name: ifaceNameFailedToRemove)
             _p->failedJoiningMulticastGroup.erase(name);
     }
 
@@ -622,16 +622,16 @@ void Worker::leaveMulticastGroup(const QString& address)
         stopListeningMulticastInterfaceWatcher();
 }
 
-void Worker::joinMulticastInterface(const QString& interfaceName)
+void Worker::joinMulticastInterface(const QString& ifaceName)
 {
     if(_p->incomingMulticastInterfaces.empty())
         tryLeaveAllAvailableInterfaces();
 
-    const auto [interfaceNameIt, interfaceNameInsertSuccess] = _p->incomingMulticastInterfaces.insert(interfaceName);
-    const auto interface = InterfacesProvider::interfaceFromName(interfaceName);
+    const auto [ifaceNameIt, ifaceNameInsertSuccess] = _p->incomingMulticastInterfaces.insert(ifaceName);
+    const auto iface = InterfacesProvider::interfaceFromName(ifaceName);
 
     // Interface already exist. We don't need to do any actions
-    if(!interfaceNameInsertSuccess)
+    if(!ifaceNameInsertSuccess)
         return;
 
     // Input disable, don't need to do anything
@@ -644,34 +644,34 @@ void Worker::joinMulticastInterface(const QString& interfaceName)
 
     // Join each multicast group
     for(const auto& group: _p->multicastGroups)
-        joinAndTrackMulticastGroup(group, interfaceName);
+        joinAndTrackMulticastGroup(group, ifaceName);
 }
 
-void Worker::leaveMulticastInterface(const QString& interfaceName)
+void Worker::leaveMulticastInterface(const QString& ifaceName)
 {
-    // If the interface wasn't present, then don't need to do anything
-    if(!_p->incomingMulticastInterfaces.erase(interfaceName))
+    // If the iface wasn't present, then don't need to do anything
+    if(!_p->incomingMulticastInterfaces.erase(ifaceName))
         return;
 
     // No rx socket mean that the socket isn't started. It mean that no multicast group are also joined
     if(!rxSocket())
         return;
 
-    // Leave all group join on interface 'interfaceName'
-    const auto it = _p->joinedMulticastGroups.find(interfaceName);
+    // Leave all group join on iface 'ifaceName'
+    const auto it = _p->joinedMulticastGroups.find(ifaceName);
     if(it != _p->joinedMulticastGroups.end())
     {
         const auto& groupJoined = it->second;
         for(const auto& group: groupJoined)
-            socketLeaveMulticastGroup(group, interfaceName);
+            socketLeaveMulticastGroup(group, ifaceName);
 
         _p->joinedMulticastGroups.erase(it);
     }
 
     // Clear cache of failed to join multicast group
-    _p->failedJoiningMulticastGroup.erase(interfaceName);
+    _p->failedJoiningMulticastGroup.erase(ifaceName);
 
-    // Try to listen on every interfaces if _p->incomingMulticastInterfaces is empty
+    // Try to listen on every ifaces if _p->incomingMulticastInterfaces is empty
     if(_p->incomingMulticastInterfaces.empty())
     {
         // Order matter because 'tryJoinAllAvailableInterfaces' might recreate the timer
@@ -691,18 +691,18 @@ void Worker::setMulticastLoopback(const bool loopback)
     }
 }
 
-void Worker::setMulticastOutgoingInterfaces(const QStringList& interfaces)
+void Worker::setMulticastOutgoingInterfaces(const QStringList& ifaces)
 {
     // Nothing changed
-    if(interfaces.empty() && _p->outgoingMulticastInterfaces.empty())
+    if(ifaces.empty() && _p->outgoingMulticastInterfaces.empty())
         return;
 
     // It will maybe be time to create new multicast socket
     if(_p->outgoingMulticastInterfaces.empty())
         destroyMulticastOutputSockets();
 
-    // Copy interfaces to _p->outgoingMulticastInterfaces
-    _p->outgoingMulticastInterfaces = WorkerPrivate::MulticastInterfaceList(interfaces.begin(), interfaces.end());
+    // Copy ifaces to _p->outgoingMulticastInterfaces
+    _p->outgoingMulticastInterfaces = WorkerPrivate::MulticastInterfaceList(ifaces.begin(), ifaces.end());
 
     // Destroy what was already instantiated.
     if(_p->multicastTxSocketsInstantiated)
@@ -737,18 +737,18 @@ void Worker::tryJoinAllAvailableInterfaces()
     Q_ASSERT(_p->joinedMulticastGroups.empty());
     Q_ASSERT(_p->failedJoiningMulticastGroup.empty());
 
-    // join every group on every interface
-    // It is expected for interfaces to fail joining. Attempt to join will be made later.
+    // join every group on every iface
+    // It is expected for ifaces to fail joining. Attempt to join will be made later.
     const auto& allInterfaces = InterfacesProvider::allInterfaces();
-    for(const auto& interface: allInterfaces)
+    for(const auto& iface: allInterfaces)
     {
-        Q_ASSERT(interface);
-        if(const auto [it, success] = _p->allMulticastInterfaces.insert(interface->name()); !success)
+        Q_ASSERT(iface);
+        if(const auto [it, success] = _p->allMulticastInterfaces.insert(iface->name()); !success)
             continue;
 
         for(const auto& group: _p->multicastGroups)
         {
-            joinAndTrackMulticastGroup(group, interface->name());
+            joinAndTrackMulticastGroup(group, iface->name());
         }
     }
 }
@@ -762,10 +762,10 @@ void Worker::tryLeaveAllAvailableInterfaces()
     if(!rxSocket())
         return;
 
-    for(const auto& [interfaceName, groups]: _p->joinedMulticastGroups)
+    for(const auto& [ifaceName, groups]: _p->joinedMulticastGroups)
     {
         for(const auto& group: groups)
-            socketLeaveMulticastGroup(group, interfaceName);
+            socketLeaveMulticastGroup(group, ifaceName);
     }
 
     _p->joinedMulticastGroups.clear();
@@ -774,28 +774,28 @@ void Worker::tryLeaveAllAvailableInterfaces()
     stopListeningMulticastInterfaceWatcher();
 }
 
-bool Worker::joinAndTrackMulticastGroup(const QString& address, const QString& interfaceName)
+bool Worker::joinAndTrackMulticastGroup(const QString& address, const QString& ifaceName)
 {
-    // Create a timer anyway, we have at least one interface to watch
+    // Create a timer anyway, we have at least one iface to watch
     startListeningMulticastInterfaceWatcher();
 
-    if(!socketJoinMulticastGroup(address, interfaceName))
+    if(!socketJoinMulticastGroup(address, ifaceName))
     {
-        _p->failedJoiningMulticastGroup[interfaceName].insert(address);
+        _p->failedJoiningMulticastGroup[ifaceName].insert(address);
         return false;
     }
 
-    const auto [insertedIt, groupInserted] = _p->joinedMulticastGroups[interfaceName].insert(address);
+    const auto [insertedIt, groupInserted] = _p->joinedMulticastGroups[ifaceName].insert(address);
 
     // If assert here it mean something gone wrong in join/leave.
     Q_ASSERT(groupInserted);
     return true;
 }
 
-bool Worker::socketJoinMulticastGroup(const QString& address, const QString& interfaceName)
+bool Worker::socketJoinMulticastGroup(const QString& address, const QString& ifaceName)
 {
     const QHostAddress hostAddress(address);
-    const auto networkInterface = QNetworkInterface::interfaceFromName(interfaceName);
+    const auto networkInterface = QNetworkInterface::interfaceFromName(ifaceName);
     const auto networkInterfaceValid = networkInterface.isValid() && (networkInterface.flags() & QNetworkInterface::IsUp)
                                        && (networkInterface.flags() & QNetworkInterface::IsRunning)
                                        && ((networkInterface.flags() & QNetworkInterface::CanMulticast)
@@ -816,15 +816,15 @@ bool Worker::socketJoinMulticastGroup(const QString& address, const QString& int
     if(!networkInterfaceValid || !rxSocket()->joinMulticastGroup(hostAddress, networkInterface))
     {
         if(networkInterfaceValid)
-            LOG_ERR("Fail to join multicast group {} an interface {}. {}",
+            LOG_ERR("Fail to join multicast group {} an iface {}. {}",
                 address.toStdString(),
-                interfaceName.toStdString(),
+                ifaceName.toStdString(),
                 rxSocket()->errorString().toStdString());
         else
-            LOG_WARN("Fail to join multicast group {} an interface {} because interface is not valid. IsUp:{}, "
+            LOG_WARN("Fail to join multicast group {} an iface {} because iface is not valid. IsUp:{}, "
                      "IsRunning:{}, CanMulticast:{}, IsLoopBack:{}",
                 address.toStdString(),
-                interfaceName.toStdString(),
+                ifaceName.toStdString(),
                 bool(networkInterface.flags() & QNetworkInterface::IsUp),
                 bool(networkInterface.flags() & QNetworkInterface::IsRunning),
                 bool(networkInterface.flags() & QNetworkInterface::CanMulticast),
@@ -832,35 +832,35 @@ bool Worker::socketJoinMulticastGroup(const QString& address, const QString& int
         return false;
     }
 
-    LOG_INFO("Success Join multicast group {} on interface {}", address.toStdString(), interfaceName.toStdString());
-    Q_EMIT multicastGroupJoined(address, interfaceName);
+    LOG_INFO("Success Join multicast group {} on iface {}", address.toStdString(), ifaceName.toStdString());
+    Q_EMIT multicastGroupJoined(address, ifaceName);
 
     return true;
 }
 
-bool Worker::socketLeaveMulticastGroup(const QString& address, const QString& interfaceName)
+bool Worker::socketLeaveMulticastGroup(const QString& address, const QString& ifaceName)
 {
     const QHostAddress hostAddress(address);
-    const auto networkInterface = QNetworkInterface::interfaceFromName(interfaceName);
+    const auto networkInterface = QNetworkInterface::interfaceFromName(ifaceName);
     const auto networkInterfaceValid =
         networkInterface.isValid() && networkInterface.flags() & (QNetworkInterface::IsRunning | QNetworkInterface::IsUp);
 
     if(!networkInterfaceValid || !rxSocket()->leaveMulticastGroup(hostAddress, networkInterface))
     {
         if(networkInterfaceValid)
-            LOG_ERR("Fail to leave multicast group {} an interface {}. {}",
+            LOG_ERR("Fail to leave multicast group {} an iface {}. {}",
                 address.toStdString(),
-                interfaceName.toStdString(),
+                ifaceName.toStdString(),
                 rxSocket()->errorString().toStdString());
         else
-            LOG_ERR("Fail to leave multicast group {} an interface {} because interface is not valid",
+            LOG_ERR("Fail to leave multicast group {} an iface {} because iface is not valid",
                 address.toStdString(),
-                interfaceName.toStdString());
+                ifaceName.toStdString());
         return false;
     }
 
-    LOG_INFO("Success Leave multicast group {} on interface {}", address.toStdString(), interfaceName.toStdString());
-    Q_EMIT multicastGroupLeaved(address, interfaceName);
+    LOG_INFO("Success Leave multicast group {} on iface {}", address.toStdString(), ifaceName.toStdString());
+    Q_EMIT multicastGroupLeaved(address, ifaceName);
 
     return true;
 }
@@ -874,7 +874,7 @@ void Worker::setMulticastLoopbackToSocket() const
         if(rxSocket() != _p->socket)
             _p->socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _p->multicastLoopback);
 
-        for(const auto& [interfaceName, socket]: _p->multicastTxSockets)
+        for(const auto& [ifaceName, socket]: _p->multicastTxSockets)
         {
             socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _p->multicastLoopback);
         }
@@ -910,7 +910,7 @@ void Worker::setMulticastTtl(const quint8 ttl)
         // This should be set in case _p->multicastTxSockets is empty
         _p->multicastTtl = ttl;
         _p->socket->setSocketOption(QAbstractSocket::MulticastTtlOption, int(_p->multicastTtl ? _p->multicastTtl : 8));
-        for(const auto& [interfaceName, socket]: _p->multicastTxSockets)
+        for(const auto& [ifaceName, socket]: _p->multicastTxSockets)
         {
             socket->setSocketOption(QAbstractSocket::SocketOption::MulticastTtlOption, int(_p->multicastTtl ? _p->multicastTtl : 8));
         };
@@ -936,36 +936,36 @@ void Worker::startListeningMulticastInterfaceWatcher()
                 // Should be deleted if _p->multicastGroups is empty
                 Q_ASSERT(!_p->multicastGroups.empty());
 
-                // Fetch all interfaces
+                // Fetch all ifaces
                 const auto allInterfaces = InterfacesProvider::allInterfaces();
 
-                // if auto joining every interface
+                // if auto joining every iface
                 if(_p->incomingMulticastInterfaces.empty())
                 {
-                    // Look for new interface to join. Every interface found are added to the '_p->failedJoiningMulticastGroup'.
+                    // Look for new iface to join. Every iface found are added to the '_p->failedJoiningMulticastGroup'.
                     // They will be joined with the other failed to join one.
-                    for(const auto& interface: allInterfaces)
+                    for(const auto& iface: allInterfaces)
                     {
-                        const auto interfaceName = interface->name();
-                        if(_p->allMulticastInterfaces.find(interfaceName) == _p->allMulticastInterfaces.end())
+                        const auto ifaceName = iface->name();
+                        if(_p->allMulticastInterfaces.find(ifaceName) == _p->allMulticastInterfaces.end())
                         {
-                            LOG_DEV_INFO("Find a new interface to join for multicast : {}", interfaceName.toStdString());
-                            _p->allMulticastInterfaces.insert(interfaceName);
-                            _p->failedJoiningMulticastGroup.insert({interfaceName, _p->multicastGroups});
+                            LOG_DEV_INFO("Find a new iface to join for multicast : {}", ifaceName.toStdString());
+                            _p->allMulticastInterfaces.insert(ifaceName);
+                            _p->failedJoiningMulticastGroup.insert({ifaceName, _p->multicastGroups});
                         }
                     }
 
-                    std::vector<QString> interfaceNameToRemove;
+                    std::vector<QString> ifaceNameToRemove;
 
-                    // Look for interfaces that disappear
-                    for(const auto& interfaceName: _p->allMulticastInterfaces)
+                    // Look for ifaces that disappear
+                    for(const auto& ifaceName: _p->allMulticastInterfaces)
                     {
                         bool found = false;
 
-                        // Search if interface is present
-                        for(const auto& interface: allInterfaces)
+                        // Search if iface is present
+                        for(const auto& iface: allInterfaces)
                         {
-                            if(interface->name() == interfaceName)
+                            if(iface->name() == ifaceName)
                             {
                                 found = true;
                                 break;
@@ -975,51 +975,50 @@ void Worker::startListeningMulticastInterfaceWatcher()
                         // If not add it to the list to delete later
                         if(!found)
                         {
-                            LOG_DEV_INFO("Interface {} disappeared, It will be removed from tracked interfaces",
-                                interfaceName.toStdString());
-                            interfaceNameToRemove.push_back(interfaceName);
+                            LOG_DEV_INFO("Interface {} disappeared, It will be removed from tracked ifaces", ifaceName.toStdString());
+                            ifaceNameToRemove.push_back(ifaceName);
                         }
                     }
 
                     // And remove them
-                    for(const auto& interfaceName: interfaceNameToRemove)
+                    for(const auto& ifaceName: ifaceNameToRemove)
                     {
-                        const auto& interfaceJoinedIt = _p->joinedMulticastGroups.find(interfaceName);
-                        if(interfaceJoinedIt != _p->joinedMulticastGroups.end())
+                        const auto& ifaceJoinedIt = _p->joinedMulticastGroups.find(ifaceName);
+                        if(ifaceJoinedIt != _p->joinedMulticastGroups.end())
                         {
-                            for(const auto& group: interfaceJoinedIt->second)
+                            for(const auto& group: ifaceJoinedIt->second)
                             {
-                                socketLeaveMulticastGroup(group, interfaceName);
+                                socketLeaveMulticastGroup(group, ifaceName);
                             }
 
-                            _p->joinedMulticastGroups.erase(interfaceJoinedIt);
+                            _p->joinedMulticastGroups.erase(ifaceJoinedIt);
                         }
-                        _p->failedJoiningMulticastGroup.erase(interfaceName);
-                        _p->allMulticastInterfaces.erase(interfaceName);
+                        _p->failedJoiningMulticastGroup.erase(ifaceName);
+                        _p->allMulticastInterfaces.erase(ifaceName);
                     }
                 }
 
                 std::vector<QString> disconnectedInterfaceList;
 
-                // Look for interface disconnection
-                for(const auto& [interfaceName, groups]: _p->joinedMulticastGroups)
+                // Look for iface disconnection
+                for(const auto& [ifaceName, groups]: _p->joinedMulticastGroups)
                 {
-                    // Only try to reconnect to interface that seems valid
-                    if(const auto& interface = InterfacesProvider::interfaceFromName(interfaceName))
+                    // Only try to reconnect to iface that seems valid
+                    if(const auto& iface = InterfacesProvider::interfaceFromName(ifaceName))
                     {
-                        const bool interfaceValid = interface->isValid() && interface->isRunning() && interface->isUp()
-                                                    && (interface->canMulticast() || (multicastLoopback() && interface->isLoopBack()));
-                        if(!interfaceValid)
+                        const bool ifaceValid = iface->isValid() && iface->isRunning() && iface->isUp()
+                                                && (iface->canMulticast() || (multicastLoopback() && iface->isLoopBack()));
+                        if(!ifaceValid)
                         {
-                            LOG_DEV_INFO("Interface {} isn't valid anymore, It will be removed from joined interfaces. "
-                                         "The worker will try to re join later the interface",
-                                interfaceName.toStdString());
-                            const auto& currentGroups = _p->failedJoiningMulticastGroup[interfaceName];
+                            LOG_DEV_INFO("Interface {} isn't valid anymore, It will be removed from joined ifaces. "
+                                         "The worker will try to re join later the iface",
+                                ifaceName.toStdString());
+                            const auto& currentGroups = _p->failedJoiningMulticastGroup[ifaceName];
 
                             // Move the list of joined multicast group to the failed one.
                             if(currentGroups.empty())
                             {
-                                _p->failedJoiningMulticastGroup[interfaceName] = groups;
+                                _p->failedJoiningMulticastGroup[ifaceName] = groups;
                             }
                             else
                             {
@@ -1029,11 +1028,11 @@ void Worker::startListeningMulticastInterfaceWatcher()
                                     groups.begin(),
                                     groups.end(),
                                     std::inserter(newList, newList.begin()));
-                                _p->failedJoiningMulticastGroup[interfaceName] = newList;
+                                _p->failedJoiningMulticastGroup[ifaceName] = newList;
                             }
 
                             // And request a delete later (since we are iterating in this map)
-                            disconnectedInterfaceList.push_back(interfaceName);
+                            disconnectedInterfaceList.push_back(ifaceName);
                         }
                     }
                 }
@@ -1042,14 +1041,14 @@ void Worker::startListeningMulticastInterfaceWatcher()
                     _p->joinedMulticastGroups.erase(disconnectedInterfaceName);
 
                 // Try to rejoin every groups
-                for(auto& [interfaceName, groups]: _p->failedJoiningMulticastGroup)
+                for(auto& [ifaceName, groups]: _p->failedJoiningMulticastGroup)
                 {
-                    // Only try to reconnect to interface that seems valid
-                    if(const auto& interface = InterfacesProvider::interfaceFromName(interfaceName))
+                    // Only try to reconnect to iface that seems valid
+                    if(const auto& iface = InterfacesProvider::interfaceFromName(ifaceName))
                     {
-                        const bool interfaceValid = interface->isValid() && interface->isRunning() && interface->isUp()
-                                                    && (multicastLoopback() && interface->isLoopBack());
-                        if(!interfaceValid)
+                        const bool ifaceValid =
+                            iface->isValid() && iface->isRunning() && iface->isUp() && (multicastLoopback() && iface->isLoopBack());
+                        if(!ifaceValid)
                             continue;
                     }
 
@@ -1057,7 +1056,7 @@ void Worker::startListeningMulticastInterfaceWatcher()
 
                     for(const auto& group: groups)
                     {
-                        if(joinAndTrackMulticastGroup(group, interfaceName))
+                        if(joinAndTrackMulticastGroup(group, ifaceName))
                             successFullyJoinedGroup.push_back(group);
                     }
 
@@ -1067,7 +1066,7 @@ void Worker::startListeningMulticastInterfaceWatcher()
                     }
                 }
 
-                // Remove interfaces with empty group
+                // Remove ifaces with empty group
                 for(auto it = _p->failedJoiningMulticastGroup.begin(); it != _p->failedJoiningMulticastGroup.end();)
                 {
                     if(it->second.empty())
@@ -1119,60 +1118,60 @@ void Worker::startOutputMulticastInterfaceWatcher()
 
                 const auto allInterfaces = InterfacesProvider::allInterfaces();
 
-                // When instantiating sockets for all interfaces, check if new interfaces appeared
+                // When instantiating sockets for all ifaces, check if new ifaces appeared
                 if(_p->outgoingMulticastInterfaces.empty())
                 {
-                    // Try to find if new interfaces were created and try to join them
-                    for(const auto& interface: allInterfaces)
+                    // Try to find if new ifaces were created and try to join them
+                    for(const auto& iface: allInterfaces)
                     {
-                        Q_CHECK_PTR(interface);
-                        const auto interfaceName = interface->name();
-                        const auto multicastTxSocketFound = _p->multicastTxSockets.find(interfaceName) != _p->multicastTxSockets.end();
-                        const auto multicastFailedToCreateFound = _p->failedToInstantiateMulticastTxSockets.find(interfaceName)
-                                                                  != _p->failedToInstantiateMulticastTxSockets.end();
+                        Q_CHECK_PTR(iface);
+                        const auto ifaceName = iface->name();
+                        const auto multicastTxSocketFound = _p->multicastTxSockets.find(ifaceName) != _p->multicastTxSockets.end();
+                        const auto multicastFailedToCreateFound =
+                            _p->failedToInstantiateMulticastTxSockets.find(ifaceName) != _p->failedToInstantiateMulticastTxSockets.end();
 
-                        // New interface detected, It's added to the list of _p->failedToInstantiateMulticastTxSockets
+                        // New iface detected, It's added to the list of _p->failedToInstantiateMulticastTxSockets
                         // Then it will be instantiated by the step of the algorithm.
                         if(!multicastFailedToCreateFound && !multicastTxSocketFound)
-                            _p->failedToInstantiateMulticastTxSockets.insert(interfaceName);
+                            _p->failedToInstantiateMulticastTxSockets.insert(ifaceName);
                     }
                 }
 
-                const auto isInterfacePresent = [&](const QString& interfaceName)
+                const auto isInterfacePresent = [&](const QString& ifaceName)
                 {
-                    for(const auto& interface: allInterfaces)
+                    for(const auto& iface: allInterfaces)
                     {
-                        if(interface->name() == interfaceName)
+                        if(iface->name() == ifaceName)
                             return true;
                     }
                     return false;
                 };
 
-                // Check for interfaces that are no longer here
+                // Check for ifaces that are no longer here
                 for(auto it = _p->failedToInstantiateMulticastTxSockets.begin(); it != _p->failedToInstantiateMulticastTxSockets.end();)
                 {
-                    const auto interfaceName = *it;
-                    if(isInterfacePresent(interfaceName))
+                    const auto ifaceName = *it;
+                    if(isInterfacePresent(ifaceName))
                     {
                         ++it;
                     }
                     else
                     {
-                        LOG_DEV_INFO("Detect interface {} disappear, stop trying to instantiate a udp multicast socket for it",
-                            interfaceName.toStdString());
+                        LOG_DEV_INFO("Detect iface {} disappear, stop trying to instantiate a udp multicast socket for it",
+                            ifaceName.toStdString());
                         it = _p->failedToInstantiateMulticastTxSockets.erase(it);
                     }
                 }
                 for(auto it = _p->multicastTxSockets.begin(); it != _p->multicastTxSockets.end();)
                 {
-                    const auto [interfaceName, socket] = *it;
-                    if(isInterfacePresent(interfaceName))
+                    const auto [ifaceName, socket] = *it;
+                    if(isInterfacePresent(ifaceName))
                     {
                         ++it;
                     }
                     else
                     {
-                        LOG_DEV_INFO("Detect interface {} disappear, delete the associated multicast socket", interfaceName.toStdString());
+                        LOG_DEV_INFO("Detect iface {} disappear, delete the associated multicast socket", ifaceName.toStdString());
                         socket->deleteLater();
                         it = _p->multicastTxSockets.erase(it);
                     }
@@ -1182,11 +1181,11 @@ void Worker::startOutputMulticastInterfaceWatcher()
                 _p->failedToInstantiateMulticastTxSockets.clear();
 
                 // Then check all the socket that failed to be instantiated and try again.
-                for(const auto& interfaceName: failedToInstantiateMulticastTxSocketsCopy)
+                for(const auto& ifaceName: failedToInstantiateMulticastTxSocketsCopy)
                 {
-                    const auto interface = InterfacesProvider::interfaceFromName(interfaceName);
-                    Q_CHECK_PTR(interface);
-                    createMulticastSocketForInterface(*interface);
+                    const auto iface = InterfacesProvider::interfaceFromName(ifaceName);
+                    Q_CHECK_PTR(iface);
+                    createMulticastSocketForInterface(*iface);
                 }
             });
 
@@ -1204,33 +1203,33 @@ void Worker::stopOutputMulticastInterfaceWatcher()
     }
 }
 
-void Worker::createMulticastSocketForInterface(const IInterface& interface)
+void Worker::createMulticastSocketForInterface(const IInterface& iface)
 {
     const auto successCreateSocket = [&]() -> bool
     {
-        const auto interfaceName = interface.name();
-        const bool isInterfaceValid = interface.isValid() && interface.isUp() && interface.isRunning()
-                                      && (interface.canMulticast() || (multicastLoopback() && interface.isLoopBack()));
+        const auto ifaceName = iface.name();
+        const bool isInterfaceValid =
+            iface.isValid() && iface.isUp() && iface.isRunning() && (iface.canMulticast() || (multicastLoopback() && iface.isLoopBack()));
 
         if(!isInterfaceValid)
         {
-            LOG_DEV_DEBUG("Can't create multicast socket for interface {} because it's not valid: isValid: {}, isUp: {}, "
+            LOG_DEV_DEBUG("Can't create multicast socket for iface {} because it's not valid: isValid: {}, isUp: {}, "
                           "isRunning: {}, canMulticast: {}, isLoopback: {}, multicastLoopback: {}",
-                interface.name().toStdString(),
-                interface.isValid(),
-                interface.isUp(),
-                interface.isRunning(),
-                interface.canMulticast(),
-                interface.isLoopBack(),
+                iface.name().toStdString(),
+                iface.isValid(),
+                iface.isUp(),
+                iface.isRunning(),
+                iface.canMulticast(),
+                iface.isLoopBack(),
                 multicastLoopback());
             return false;
         }
 
-        if(_p->multicastTxSockets.find(interfaceName) != _p->multicastTxSockets.end())
+        if(_p->multicastTxSockets.find(ifaceName) != _p->multicastTxSockets.end())
         {
-            LOG_DEV_ERR("Multicast tx socket is already instantiated for interface {}. This might hide a bug in "
-                        "the interface retrieving system",
-                interfaceName.toStdString());
+            LOG_DEV_ERR("Multicast tx socket is already instantiated for iface {}. This might hide a bug in "
+                        "the iface retrieving system",
+                ifaceName.toStdString());
             return false;
         }
 
@@ -1241,19 +1240,19 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
             return false;
         }
 
-        socket->setMulticastInterface(QNetworkInterface::interfaceFromName(interfaceName));
+        socket->setMulticastInterface(QNetworkInterface::interfaceFromName(ifaceName));
         socket->setSocketOption(QAbstractSocket::SocketOption::MulticastLoopbackOption, _p->multicastLoopback);
 
         //const auto returnedInterface = socket->multicastInterface();
         //LOG_DEV_INFO("returnedInterface.isValid : {}", returnedInterface.isValid());
         //LOG_DEV_INFO("returnedInterface.name : {}", returnedInterface.name().toStdString());
 
-        const auto onError = [interfaceName, socket, this](QAbstractSocket::SocketError error)
+        const auto onError = [ifaceName, socket, this](QAbstractSocket::SocketError error)
         {
-            LOG_DEV_WARN("{}: Multicast tx error: {}", interfaceName.toStdString(), socket->errorString().toStdString());
+            LOG_DEV_WARN("{}: Multicast tx error: {}", ifaceName.toStdString(), socket->errorString().toStdString());
             socket->deleteLater();
-            _p->multicastTxSockets.erase(interfaceName);
-            _p->failedToInstantiateMulticastTxSockets.insert(interfaceName);
+            _p->multicastTxSockets.erase(ifaceName);
+            _p->failedToInstantiateMulticastTxSockets.insert(ifaceName);
         };
 
         // Connect to socket signals
@@ -1263,18 +1262,18 @@ void Worker::createMulticastSocketForInterface(const IInterface& interface)
         connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred), this, onError, Qt::QueuedConnection);
 #endif
 
-        const auto [it, success] = _p->multicastTxSockets.insert({interfaceName, socket});
+        const auto [it, success] = _p->multicastTxSockets.insert({ifaceName, socket});
 
-        // This have been checked before creating the socket if(_p->multicastTxSockets.find(interfaceName) != _p->multicastTxSockets.end())
+        // This have been checked before creating the socket if(_p->multicastTxSockets.find(ifaceName) != _p->multicastTxSockets.end())
         Q_ASSERT(success);
 
-        LOG_DEV_INFO("Create multicast tx socket for interface {}", interfaceName.toStdString());
+        LOG_DEV_INFO("Create multicast tx socket for iface {}", ifaceName.toStdString());
 
         return true;
     }();
 
     if(!successCreateSocket)
-        _p->failedToInstantiateMulticastTxSockets.insert(interface.name());
+        _p->failedToInstantiateMulticastTxSockets.insert(iface.name());
 };
 
 void Worker::createMulticastOutputSockets()
@@ -1289,24 +1288,24 @@ void Worker::createMulticastOutputSockets()
     // If _p->multicastTxSocketsInstantiated is false, _p->multicastTxSockets HAVE TO be empty
     Q_ASSERT(_p->multicastTxSockets.empty());
 
-    // Create sockets only for the interfaces specified by user or for every interfaces if nothing is specified
+    // Create sockets only for the ifaces specified by user or for every ifaces if nothing is specified
     if(_p->outgoingMulticastInterfaces.empty())
     {
-        LOG_DEV_INFO("Create multicast tx sockets for all interfaces");
-        const auto interfaces = InterfacesProvider::allInterfaces();
-        for(const auto& interface: interfaces)
+        LOG_DEV_INFO("Create multicast tx sockets for all ifaces");
+        const auto ifaces = InterfacesProvider::allInterfaces();
+        for(const auto& iface: ifaces)
         {
-            Q_CHECK_PTR(interface);
-            createMulticastSocketForInterface(*interface);
+            Q_CHECK_PTR(iface);
+            createMulticastSocketForInterface(*iface);
         }
     }
     else
     {
-        for(const auto& interfaceName: _p->outgoingMulticastInterfaces)
+        for(const auto& ifaceName: _p->outgoingMulticastInterfaces)
         {
-            const auto interface = InterfacesProvider::interfaceFromName(interfaceName);
-            Q_CHECK_PTR(interface);
-            createMulticastSocketForInterface(*interface);
+            const auto iface = InterfacesProvider::interfaceFromName(ifaceName);
+            Q_CHECK_PTR(iface);
+            createMulticastSocketForInterface(*iface);
         }
     }
 
@@ -1317,7 +1316,7 @@ void Worker::createMulticastOutputSockets()
 void Worker::destroyMulticastOutputSockets()
 {
     LOG_DEV_INFO("Destroy all multicast tx sockets");
-    for(const auto& [interfaceName, socket]: _p->multicastTxSockets)
+    for(const auto& [ifaceName, socket]: _p->multicastTxSockets)
     {
         Q_CHECK_PTR(socket);
         socket->deleteLater();
@@ -1393,7 +1392,7 @@ void Worker::onSendDatagram(const SharedDatagram& datagram)
             {
                 bool byteWrittenInitialized = false;
                 qint64 bytes = 0;
-                for(const auto& [interfaceName, socket]: _p->multicastTxSockets)
+                for(const auto& [ifaceName, socket]: _p->multicastTxSockets)
                 {
                     socket->setSocketOption(QAbstractSocket::MulticastTtlOption, int(_p->multicastTtl ? _p->multicastTtl : 8));
                     const auto currentBytesWritten = socket->writeDatagram(reinterpret_cast<const char*>(datagram->buffer()),
