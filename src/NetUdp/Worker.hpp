@@ -9,24 +9,20 @@
 #ifndef __NETUDP_SERVER_WORKER_HPP__
 #define __NETUDP_SERVER_WORKER_HPP__
 
-#include <NetUdp/RecycledDatagram.hpp>
 #include <NetUdp/Export.hpp>
-#include <NetUdp/InterfacesProvider.hpp>
-#include <Recycler/Circular.hpp>
+#include <NetUdp/Datagram.hpp>
 #include <QtCore/QObject>
 #include <QtCore/QString>
-#include <QtCore/QElapsedTimer>
 #include <QtNetwork/QAbstractSocket>
 
 QT_FORWARD_DECLARE_CLASS(QUdpSocket);
-QT_FORWARD_DECLARE_CLASS(QTimer);
-QT_FORWARD_DECLARE_CLASS(QElapsedTimer);
 
 #include <set>
-#include <map>
 #include <memory>
 
 namespace netudp {
+
+struct WorkerPrivate;
 
 class NETUDP_API_ Worker : public QObject
 {
@@ -36,77 +32,6 @@ class NETUDP_API_ Worker : public QObject
 public:
     Worker(QObject* parent = nullptr);
     ~Worker();
-
-    using MulticastGroupList = std::set<QString>;
-    using MulticastInterfaceList = std::set<QString>;
-    using InterfaceToMulticastSocket = std::map<QString, QUdpSocket*>;
-
-    // ──────── ATTRIBUTE ────────
-private:
-    QUdpSocket* _socket = nullptr;
-    QUdpSocket* _rxSocket = nullptr;
-    QTimer* _watchdog = nullptr;
-    recycler::Circular<RecycledDatagram> _cache;
-    bool _isBounded = false;
-    quint64 _watchdogTimeout = 5000;
-    QString _rxAddress;
-    quint16 _rxPort = 0;
-    quint16 _txPort = 0;
-
-    // ─── Multicast - Input ───
-
-    // List of all multicast group the socket is listening to
-    MulticastGroupList _multicastGroups;
-
-    // Incoming interfaces for multicast packets that are going to be listened.
-    // If empty, then every interfaces available on your system that support multicast are going to be listened.
-    // This set doesn't reflect the interfaces that are really joined. If you want to know which interfaces are really joined
-    // or which one failed to joined, then check `_failedToJoinIfaces` & '_joinedIfaces'
-    MulticastInterfaceList _incomingMulticastInterfaces;
-    MulticastInterfaceList _allMulticastInterfaces;
-
-    MulticastInterfaceList& currentMulticastInterfaces()
-    {
-        return _incomingMulticastInterfaces.empty() ? _allMulticastInterfaces : _incomingMulticastInterfaces;
-    }
-
-    // Keep track of all multicast interfaces, to know which one are available
-    //std::set<QString> _allMulticastInterfaces;
-
-    // Keep track of group that were joined on each interfaces
-    std::map<QString, MulticastGroupList> _joinedMulticastGroups;
-
-    // Keep track of the interfaces that couldn't be joined, to retry periodically when the interface will be up again
-    // See 'startListeningMulticastInterfaceWatcher'
-    std::map<QString, MulticastGroupList> _failedJoiningMulticastGroup;
-
-    // ─── Multicast - Output ───
-
-    // User requested outgoing multicast interfaces
-    MulticastInterfaceList _outgoingMulticastInterfaces;
-
-    // Keep track of interfaces for which sockets couldn't be created and try later.
-    // See 'startOutputMulticastInterfaceWatcher'
-    MulticastInterfaceList _failedToInstantiateMulticastTxSockets;
-
-    // Create a socket for each interface on which we want to multicast
-    // This is way more efficient than changing IP_MULTICAST_IF at each packet send.
-    // _socket won't be used for multicast packet sending
-    // Port used for each socket will be the one specified by txPort
-    InterfaceToMulticastSocket _multicastTxSockets;
-
-    // Indicate if _multicastSockets are created or not.
-    // !_multicastSockets.empty() can't be used since it's possible that they is no interface at all.
-    // In that case the regular _socket should be used to send datagram.
-    // Creation and destruction is controlled by startMulticastOutputSockets/stopMulticastOutputSockets.
-    // Each time _multicastSocketsInstantiated to true, a QElapsedTimer is instantiated.
-    // If no multicast datagram are send for 30s, then all sockets are destroyed.²
-    bool _multicastTxSocketsInstantiated = false;
-
-    bool _multicastLoopback = false;
-    quint8 _multicastTtl = 0;
-    bool _inputEnabled = false;
-    bool _separateRxTxSockets = false;
 
 public:
     bool isBounded() const;
@@ -198,21 +123,10 @@ private:
     void stopWatchdog();
     void setMulticastTtl(const quint8 ttl);
 
-    // ──────── MULTICAST INTERFACE JOIN WATCHER ────────
-private:
-    // Created when at least one interface is being joined. ie (!_joinedMulticastGroups.empty() || !_failedJoiningMulticastGroup.empty())
-    // Destroy in 'onStop', when _joinedMulticastGroups & _failedJoiningMulticastGroup are both empty
-    QTimer* _listeningMulticastInterfaceWatcher = nullptr;
-
     void startListeningMulticastInterfaceWatcher();
     void stopListeningMulticastInterfaceWatcher();
-
     // ──────── MULTICAST TX JOIN WATCHER ────────
 private:
-    // Created when
-    QTimer* _outputMulticastInterfaceWatcher = nullptr;
-    QElapsedTimer _txMulticastPacketElapsedTime;
-
     void startOutputMulticastInterfaceWatcher();
     void stopOutputMulticastInterfaceWatcher();
 
@@ -253,14 +167,6 @@ private:
     static QString socketStateToString(QAbstractSocket::SocketState socketState);
 
     // ──────── COUNTER ────────
-private:
-    quint64 _rxBytesCounter = 0;
-    quint64 _txBytesCounter = 0;
-    quint64 _rxPacketsCounter = 0;
-    quint64 _txPacketsCounter = 0;
-    quint64 _rxInvalidPacket = 0;
-    QTimer* _bytesCounterTimer = nullptr;
-
 protected:
     void startBytesCounter();
     virtual void stopBytesCounter();
@@ -271,6 +177,9 @@ Q_SIGNALS:
     void rxPacketsCounterChanged(const quint64 rx);
     void txPacketsCounterChanged(const quint64 tx);
     void rxInvalidPacketsCounterChanged(const quint64 rx);
+
+private:
+    std::unique_ptr<WorkerPrivate> _p;
 };
 
 }
