@@ -224,7 +224,14 @@ endif()
 target_compile_features(${NETUDP_TARGET} PUBLIC cxx_std_17)
 target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_INCS_FOLDER}>)
 
-target_link_libraries(${NETUDP_TARGET} PUBLIC Recycler spdlog Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Qml Qt${QT_VERSION_MAJOR}::Network)
+target_link_libraries(
+  ${NETUDP_TARGET}
+  PUBLIC Recycler
+  PUBLIC spdlog
+  PUBLIC Qt${QT_VERSION_MAJOR}::Core
+  PUBLIC Qt${QT_VERSION_MAJOR}::Qml
+  PUBLIC Qt${QT_VERSION_MAJOR}::Network
+)
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)
