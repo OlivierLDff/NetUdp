@@ -14,6 +14,11 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 # │                       PROJECT SETTINGS                           │
 # └──────────────────────────────────────────────────────────────────┘
 
+set(NETUDP_MAIN_PROJECT OFF)
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(NETUDP_MAIN_PROJECT ON)
+endif()
+
 # OPTIONS
 
 set(NETUDP_VERSION_MAJOR 1)
