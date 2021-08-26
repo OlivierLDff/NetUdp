@@ -237,3 +237,9 @@ if(NETUDP_ENABLE_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()
+
+# ───── 🔊 Log dev command and info ─────
+
+if(NETUDP_MAIN_PROJECT)
+  include(cmake/PrintConfiguration.cmake)
+endif()
