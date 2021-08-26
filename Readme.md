@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
 
-    net::udp::Socket server;
+    netudp::Socket server;
     server.start();
     const std::string data = "Dummy Data";
     server.sendDatagram(data.c_str(), data.length()+1, "127.0.0.1", 9999);
@@ -82,11 +82,11 @@ int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
 
-    net::udp::Socket client;
+    netudp::Socket client;
     client.start("127.0.0.1", 9999);
 
-    QObject::connect(&client, &net::udp::Socket::sharedDatagramReceived,
-                     [](const net::udp::SharedDatagram& d)
+    QObject::connect(&client, &netudp::Socket::sharedDatagramReceived,
+                     [](const netudp::SharedDatagram& d)
     {
         qInfo("Rx : %s", reinterpret_cast<const char*>(d->buffer()));
     });
@@ -142,7 +142,7 @@ virtual bool sendDatagram(const char* buffer, const size_t length, const QHostAd
 virtual bool sendDatagram(const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0);
 ```
 
-To avoid useless memory copy it's recommended to retrieve a datagram from `Socket` cache with `makeDatagram(const size_t length)`. Then use this `net::udp::SharedDatagram` to serialize data. And call :
+To avoid useless memory copy it's recommended to retrieve a datagram from `Socket` cache with `makeDatagram(const size_t length)`. Then use this `netudp::SharedDatagram` to serialize data. And call :
 
 ```cpp
 virtual bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0);
@@ -166,16 +166,16 @@ You need to override:
 ```cpp
 #include <NetUdp/ISocket.hpp>
 
-class MyAbstractSocket : net::udp::ISocket
+class MyAbstractSocket : netudp::ISocket
 {
     Q_OBJECT
 public:
-    MyAbstractSocket(QObject* parent = nullptr) : net::udp::ISocket(parent) {}
+    MyAbstractSocket(QObject* parent = nullptr) : netudp::ISocket(parent) {}
 
 public Q_SLOTS:
     bool start() override
     {
-        if(!net::udp::ISocket::start())
+        if(!netudp::ISocket::start())
             return false;
 
         // Do your business ...
@@ -184,7 +184,7 @@ public Q_SLOTS:
     }
     bool stop() override
     {
-        auto stopped = net::udp::ISocket::stop()
+        auto stopped = netudp::ISocket::stop()
 
         // Do your business ...
 
@@ -233,7 +233,7 @@ Using a custom `Datagram` can reduce memory copy depending on your application.
 ```cpp
 #include <NetUdp/Datagram.hpp>
 
-class MyDatagram : net::udp::Datagram
+class MyDatagram : netudp::Datagram
 {
     uint8_t* myBuffer = nullptr;
     size_t myLength = 0;
@@ -259,11 +259,11 @@ Example:
 ```cpp
 #include <NetUdp/Worker.hpp>
 
-class MySocketWorker : net::udp::Worker
+class MySocketWorker : netudp::Worker
 {
     Q_OBJECT
 public:
-    MySocketWorker(QObject* parent = nullptr) : net::udp::SocketWorker(parent) {}
+    MySocketWorker(QObject* parent = nullptr) : netudp::SocketWorker(parent) {}
 
 public Q_SLOTS:
     bool std::unique_ptr<SocketWorker> createWorker() override
@@ -291,7 +291,7 @@ public Q_SLOTS:
         // Do your business ...
 
         // This super call is optionnal. If not done Socket will never trigger onDatagramReceived
-        net::udp::SocketWorker::onDatagramReceived(datagram);
+        netudp::SocketWorker::onDatagramReceived(datagram);
     }
 
     std::shared_ptr<Datagram> makeDatagram(const size_t length) override
@@ -319,11 +319,11 @@ Example:
 ```cpp
 #include <NetUdp/Socket.hpp>
 
-class MySocket : net::udp::Socket
+class MySocket : netudp::Socket
 {
     Q_OBJECT
 public:
-    MySocket(QObject* parent = nullptr) : net::udp::Socket(parent) {}
+    MySocket(QObject* parent = nullptr) : netudp::Socket(parent) {}
 
 public Q_SLOTS:
     bool std::unique_ptr<Worker> createWorker() override
@@ -344,7 +344,7 @@ public Q_SLOTS:
         // Do your business ...
 
         // This super call is optionnal. If not done Socket will never trigger datagramReceived signal
-        net::udp::Socket::onDatagramReceived(datagram);
+        netudp::Socket::onDatagramReceived(datagram);
     }
 
     std::shared_ptr<Datagram> makeDatagram(const size_t length) override
@@ -409,7 +409,7 @@ Options:
 
 ## Qml Usage
 
-* `net::udp::registerQmlTypes();` should be called in the main to register qml types.
+* `netudp::registerQmlTypes();` should be called in the main to register qml types.
 
 ### Unicast Datagram
 
@@ -523,8 +523,8 @@ This library also provide a tool object that demonstrate every Qmls functionalit
 
 In order to use this qml object into another qml file, multiple steps are required.
 
-* Call `net::udp::registerQmlTypes(...)` to register `Socket`, `SharedDatagram`, ... to the qml system
-* Call `net::udp::loadQmlResources()` to load every `NetUdp` resources into the `qrc`.
+* Call `netudp::registerQmlTypes(...)` to register `Socket`, `SharedDatagram`, ... to the qml system
+* Call `netudp::loadQmlResources()` to load every `NetUdp` resources into the `qrc`.
 
 Then simply to something like that:
 
@@ -586,7 +586,7 @@ FetchContent_MakeAvailable(NetUdp)
 target_link_libraries(MyTarget PRIVATE NetUdp)
 ```
 
-Then you just need to `#include <NetUdp/NetUdp.hpp>`. You should also call in your main : `net::udp::registerQmlTypes();`.
+Then you just need to `#include <NetUdp/NetUdp.hpp>`. You should also call in your main : `netudp::registerQmlTypes();`.
 
 ## Dependencies
 
@@ -620,8 +620,8 @@ cd scripts
 
 ### v2.0.0
 
-💥 Net/Udp -> NetUdp
-💥 net::udp -> netudp
+💥 NetUdp -> NetUdp
+💥 netudp -> netudp
 ➖ remove spdlog dependency in flavor of qCDebug/qCWarning
 ➕ Manage dependencies via CPM
 ♻️ Worker: interface -> iface to avoid conflict with MSVC # define interface struct https://stackoverflow.com/questions/25234203/what-is-the-interface-keyword-in-msvc
