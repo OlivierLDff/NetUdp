@@ -59,7 +59,9 @@ set(NETUDP_ENABLE_TESTS OFF CACHE BOOL "Create test target for NetUdp")
 # CREATE PROJECT
 
 project(${NETUDP_PROJECT} VERSION ${NETUDP_VERSION} LANGUAGES C CXX)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+if(NETUDP_MAIN_PROJECT)
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()
 
 message(STATUS "---------------- NETUDP OPTIONS. ----------------")
 
