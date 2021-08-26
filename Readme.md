@@ -1,6 +1,6 @@
 # NetUdp
 
-![CI](https://github.com/OlivierLDff/NetUdp/workflows/CI/badge.svg)
+![CI](https://github.com/OlivierLDff/NetUdp/workflows/CI/badge.svg) ![https://gitmoji.dev/](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)
 
 NetUdp provide a Udp Socket that can send and receive Datagram.
 
