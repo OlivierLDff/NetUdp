@@ -598,7 +598,7 @@ All dependencies are managed in `cmake/Dependencies.cmake`.
 >
 > ```bash
 > mkdir -p build && cd build
-> cmake -DNETUDP_ENABLE_TESTS=ON --graphviz=dependencies.dot ..
+> cmake --graphviz=dependencies.dot ..
 > dot -Tsvg -o ../docs/dependencies.svg dependencies.dot -Gbgcolor=transparent -Nfillcolor=white -Nstyle=filled
 > ```
 
