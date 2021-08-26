@@ -11,13 +11,11 @@
 
 #include <NetUdp/Export.hpp>
 #include <NetUdp/Property.hpp>
-#include <NetUdp/RecycledDatagram.hpp>
-#include <Recycler/Circular.hpp>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtQml/QJSValue>
-#include <set>
+#include <memory>
 
 namespace netudp {
 
@@ -28,10 +26,7 @@ class NETUDP_API_ ISocket : public QObject
     Q_OBJECT
     // ──────── CONSTRUCTOR ────────
 public:
-    ISocket(QObject* parent = nullptr)
-        : QObject(parent)
-    {
-    }
+    ISocket(QObject* parent = nullptr);
 
     // ──────── ATTRIBUTE STATE ────────
 protected:
@@ -170,6 +165,8 @@ Q_SIGNALS:
     void datagramReceived(QJSValue datagram);
 };
 
+struct SocketPrivate;
+
 class NETUDP_API_ Socket : public ISocket
 {
     Q_OBJECT
@@ -182,21 +179,6 @@ public:
 
     // ──────── WORKER ────────
 protected:
-    Worker* _worker = nullptr;
-    QThread* _workerThread = nullptr;
-
-    // Recycle datagram to reduce dynamic allocation
-    recycler::Circular<RecycledDatagram> _cache;
-
-    // Multicast group to which the socket subscribe
-    std::set<QString> _multicastListeningGroups;
-
-    // Network Interfaces on which multicast groups are listened.
-    std::set<QString> _multicastListeningInterfaces;
-
-    // Network INterfaces on which multicast datagram are send
-    std::set<QString> _multicastOutgoingInterfaces;
-
     // Kill worker from main thread
     // Set _worker & _workerThread to nullptr
     void killWorker();
@@ -273,6 +255,9 @@ Q_SIGNALS:
     void joinMulticastInterfaceWorker(const QString address);
     void leaveMulticastInterfaceWorker(const QString address);
     void sendDatagramToWorker(netudp::SharedDatagram datagram);
+
+private:
+    std::unique_ptr<SocketPrivate> _p;
 };
 
 }
