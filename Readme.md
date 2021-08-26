@@ -618,6 +618,22 @@ cd scripts
 
 ## Changelog
 
+### v2.0.0
+
+💥 Net/Udp -> NetUdp
+💥 net::udp -> netudp
+➖ remove spdlog dependency in flavor of qCDebug/qCWarning
+➕ Manage dependencies via CPM
+♻️ Worker: interface -> iface to avoid conflict with MSVC # define interface struct https://stackoverflow.com/questions/25234203/what-is-the-interface-keyword-in-msvc
+♻️ pimpl WorkerPrivate
+♻️ pimpl SocketPrivate
+♻️ pimpl RecycledDatagramPrivate
+🔨 Make `recycler` private since all Recycler include were moved inside pimpl
+⚡️ NETUDP_ENABLE_UNITY_BUILD
+🐛 InterfaceProvider: Use steady_clock instead of system to avoid rollback
+🔊 Print build command at the of cmake
+📝 Update Readme with dependencies graph
+
 ### v1.3.1
 
 🐛 include missing QElapsedTimer header in Worker
