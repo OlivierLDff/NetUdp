@@ -87,6 +87,10 @@ set(NETUDP_ENABLE_PCH
  Only work if CMake support 'target_precompile_headers'. \"
  This can speed up compilation time."
 )
+set(NETUDP_ENABLE_UNITY_BUILD
+    ON
+    CACHE BOOL "NetUdp source files will be combined into batches for faster compilation."
+)
 
 # Extra
 set(NETUDP_ENABLE_EXAMPLES
@@ -123,6 +127,7 @@ if(NETUDP_VERBOSE)
   message(STATUS "NETUDP_FOLDER_PREFIX      : " ${NETUDP_FOLDER_PREFIX})
   message(STATUS "NETUDP_ENABLE_QML         : " ${NETUDP_ENABLE_QML})
   message(STATUS "NETUDP_ENABLE_PCH         : " ${NETUDP_ENABLE_PCH})
+  message(STATUS "NETUDP_ENABLE_UNITY_BUILD : ${NETUDP_ENABLE_UNITY_BUILD}")
   message(STATUS "NETUDP_ENABLE_EXAMPLES    : " ${NETUDP_ENABLE_EXAMPLES})
   message(STATUS "NETUDP_ENABLE_TESTS       : " ${NETUDP_ENABLE_TESTS})
   message(STATUS "---------------- DONE WITH OPTIONS. -----------------")
@@ -223,6 +228,7 @@ endif()
 
 target_compile_features(${NETUDP_TARGET} PUBLIC cxx_std_17)
 target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_INCS_FOLDER}>)
+set_target_properties(${NETUDP_TARGET} PROPERTIES UNITY_BUILD ${NETUDP_ENABLE_UNITY_BUILD})
 
 target_link_libraries(
   ${NETUDP_TARGET}
