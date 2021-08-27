@@ -223,6 +223,8 @@ else()
 
 endif()
 
+add_library(${NETUDP_TARGET}::${NETUDP_TARGET} ALIAS ${NETUDP_TARGET})
+
 target_compile_features(${NETUDP_TARGET} PUBLIC cxx_std_17)
 target_include_directories(${NETUDP_TARGET} PUBLIC $<BUILD_INTERFACE:${NETUDP_INCS_FOLDER}>)
 set_target_properties(${NETUDP_TARGET} PROPERTIES UNITY_BUILD ${NETUDP_ENABLE_UNITY_BUILD})
