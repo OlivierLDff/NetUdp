@@ -31,16 +31,14 @@ Every datagram allocation is stored in `std::shared_ptr<Datagram>`. This allow t
 ### Dependencies
 
 * The library depends on C++ 14 STL.
-* [Recycler](https://github.com/OlivierLDff/Recycler.git) library to reuse allocated datagram.
-* spdlog to log.
-* Qt Core Qml Network for the backend.
+* [Recycler](https://github.com/OlivierLDff/Recycler.git) library to reuse allocated datagram (The dependency is private).
 * Qt dependencies:
   * Core, Network, Qml
 
 ### Tools
 
 * [CMake](https://cmake.org/) v3.14 or greater.
-* C++17 compliant compiler or greater.
+* C++14 compliant compiler or greater.
 * Internet connection to download dependencies from *Github* during configuration.
 
 ## C++ Usage
