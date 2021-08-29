@@ -157,7 +157,7 @@ if(NETUDP_ENABLE_QML)
   )
 endif()
 
-include(cmake/FetchRecyler.cmake)
+include(cmake/FetchRecycler.cmake)
 
 # NetUdp
 
