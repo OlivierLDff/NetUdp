@@ -1,8 +1,8 @@
 # https://github.com/OlivierLDff/CPM.cmake
 
-set(CPM_DOWNLOAD_VERSION "91585e3864cc0e2a140c70a57a05b76c12934419") # v0.32.2
+set(CPM_DOWNLOAD_VERSION "ea6a8eb8959e06a576c1843750f03ce28c0b0121") # v0.32.3
 set(CPM_VERSION
-    "v0.32.2"
+    "v0.32.3"
     CACHE INTERNAL ""
 )
 
