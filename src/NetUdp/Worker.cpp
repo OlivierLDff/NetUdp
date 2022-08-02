@@ -1411,6 +1411,9 @@ void Worker::readPendingDatagrams()
     if(!rxSocket())
         return;
 
+    if(!_p->inputEnabled)
+        return;
+
     while(rxSocket() && rxSocket()->isValid() && rxSocket()->hasPendingDatagrams())
     {
         if(rxSocket()->pendingDatagramSize() == 0)
@@ -1512,9 +1515,12 @@ void Worker::onSocketErrorCommon(QAbstractSocket::SocketError error, QUdpSocket*
     {
         if(error == QAbstractSocket::SocketError::ConnectionRefusedError)
         {
-            qCDebug(netudp_worker_log) << "Ignoring socket error (" << socket->errorString()
-                                       << "), because it simply mean we received an ICMP "
-                                          "packet Destination unreachable.";
+            if(_p->inputEnabled)
+            {
+                qCDebug(netudp_worker_log) << "Ignoring socket error (" << socket->errorString()
+                                           << "), because it simply mean we received an ICMP "
+                                              "packet Destination unreachable.";
+            }
             return;
         }
         qCWarning(netudp_worker_log) << "Socket Error (" << error << ") : " << socket->errorString();
