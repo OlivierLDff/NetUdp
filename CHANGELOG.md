@@ -1,5 +1,17 @@
 # Changelog
 
+<a name="2.0.5"></a>
+## 2.0.5 (2022-10-03)
+
+### Fixed
+
+- 🐛 QT_VERSION_MAJOR not defined [[b12d711](https://github.com/OlivierLDff/NetUdp/commit/b12d7112cf3f6bbd89279335e6dbaf6f085988be)]
+
+### Miscellaneous
+
+- 📝 Update Changelog ([#10](https://github.com/OlivierLDff/NetUdp/issues/10)) [[bd72d22](https://github.com/OlivierLDff/NetUdp/commit/bd72d222cabdb7de0bf58abf7b3ccc3282147084)]
+
+
 <a name="2.0.4"></a>
 ## 2.0.4 (2022-10-03)
 
