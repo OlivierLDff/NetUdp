@@ -179,7 +179,7 @@ if(NETUDP_ENABLE_QML)
   endforeach()
 
   # Add qml to the qtquick compiler
-  if(${QT_VERSION_MAJOR} VERSION_LESS_EQUAL 5)
+  if(COMMAND qtquick_compiler_add_resources)
     qtquick_compiler_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
   endif()
 
