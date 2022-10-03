@@ -135,24 +135,26 @@ endif()
 
 # ───── Add dependencies ─────
 
-find_package(
-  QT NAMES Qt6 Qt5
-  COMPONENTS Core
-  REQUIRED
-)
-
-find_package(
-  Qt${QT_VERSION_MAJOR}
-  COMPONENTS Core Qml Network CONFIG
-  REQUIRED
-)
-
-if(NETUDP_ENABLE_QML)
+if(NOT TARGET Qt::Core)
   find_package(
-    Qt${QT_VERSION_MAJOR}
-    COMPONENTS Quick QuickCompiler CONFIG
+    QT NAMES Qt6 Qt5
+    COMPONENTS Core
     REQUIRED
   )
+
+  find_package(
+    Qt${QT_VERSION_MAJOR}
+    COMPONENTS Core Qml Network CONFIG
+    REQUIRED
+  )
+
+  if(NETUDP_ENABLE_QML)
+    find_package(
+      Qt${QT_VERSION_MAJOR}
+      COMPONENTS Quick QuickCompiler CONFIG
+      REQUIRED
+    )
+  endif()
 endif()
 
 include(cmake/FetchRecycler.cmake)
