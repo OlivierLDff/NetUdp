@@ -147,8 +147,6 @@ find_package(
   REQUIRED
 )
 
-find_package(Qt5 REQUIRED COMPONENTS Core Qml Network)
-
 if(NETUDP_ENABLE_QML)
   find_package(
     Qt${QT_VERSION_MAJOR}
