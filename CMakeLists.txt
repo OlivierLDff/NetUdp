@@ -151,9 +151,16 @@ if(NOT TARGET Qt::Core)
   if(NETUDP_ENABLE_QML)
     find_package(
       Qt${QT_VERSION_MAJOR}
-      COMPONENTS Quick QuickCompiler CONFIG
+      COMPONENTS Quick CONFIG
       REQUIRED
     )
+    if(${QT_VERSION_MAJOR} VERSION_LESS_EQUAL 5)
+      find_package(
+        Qt${QT_VERSION_MAJOR}
+        COMPONENTS QuickCompiler CONFIG
+        REQUIRED
+      )
+    endif()
   endif()
 endif()
 
@@ -172,7 +179,9 @@ if(NETUDP_ENABLE_QML)
   endforeach()
 
   # Add qml to the qtquick compiler
-  qtquick_compiler_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
+  if(${QT_VERSION_MAJOR} VERSION_LESS_EQUAL 5)
+    qtquick_compiler_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
+  endif()
 
   # Trick to rerun cmake each time NetUdp.qrc is updated
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc ${CMAKE_CURRENT_BINARY_DIR}/qml.junk)
