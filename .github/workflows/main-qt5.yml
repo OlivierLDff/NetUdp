@@ -1,4 +1,4 @@
-name: CI
+name: CI-qt5
 
 on:
   push:
