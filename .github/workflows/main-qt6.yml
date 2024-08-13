@@ -48,6 +48,9 @@ jobs:
       - name: Build NetUdp Unit Tests
         run: cmake --build build --target "NetUdp_Tests" --config "${{ matrix.build_type }}" -j
 
+      - name: Build NetUdp QtQuick Unit Tests
+        run: cmake --build build --target "NetUdp_QuickTests" --config "${{ matrix.build_type }}" -j
+
       - name: Run NetUdp Unit tests
         run: cd build && ctest --build-config "${{ matrix.build_type }}" --progress --verbose --parallel 12
         if: "!contains(matrix.os, 'ubuntu')"
