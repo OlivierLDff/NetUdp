@@ -8,6 +8,14 @@ NetUdp provide a Udp Socket that can send and receive Datagram.
 * C++ and Qml API.
 * Watcher that restart internal socket if something went wrong with the operating system.
 
+## 🧹 Maintenance notice
+
+This library is in maintenance mode. It means that only critical bugs will be fixed. No new features will be added. If you want to take over this library, please do so.
+
+The library has some huge design flaw, flanky API and tests. It was part of my experient when I was young, and I learned a lot from it. I don't want to fix the API, because when using Qt you shouldn't rely on third party library like, but rather simply use `QUdpSocket`.
+
+Keep you dependencies as small as possible, so maintainability is easier.
+
 ## 🚀 Overview
 
 <p align="center">
