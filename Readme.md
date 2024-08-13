@@ -1,6 +1,6 @@
 # NetUdp
 
-![CI](https://github.com/OlivierLDff/NetUdp/workflows/CI/badge.svg) ![https://gitmoji.dev/](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)
+[![CI-qt5](https://github.com/OlivierLDff/NetUdp/actions/workflows/main-qt5.yml/badge.svg)](https://github.com/OlivierLDff/NetUdp/actions/workflows/main-qt5.yml) [![CI-qt6](https://github.com/OlivierLDff/NetUdp/actions/workflows/main-qt6.yml/badge.svg)](https://github.com/OlivierLDff/NetUdp/actions/workflows/main-qt6.yml) ![https://gitmoji.dev/](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)
 
 NetUdp provide a Udp Socket that can send and receive Datagram.
 
