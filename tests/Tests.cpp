@@ -14,7 +14,7 @@ namespace netudp {
 class UnicastClientServer : public ::testing::Test
 {
 protected:
-    virtual void SetUp()
+    void init()
     {
         rx.setRxAddress(serverListeningAddr);
         rx.setRxPort(serverListeningPort);
@@ -70,6 +70,8 @@ protected:
 
 TEST_F(UnicastClientServer, clientToServer)
 {
+    serverListeningPort = 1111;
+    init();
     rx.setUseWorkerThread(false);
     tx.setUseWorkerThread(false);
     clientToServerTest();
@@ -77,6 +79,8 @@ TEST_F(UnicastClientServer, clientToServer)
 
 TEST_F(UnicastClientServer, clientToServerMultithread)
 {
+    serverListeningPort = 1112;
+    init();
     rx.setUseWorkerThread(true);
     tx.setUseWorkerThread(true);
     clientToServerTest();
@@ -86,7 +90,7 @@ TEST_F(UnicastClientServer, clientToServerMultithread)
 class MulticastClientServer : public ::testing::Test
 {
 protected:
-    virtual void SetUp()
+    void init()
     {
         rx.setMulticastGroups({multicastGroup});
         rx.setRxPort(multicastPort);
@@ -97,7 +101,7 @@ protected:
         rx.setMulticastLoopback(true);
     }
 
-    uint16_t multicastPort = 11111;
+    uint16_t multicastPort = 11112;
     QString multicastGroup = QStringLiteral("239.1.2.3");
 
     netudp::Socket tx;
@@ -149,6 +153,8 @@ protected:
 
 TEST_F(MulticastClientServer, Sync)
 {
+    multicastPort = 1113;
+    init();
     tx.setUseWorkerThread(false);
     tx.setUseWorkerThread(false);
     serverToClientTest();
@@ -156,6 +162,8 @@ TEST_F(MulticastClientServer, Sync)
 
 TEST_F(MulticastClientServer, Async)
 {
+    multicastPort = 1114;
+    init();
     tx.setUseWorkerThread(true);
     tx.setUseWorkerThread(true);
     serverToClientTest();
@@ -248,6 +256,7 @@ protected:
 
 TEST_F(MulticastClient2Server, Sync)
 {
+    multicastPort = 11235;
     tx.setUseWorkerThread(false);
     tx.setUseWorkerThread(false);
     serverToClientTest();
@@ -255,6 +264,7 @@ TEST_F(MulticastClient2Server, Sync)
 
 TEST_F(MulticastClient2Server, Async)
 {
+    multicastPort = 11236;
     tx.setUseWorkerThread(true);
     tx.setUseWorkerThread(true);
     serverToClientTest();
@@ -347,15 +357,22 @@ TEST(WorkerMultithreadFuzz, releaseBindedPort)
         server.start();
 
         if(spyServerBounded.empty())
+        {
+            qDebug() << "Waiting for server bounded";
             ASSERT_TRUE(spyServerBounded.wait());
+        }
 
         if(spyClientBounded.empty())
+        {
+            qDebug() << "Waiting for client bounded";
             ASSERT_TRUE(spyClientBounded.wait());
+        }
 
         auto d = server.makeDatagram(10);
         std::memset(d->buffer(), 0x12, 10);
         server.sendDatagram(d, "127.0.0.1", 1234);
 
+        qDebug() << "Waiting for datagram";
         ASSERT_TRUE(spyDatagramReceived.wait());
     }
 }

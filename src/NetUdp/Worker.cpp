@@ -97,6 +97,11 @@ struct WorkerPrivate
     bool inputEnabled = false;
     bool separateRxTxSockets = false;
 
+    bool validInputConfiguration() const
+    {
+        return inputEnabled && rxPort != 0;
+    }
+
     // ──────── MULTICAST INTERFACE JOIN WATCHER ────────
     // Created when at least one iface is being joined. ie (!_p->joinedMulticastGroups.empty() || !_p->failedJoiningMulticastGroup.empty())
     // Destroy in 'onStop', when joinedMulticastGroups & failedJoiningMulticastGroup are both empty
@@ -219,7 +224,7 @@ void Worker::onStart()
 
     if(_p->inputEnabled)
     {
-        if(_p->rxAddress.isEmpty())
+        if(!_p->rxAddress.isEmpty())
         {
             qCWarning(netudp_worker_log) << "Start Udp Socket Worker rx : " << _p->rxAddress << ":" << _p->rxPort
                                          << "tx port :" << _p->txPort;
@@ -231,7 +236,7 @@ void Worker::onStart()
     }
     else
     {
-        if(_p->rxAddress.isEmpty())
+        if(!_p->rxAddress.isEmpty())
         {
             qCWarning(netudp_worker_log) << "Start Udp Socket Worker rx port : " << _p->rxAddress << ":" << _p->rxPort;
         }
@@ -330,26 +335,50 @@ void Worker::onStart()
     // Qt multicast issues are non resolved ? https://forum.qt.io/topic/78090/multicast-issue-possible-bug/17
     const auto bindSuccess = [&]()
     {
-        if(useTwoSockets)
-            return _p->rxSocket->bind(QHostAddress(_p->rxAddress),
-                       _p->rxPort,
-                       QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint)
-                   && _p->socket->bind(QHostAddress(), _p->txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+        auto* const socket = [&]() -> QUdpSocket*
+        {
+            if(!_p->validInputConfiguration())
+                return nullptr;
 
-        if(_p->inputEnabled)
-            return _p->socket->bind(QHostAddress(_p->rxAddress),
-                _p->rxPort,
-                QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
-        return _p->socket->bind(QHostAddress(), _p->txPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+            if(useTwoSockets)
+                return rxSocket();
+
+            return _p->socket;
+        }();
+
+        if(socket)
+        {
+            qCDebug(netudp_worker_log) << "Bind to " << _p->rxAddress << ":" << _p->rxPort;
+
+            const auto hostAddress = _p->rxAddress.isEmpty() ? QHostAddress(QHostAddress::AnyIPv4) : QHostAddress(_p->rxAddress);
+
+            return socket->bind(hostAddress, _p->rxPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
+        }
+
+        qCDebug(netudp_worker_log) << "No need to bind to any address";
+        return false;
     }();
+
+    qCDebug(netudp_worker_log) << "Bind success : " << bindSuccess << ", valid input configuration : " << _p->validInputConfiguration();
 
     // Finish the start of the socket
     // Or start watchdog on failure
-    if(bindSuccess)
+    if(bindSuccess || !_p->validInputConfiguration())
     {
-        qCDebug(netudp_worker_log) << "Success bind to " << _p->socket->localAddress() << ":" << _p->socket->localPort();
+        // Sorry for this atrocity, but this is how the library public API is designed
+        // Library is in maintenance mode, this highlight bad design and library should be reworked
+        if(!_p->validInputConfiguration())
+        {
+            _p->isBounded = true;
+            Q_EMIT isBoundedChanged(true);
+        }
 
-        if(!_p->multicastGroups.empty() && rxSocket() && _p->inputEnabled)
+        if(bindSuccess)
+        {
+            qCDebug(netudp_worker_log) << "Success bind to " << _p->socket->localAddress() << ":" << _p->socket->localPort();
+        }
+
+        if(!_p->multicastGroups.empty() && rxSocket() && _p->validInputConfiguration())
         {
             // Join multicast groups either on every ifaces or in '_p->incomingMulticastInterfaces' given by user
             if(_p->incomingMulticastInterfaces.empty())
@@ -1196,7 +1225,9 @@ void Worker::createMulticastSocketForInterface(const IInterface& iface)
         }
 
         auto socket = new QUdpSocket(this);
-        if(!socket->bind(QHostAddress(), 0, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint))
+        qCDebug(netudp_worker_log) << "Create multicast tx socket for iface " << ifaceName;
+
+        if(!socket->bind(QHostAddress(QHostAddress::AnyIPv4), 0, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint))
         {
             socket->deleteLater();
             return false;
