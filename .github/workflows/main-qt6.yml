@@ -39,7 +39,7 @@ jobs:
       - name: Configure NetUdp
         run: |
           mkdir -p build
-          cmake -DNETUDP_ENABLE_EXAMPLES=ON -DNETUDP_ENABLE_TESTS=ON -DNETUDP_ENABLE_QML=OFF -DNETUDP_ENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" -B build -S .
+          cmake -DNETUDP_ENABLE_EXAMPLES=ON -DNETUDP_ENABLE_TESTS=ON -DNETUDP_ENABLE_QML=ON -DNETUDP_ENABLE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" -B build -S .
         shell: bash
 
       - name: Build NetUdp
@@ -47,9 +47,6 @@ jobs:
 
       - name: Build NetUdp Unit Tests
         run: cmake --build build --target "NetUdp_Tests" --config "${{ matrix.build_type }}" -j
-
-      - name: Build NetUdp QtQuick Unit Tests
-        run: cmake --build build --target "NetUdp_QuickTests" --config "${{ matrix.build_type }}" -j
 
       - name: Run NetUdp Unit tests
         run: cd build && ctest --build-config "${{ matrix.build_type }}" --progress --verbose --parallel 12
