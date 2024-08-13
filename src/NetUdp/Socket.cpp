@@ -493,6 +493,7 @@ bool Socket::sendDatagram(std::shared_ptr<Datagram> datagram)
     return true;
 }
 
+#ifdef NETUDP_ENABLE_QML
 bool Socket::sendDatagram(QJSValue datagram)
 {
     static const auto addressKey = "address";
@@ -584,6 +585,7 @@ bool Socket::sendDatagram(QJSValue datagram)
 
     return sendDatagram(sharedDatagram);
 }
+#endif
 
 bool Socket::isSendDatagramAllowed() const
 {
@@ -609,6 +611,7 @@ void Socket::onDatagramReceived(const SharedDatagram& datagram)
     Q_CHECK_PTR(datagram.get());
     Q_EMIT sharedDatagramReceived(datagram);
 
+#ifdef NETUDP_ENABLE_QML
     // This function violates the object-oriented principle of modularity.
     // However, if the socket isn't used in qml we can avoid doing a deep copy of the shared datagram
     static const QMetaMethod datagramReceivedSignal = QMetaMethod::fromSignal(&ISocket::datagramReceived);
@@ -634,6 +637,7 @@ void Socket::onDatagramReceived(const SharedDatagram& datagram)
 
         Q_EMIT datagramReceived(jsDatagram);
     }
+#endif
 }
 
 void Socket::onWorkerRxPerSecondsChanged(const quint64 rxBytes)

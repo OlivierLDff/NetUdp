@@ -244,17 +244,14 @@ target_link_libraries(
   ${NETUDP_TARGET}
   PRIVATE Recycler
   PUBLIC Qt${QT_VERSION_MAJOR}::Core
+  PUBLIC Qt${QT_VERSION_MAJOR}::Qml
   PUBLIC Qt${QT_VERSION_MAJOR}::Network
 )
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)
-  target_link_libraries(
-    ${NETUDP_TARGET}
-    PUBLIC Qt${QT_VERSION_MAJOR}::Qml
-  )
   set_target_properties(${NETUDP_TARGET} PROPERTIES AUTORCC TRUE)
-  target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_ENABLE_QML)
+  target_compile_definitions(${NETUDP_TARGET} PUBLIC -DNETUDP_ENABLE_QML)
 endif()
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES FOLDER ${NETUDP_FOLDER_PREFIX})
