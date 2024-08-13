@@ -1,5 +1,22 @@
 # Changelog
 
+<a name="2.0.6"></a>
+## 2.0.6 (2024-08-13)
+
+### Fixed
+
+- 🐛 Correctly call &#x60;bind&#x60; only when necessary ([#16](https://github.com/OlivierLDff/NetUdp/issues/16)) [[7c50285](https://github.com/OlivierLDff/NetUdp/commit/7c5028504b2b604d70d04e2fe810e2983ba28ea9)]
+- 🐛 Don&#x27;t link to &#x60;Qt::Qml&#x60; when &#x60;NETUDP_ENABLE_QML&#x60; is &#x60;OFF&#x60; ([#13](https://github.com/OlivierLDff/NetUdp/issues/13)) [[1fd6669](https://github.com/OlivierLDff/NetUdp/commit/1fd6669a2c953b9550e5cf8a2bde6e79914c5ca1)]
+- 💚 Fix CI to support Qt5 and update Qt6 ([#14](https://github.com/OlivierLDff/NetUdp/issues/14)) [[fced1e8](https://github.com/OlivierLDff/NetUdp/commit/fced1e80aba12bfeaf0489f2fa241a9af8c41388)]
+
+### Miscellaneous
+
+- 📝 CI badges [[35db493](https://github.com/OlivierLDff/NetUdp/commit/35db493597eefdb1c573accf5293678ec4c5c007)]
+-  👷 Rename CI to qt5 &amp; qt6 [[1d4bf14](https://github.com/OlivierLDff/NetUdp/commit/1d4bf1495892d6e49db907fed8b9f826745e0011)]
+- 📝 Maintenance memo [[40ff866](https://github.com/OlivierLDff/NetUdp/commit/40ff866071730fc31d4fe3e8e3de4fc63156e693)]
+- 📝 Update Changelog ([#11](https://github.com/OlivierLDff/NetUdp/issues/11)) [[30cfe50](https://github.com/OlivierLDff/NetUdp/commit/30cfe506ed8357277a5b218f1cc7b3fd46cf09d2)]
+
+
 <a name="2.0.5"></a>
 ## 2.0.5 (2022-10-03)
 
