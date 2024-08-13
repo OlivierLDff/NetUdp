@@ -181,6 +181,8 @@ if(NETUDP_ENABLE_QML)
   # Add qml to the qtquick compiler
   if(COMMAND qtquick_compiler_add_resources)
     qtquick_compiler_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
+  elseif(COMMAND qt_add_resources)
+    qt_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
   endif()
 
   # Trick to rerun cmake each time NetUdp.qrc is updated
