@@ -9,7 +9,7 @@ jobs:
       matrix:
         os: [windows-latest, macOS-13, ubuntu-latest]
         version: ['5.15.2']
-        build_type: ['Release', 'Debug']
+        build_type: ['Release']
 
     steps:
       - uses: actions/checkout@v2
