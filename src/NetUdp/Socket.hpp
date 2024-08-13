@@ -15,7 +15,9 @@
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
-#include <QtQml/QJSValue>
+#ifdef NETUDP_ENABLE_QML
+#    include <QtQml/QJSValue>
+#endif
 #include <memory>
 
 namespace netudp {
@@ -135,6 +137,7 @@ public Q_SLOTS:
     virtual void clearRxInvalidCounter() = 0;
     virtual void clearCounters() = 0;
 
+#ifdef NETUDP_ENABLE_QML
     // Example:
     // ```js
     // socket.sendDatagram({
@@ -146,6 +149,7 @@ public Q_SLOTS:
     // ```
     //
     virtual bool sendDatagram(QJSValue datagram) = 0;
+#endif
 
 public:
     virtual bool sendDatagram(
@@ -163,7 +167,9 @@ Q_SIGNALS:
     void multicastGroupLeaved(QString group, QString interfaceName);
 
     void sharedDatagramReceived(const SharedDatagram& datagram);
+#ifdef NETUDP_ENABLE_QML
     void datagramReceived(QJSValue datagram);
+#endif
 };
 
 struct SocketPrivate;
@@ -231,7 +237,9 @@ public:
     bool sendDatagram(const char* buffer, const size_t length, const QString& address, const uint16_t port, const uint8_t ttl = 0) override;
     bool sendDatagram(std::shared_ptr<Datagram> datagram, const QString& address, const uint16_t port, const uint8_t ttl = 0) override;
     bool sendDatagram(std::shared_ptr<Datagram> datagram) override;
+#ifdef NETUDP_ENABLE_QML
     bool sendDatagram(QJSValue datagram) override;
+#endif
 
     bool isSendDatagramAllowed() const;
 

@@ -181,6 +181,8 @@ if(NETUDP_ENABLE_QML)
   # Add qml to the qtquick compiler
   if(COMMAND qtquick_compiler_add_resources)
     qtquick_compiler_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
+  elseif(COMMAND qt_add_resources)
+    qt_add_resources(NETUDP_QML_RES ${CMAKE_CURRENT_SOURCE_DIR}/qml/NetUdp.qrc)
   endif()
 
   # Trick to rerun cmake each time NetUdp.qrc is updated
@@ -249,7 +251,7 @@ target_link_libraries(
 set_target_properties(${NETUDP_TARGET} PROPERTIES AUTOMOC TRUE)
 if(NETUDP_ENABLE_QML)
   set_target_properties(${NETUDP_TARGET} PROPERTIES AUTORCC TRUE)
-  target_compile_definitions(${NETUDP_TARGET} PRIVATE -DNETUDP_ENABLE_QML)
+  target_compile_definitions(${NETUDP_TARGET} PUBLIC -DNETUDP_ENABLE_QML)
 endif()
 
 set_target_properties(${NETUDP_TARGET} PROPERTIES FOLDER ${NETUDP_FOLDER_PREFIX})
